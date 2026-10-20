@@ -67,6 +67,31 @@ try {
     assert.ok(submit);
     assert.equal(!submit[1].includes('disabled'), enabled, `${kind}: ${value}`);
   }
+  // 互动课堂：目录页、每个演示在每个适用年级的课堂页，以及“动手模式”下的演示画面
+  useMath.getState().setGrade(3); useMath.getState().go('class');
+  const classHtml = render('互动课堂');
+  for (const text of ['一年级', '六年级', '上册', '下册', '数学', '科学', '人教版', '分数的初步认识']) assert.ok(classHtml.includes(text), text);
+  const { LessonView } = await server.ssrLoadModule('/src/components/lesson/classroom.tsx');
+  const { DEMO_LIST, defaultParams } = await server.ssrLoadModule('/src/lib/lesson/demos.ts');
+  const stages = await server.ssrLoadModule('/src/components/lesson/stages-math.tsx');
+  const sci = await server.ssrLoadModule('/src/components/lesson/stages-science.tsx');
+  let lessonCount = 0;
+  for (const demo of DEMO_LIST) for (const grade of demo.grades) {
+    const html = renderToString(createElement(LessonView, { demo: demo.id, grade, unitTitle: '测试单元', onBack() {} }));
+    for (const text of [demo.title, '播放', '上一步', '下一步', '重新开始', '完整过程', '老师，再讲一遍', '换一种方法讲', '调节参数', '开始随堂练习']) assert.ok(html.includes(text), `${demo.id}@${grade}: ${text}`);
+    assert.ok(!/>(Play|Pause|Reset|Next|Back)</.test(html), `${demo.id} 不应出现英文按钮`);
+    if (demo.subject === 'science') for (const text of ['实验目的', '所需器材', '实验步骤', '观察结果', '结果解释', '想一想']) assert.ok(html.includes(text), `${demo.id}: ${text}`);
+    lessonCount++;
+  }
+  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage };
+  for (const demo of DEMO_LIST) {
+    const html = renderToString(createElement(stageOf[demo.id], { params: defaultParams(demo.id), scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+    assert.ok(html.includes('<svg') || html.includes('dec-row'), demo.id);
+  }
+  // 参数联动：半径改变后，画面里的周长和面积随之更新
+  const c5 = renderToString(createElement(stages.CircleStage, { params: { r: 5, n: 8 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+  assert.ok(c5.includes('31.4') && c5.includes('78.5'));
+  console.log(`Classroom: ${lessonCount} lesson pages and ${DEMO_LIST.length} interactive stages rendered`);
   console.log('Existing screens, 18 unit lessons, 3 lab types, unit completion/report and 5 input-state render checks passed (not browser interaction tests)');
 } finally {
   await server.close();
