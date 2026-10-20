@@ -73,7 +73,7 @@ try {
   // 一年级拖苹果
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '一年级' }).click();
-  await page.locator('li', { hasText: '1～5 的认识和加减法' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li', { hasText: '5 以内数的认识和加、减法' }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   for (let i = 0; i < 2; i++) {
     const apples = page.locator('.stage svg g[style*="grab"]');
@@ -112,21 +112,39 @@ try {
   const angleText = await page.locator('.stage-result').textContent();
   assert.match(angleText, /^(8[5-9]|9[0-5])° · (锐角|直角|钝角)/);
   ok(`四年级：拖动角的一边到正上方，读数 ${angleText}`);
-  // 五年级方程
+  // 五年级：新教材的等式性质（不再解方程）
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '五年级' }).click();
-  await page.locator('li', { hasText: '简易方程' }).getByRole('button', { name: '上课' }).click();
-  for (let i = 1; i <= 6; i++) { await page.getByRole('button', { name: new RegExp(`^第 ${i} 步`) }).click(); }
+  await page.locator('li', { hasText: '用字母表示数和数量关系' }).getByRole('button', { name: '上课' }).click();
+  for (let i = 1; i <= 5; i++) { await page.getByRole('button', { name: new RegExp(`^第 ${i} 步`) }).click(); }
   const bb = await page.locator('.board').innerText();
-  assert.ok(bb.includes('3x + 4 = 19') && bb.includes('3x = 15') && bb.includes('x = 5') && bb.includes('检验'));
+  assert.ok(bb.includes('3x + 4 = 19') && bb.includes('3×5 + 4 = 19') && bb.includes('等式两边') && bb.includes('初中'));
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   await page.getByLabel('猜 x 的值').fill('5');
   await page.locator('.stage-result', { hasText: '平衡了！x = 5' }).waitFor();
-  ok('五年级：方程逐步展示 3x+4=19 → 3x=15 → x=5，天平猜 5 时平衡');
-  // 六年级圆
+  ok('五年级（新教材）：代入 x=5 得 3×5+4=19，演示等式的性质并说明解方程到初中学；天平猜 5 时平衡');
+  // 五年级：可能性真实随机试验
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  await page.locator('li', { hasText: '可能性' }).getByRole('button', { name: '上课' }).click();
+  await page.getByRole('button', { name: '摸 100 次', exact: true }).click();
+  const label = await page.locator('.stage svg').getAttribute('aria-label');
+  const mm = label.match(/已摸 (\d+) 次，红 (\d+) 次，白 (\d+) 次/);
+  assert.ok(mm && Number(mm[1]) === 100 && Number(mm[2]) + Number(mm[3]) === 100 && Number(mm[2]) > Number(mm[3]));
+  ok(`五年级：红 7 白 3 真随机摸 100 次，红 ${mm[2]} 次、白 ${mm[3]} 次`);
+  // 新教材目录核对
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '六年级' }).click();
-  await page.locator('li', { hasText: '圆' }).filter({ hasText: /^\d*圆/ }).first().getByRole('button', { name: '上课' }).click();
+  const six = await page.locator('.class-units').innerText();
+  for (const t of ['确定位置', '生活中的负数', '鸽巢问题']) assert.ok(six.includes(t), t);
+  for (const t of ['扇形统计图', '数与形']) assert.ok(!six.includes(t), t);
+  ok('六上新目录：有确定位置、生活中的负数、鸽巢问题，没有比、扇形统计图、数与形');
+  await page.locator('li', { hasText: '鸽巢问题' }).getByRole('button', { name: '上课' }).click();
+  await page.getByRole('button', { name: '随便放一次', exact: true }).click();
+  await page.locator('.stage-result', { hasText: '确实不少于 3 个' }).waitFor();
+  ok('鸽巢问题：7 个苹果随机放进 3 个抽屉，最多的抽屉确实不少于 3 个');
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  // 六年级圆
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: /^四 圆$/ }) }).getByRole('button', { name: '上课' }).click();
   await page.getByLabel('半径 r').fill('7');
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   await page.locator('.stage-result', { hasText: '153.86' }).waitFor();
@@ -147,6 +165,54 @@ try {
   await page.getByText('安全提醒').waitFor();
   ok('科学：串联坏一个灯全灭，改并联后其余灯仍亮；有安全提醒');
   await page.screenshot({ path: `${out}/circuit-desktop.png`, fullPage: true });
+  // 二年级下：拖动分针认识时间
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  await page.getByRole('group', { name: '学科' }).getByRole('button', { name: '数学' }).click();
+  await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '二年级' }).click();
+  await page.getByRole('group', { name: '学期' }).getByRole('button', { name: '下册' }).click();
+  await page.locator('li', { hasText: '时间在哪里' }).getByRole('button', { name: '上课' }).click();
+  await page.getByRole('button', { name: '让我自己试试' }).first().click();
+  const ch = page.locator('.stage svg circle[style*="grab"]');
+  const cb = await ch.boundingBox(); const csv = await page.locator('.stage svg').boundingBox();
+  await page.mouse.move(cb.x + cb.width / 2, cb.y + cb.height / 2); await page.mouse.down();
+  await page.mouse.move(csv.x + csv.width * (140 / 440), csv.y + csv.height * (190 / 230), { steps: 12 }); await page.mouse.up();
+  await page.locator('.stage-result', { hasText: '3 时 30 分' }).waitFor();
+  ok('二年级：把分针拖到 6，显示 3 时 30 分');
+  // AI 老师：用模拟接口验证（不使用真实密钥）
+  await page.route('https://api.example.com/v1/chat/completions', async (route) => {
+    const body = route.request().postDataJSON();
+    const ok2 = body.messages[0].content.includes('2 年级') && route.request().headers()['authorization'] === 'Bearer test-key';
+    await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ choices: [{ message: { content: ok2 ? '<b>分针</b>指着 6，就是 30 分。' : '提示词不对' } }] }) });
+  });
+  await page.getByRole('button', { name: '设置', exact: true }).click();
+  await page.getByLabel('开启 AI 老师').check();
+  await page.getByLabel('服务地址').fill('https://api.example.com/v1');
+  await page.getByLabel('API 密钥').fill('test-key');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  await page.getByLabel('问老师').fill('为什么是 30 分？');
+  await page.getByRole('button', { name: '发送', exact: true }).click();
+  await page.locator('.tutor-bubble', { hasText: '分针指着 6，就是 30 分。' }).waitFor();
+  assert.ok(!(await page.locator('.tutor-bubble').innerHTML()).includes('<b>'), 'AI 回复只显示纯文本');
+  await page.getByRole('button', { name: '设置', exact: true }).click();
+  await page.getByRole('button', { name: '清除密钥' }).click();
+  assert.equal(await page.evaluate(() => localStorage.getItem('kaiqiao-ai')), null);
+  ok('AI 老师（模拟接口）：按年级发送提示词，回复去掉 HTML 后显示；清除后不再保存密钥');
+  // 随堂练习写入课堂记录
+  await page.getByRole('button', { name: '开始随堂练习' }).click();
+  const qz = page.locator('.quiz');
+  if (await qz.locator('.quiz-choices button').count()) await qz.locator('.quiz-choices button').first().click(); else { await qz.getByLabel('填写答案').fill('60'); await qz.getByRole('button', { name: '提交' }).click(); }
+  await qz.locator('.quiz-feedback').waitFor();
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  await page.locator('.class-log li', { hasText: '认识时间' }).waitFor();
+  ok('随堂练习结果写入“课堂练习记录”');
+  // 导入资料
+  await page.getByLabel('资料内容').fill('# 小数乘法\n1.2×0.5=\n1O+5=\n解方程 3x+4=19');
+  await page.getByLabel('适用年级').selectOption('5');
+  await page.getByRole('button', { name: '识别内容' }).click();
+  await page.locator('.import-item', { hasText: '答案：0.6' }).waitFor();
+  await page.locator('.import-item.is-needs-confirm', { hasText: '1O+5=' }).waitFor();
+  await page.locator('.import-item.is-above-grade', { hasText: '解方程' }).waitFor();
+  ok('导入资料：1.2×0.5 算出 0.6；“1O+5”标为需确认；解方程标为超出年级');
   // 原有功能回归
   await page.getByRole('button', { name: '练习' }).first().click();
   await page.getByRole('button', { name: '题库' }).first().click();
