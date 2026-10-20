@@ -276,7 +276,7 @@ function AskShell({ mood, title, onBack, progress, completed = 0, total, combo, 
     {extra ? <div className="practice-extra">{extra}</div> : null}
     <div className={cn("practice-workspace", feedback && "has-feedback")}>
       <section className="question-card" aria-label="题目">
-        <div className="question-card-top"><span className="soft-badge">{fromWrong ? "原题再练" : skillLabel ?? "认真想一想"}</span>{combo >= 2 ? <span className="combo-badge"><SparkleIcon />连对 {combo} 题</span> : null}<button type="button" className="icon-button ml-auto" onClick={() => speakPrompt(qPrompt)} aria-label="读题"><Volume2 size={19} /></button></div>
+        <div className="question-card-top"><span className="soft-badge">{fromWrong ? "原题再练" : skillLabel ?? "想一想"}</span>{combo >= 2 ? <span className="combo-badge"><SparkleIcon />连对 {combo} 题</span> : null}<button type="button" className="icon-button ml-auto" onClick={() => speakPrompt(qPrompt)} aria-label="读题"><Volume2 size={19} /></button></div>
         <p className={cn("question-prompt", qPrompt.length > 28 && "question-prompt--long")}>{qPrompt}</p>
         {!feedback ? <div className="question-encouragement"><Mascot mood={mood} /><span>不着急，先想清楚。</span></div> : null}
         {feedback ? <div className={cn("feedback-box", !feedback.ok && "feedback-box--retry")} role="status">
@@ -290,7 +290,7 @@ function AskShell({ mood, title, onBack, progress, completed = 0, total, combo, 
       </section>
       {!feedback ? children : null}
     </div>
-    <p className="practice-footnote">{total ? "每道题都可以慢慢想。答完后，点「下一题」继续。" : "限时模式会自动进入下一题，错题会留在错题本。"}</p>
+    <p className="practice-footnote">{total ? "不限时，慢慢想。答完会有讲解，再点「下一题」。" : "限时模式会自动进入下一题，错题会留在错题本。"}</p>
   </div>;
 }
 
