@@ -1,4 +1,5 @@
 import { Learning } from "./learning";
+import { Classroom } from "@/components/lesson/classroom";
 import { unitById } from "@/lib/math/units";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, Lightbulb, Star, Timer, Volume2, X } from "lucide-react";
@@ -31,6 +32,7 @@ export function Game() {
   useEffect(() => () => hushSpeak(), []);
   return <AppShell screen={screen}>
     {screen === "home" ? <Home /> : null}
+    {screen === "class" ? <Classroom /> : null}
     {screen === "learn" ? <Learning /> : null}
     {screen === "map" ? <Map /> : null}
     {screen === "play" ? <Play /> : null}
