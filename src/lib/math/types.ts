@@ -54,4 +54,4 @@ export type SkillStat = {
 
 export type PlayKind = "topic" | "unit" | "campaign" | "daily" | "review" | "duel" | "sprint" | "drill";
 
-export type Screen = "learn" | "home" | "map" | "play" | "result" | "review" | "duel" | "report";
+export type Screen = "class" | "learn" | "home" | "map" | "play" | "result" | "review" | "duel" | "report";
