@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UnitProgress } from "./learning";
-import { ArrowRight, BookOpen, Check, ChevronRight, Download, Flame, Lightbulb, LockKeyhole, Map as MapIcon, RotateCcw, Sparkles, Star, Target, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpen, Check, ChevronRight, Download, Flame, Lightbulb, LockKeyhole, Map as MapIcon, RotateCcw, Search, Sparkles, Star, Target, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CHAPTERS, GRADE_LABEL, LEVELS_PER_CHAPTER, chapterById, chaptersOfGrade } from "@/lib/math/chapters";
 import { unlockAudio, playTap } from "@/lib/math/audio";
@@ -23,12 +23,11 @@ export function Home() {
   const all = chaptersOfGrade(s.selectedGrade).length * LEVELS_PER_CHAPTER;
   const tap = (action: () => void) => { unlockAudio(); if (!s.muted) playTap(); action(); };
   return <div className="page-enter">
-    <PageHeading eyebrow="一点练习 · 一点进步" title="今天，也开窍一点。" description="先想一想，再动手。每一次认真练习，都算数。" />
-    <section className="learning-entry"><span className="mode-icon"><Lightbulb size={24}/></span><div><span className="eyebrow">{s.selectedGrade===3?"原创理解实验室":"本年级题库已更新"}</span><h2>先想明白，再练到会。</h2><p>{s.selectedGrade===3?"三年级 18 个知识单元，配分步讲解和互动实验。":`${GRADE_LABEL[s.selectedGrade]} ${chaptersOfGrade(s.selectedGrade).length} 个题库模块，按知识点自由练习。`}</p></div><Button onClick={() => s.go(s.selectedGrade===3?"learn":"map")}>{s.selectedGrade===3?"去理解":"选知识点"}<ArrowRight/></Button></section>
+    <PageHeading eyebrow={`${GRADE_LABEL[s.selectedGrade]} · 今日练习`} title={dailyDone ? "今天的练习完成啦。" : "今天，也开窍一点。"} description={dailyDone ? "想多练一会儿，就挑个知识点，或去错题本把难题再想一遍。" : "每天 10 道题，先想清楚，再动手。答错也没关系，每道题都有讲解。"} />
     <div className="home-feature-grid">
       <section className="daily-card" aria-labelledby="daily-title">
         <span className="hero-kicker"><span className="status-dot" />{dailyDone ? "今天已完成" : "今天的小目标"}</span>
-        <div className="daily-copy"><h2 id="daily-title">每天一组，<br />把数学练明白。</h2><p>{GRADE_LABEL[s.selectedGrade]} · 10 道基础题<br />做完后，再巩固本轮错题。</p></div>
+        <div className="daily-copy"><h2 id="daily-title">每天一组，<br />把数学练明白。</h2><p>{GRADE_LABEL[s.selectedGrade]} · 10 道基础题<br />答错的题会收进错题本。</p></div>
         <div className="hero-art"><span className="orbit orbit-one" /><span className="orbit orbit-two" /><span className="math-doodle doodle-one">+</span><span className="math-doodle doodle-two">÷</span><Mascot mood={dailyDone ? "happy" : "idle"} /></div>
         <Button className="daily-button" size="lg" onClick={() => tap(s.startDaily)}>{dailyDone ? <Check /> : <Sparkles />}{dailyDone ? "再练一组" : "开始每日练习"}<ArrowRight /></Button>
       </section>
@@ -40,9 +39,10 @@ export function Home() {
         <Button variant="secondary" size="lg" className="mt-5 w-full justify-between" onClick={() => tap(() => s.startLevel(next.chapterId, next.level))}>{done ? "继续闯关" : "开始闯关"}<ArrowRight /></Button>
       </section>
     </div>
+    <section className="learning-entry"><span className="mode-icon"><Lightbulb size={24}/></span><div><span className="eyebrow">{s.selectedGrade===3?"原创理解实验室":"按知识点练"}</span><h2>先想明白，再练到会。</h2><p>{s.selectedGrade===3?"三年级 18 个知识单元，配分步讲解和互动实验。":`${GRADE_LABEL[s.selectedGrade]} ${chaptersOfGrade(s.selectedGrade).length} 个题库模块，按知识点自由练习。`}</p></div><Button onClick={() => s.go(s.selectedGrade===3?"learn":"map")}>{s.selectedGrade===3?"去理解":"选知识点"}<ArrowRight/></Button></section>
     <div className="section-heading"><h2>换个方式练一练</h2><span>按自己的节奏来</span></div>
     <div className="mode-grid">
-      <ModeCard icon={BookOpen} tone="peach" title="错题再想想" description={count ? `${count} 道待巩固 · 把难点变熟悉` : "把不熟悉的题，慢慢弄明白"} onClick={() => tap(() => s.go("review"))} />
+      <ModeCard icon={BookOpen} tone="peach" title="错题再想想" description={count ? `${count} 道待巩固 · 把难点变熟悉` : "暂时没有错题，继续保持"} onClick={() => tap(() => s.go("review"))} />
       <ModeCard icon={Timer} tone="blue" title="90 秒小挑战" description="先求答对，再试试快一点" onClick={() => tap(s.startSprint)} />
       <ModeCard icon={Zap} tone="lavender" title="和窍窍比一比" description="60 秒 · 与电脑伙伴一起练" onClick={() => tap(s.startDuel)} />
     </div>
@@ -64,15 +64,15 @@ export function Map() {
   const chapters=chaptersOfGrade(s.selectedGrade).filter(c=>`${c.name}${c.blurb}`.includes(query.trim()));
   const next = nextCampaign(s.stars, s.selectedGrade);
   return <div className="page-enter">
-    <PageHeading eyebrow={`${GRADE_LABEL[s.selectedGrade]} · 我的学习路线`} title="题库与闯关" description="先选年级，再选今天想练的知识点。每组 8 题，答错后会安排同类巩固。" action={<span className="star-total"><Star size={19} />{chaptersOfGrade(s.selectedGrade).reduce((sum, c) => sum + chapterStarSum(s.stars, c.id), 0)} 星</span>} />
+    <PageHeading eyebrow={`${GRADE_LABEL[s.selectedGrade]} · 我的学习路线`} title="题库与闯关" description="选一个今天想练的知识点。每组 8 题，答错会追加同类题帮你巩固。" action={<span className="star-total"><Star size={19} />{chaptersOfGrade(s.selectedGrade).reduce((sum, c) => sum + chapterStarSum(s.stars, c.id), 0)} 星</span>} />
     <div className="bank-toolbar"><div className="theme-tabs" aria-label="练习方式"><button type="button" aria-pressed={mode==="topic"} onClick={()=>setMode("topic")}>按知识点练</button><button type="button" aria-pressed={mode==="journey"} onClick={()=>setMode("journey")}>闯关路线</button></div><span className="soft-badge">{GRADE_LABEL[s.selectedGrade]} · {chaptersOfGrade(s.selectedGrade).length} 个模块</span></div>
     {mode==="topic"?<>
-      <div className="bank-filters"><label className="learning-search"><input aria-label="搜索本年级题库" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜知识点或题型…"/></label><div className="theme-tabs" aria-label="练习层次"><button type="button" aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>基础一组</button><button type="button" aria-pressed={advanced} onClick={()=>setAdvanced(true)}>进阶一组</button></div></div>
-      <div className="unit-grid">{chapters.map((chapter,index)=><button type="button" className="unit-card" key={chapter.id} onClick={()=>s.startTopic(chapter.id,advanced)}><div><span className="unit-number">{String(index+1).padStart(2,"0")}</span><small>{chapter.term==="选学拓展"?"选学拓展":"原创变式练习"}</small></div><h2>{chapter.name}</h2><p>{chapter.blurb}</p><footer><span>{advanced?"进阶":"基础"} · 练 8 题</span><ArrowRight size={17}/></footer></button>)}</div>
-      {!chapters.length?<p className="gentle-note">这个年级暂未找到对应题型，换个关键词试试。</p>:null}
-      <p className="gentle-note">按知识点练不受闯关解锁限制，答题会记入学情，但不获得闯关星星。这里按知识点选学，不代表完整教材同步。</p>
+      <div className="bank-filters"><label className="learning-search"><Search size={16} aria-hidden="true"/><input aria-label="搜索本年级题库" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜知识点或题型…"/></label><div className="theme-tabs" aria-label="练习层次"><button type="button" aria-pressed={!advanced} onClick={()=>setAdvanced(false)}>基础一组</button><button type="button" aria-pressed={advanced} onClick={()=>setAdvanced(true)}>进阶一组</button></div></div>
+      <div className="unit-grid">{chapters.map((chapter,index)=><button type="button" className="unit-card" key={chapter.id} onClick={()=>s.startTopic(chapter.id,advanced)}><div><span className="unit-number">{String(index+1).padStart(2,"0")}</span>{["上册","下册","上·下","选学拓展"].includes(chapter.term)?<small>{chapter.term}</small>:null}</div><h2>{chapter.name}</h2><p>{chapter.blurb}</p><footer><span>{advanced?"进阶":"基础"} · 练 8 题</span><ArrowRight size={17}/></footer></button>)}</div>
+      {!chapters.length?<p className="gentle-note">没找到相关知识点，换个关键词试试，比如“乘法”“面积”。</p>:null}
+      <p className="gentle-note">按知识点练不用解锁，会计入学情，但不拿闯关星星。题目均为原创，并非教材逐课同步。</p>
     </>:<>
-    <p className="gentle-note">每章通过 3 关后解锁下一章；旧版星星与进度继续保留。</p>
+    <p className="gentle-note">每章通过 3 关，就能解锁下一章。</p>
     <ol className="chapter-grid">{chaptersOfGrade(s.selectedGrade).map((chapter, index) => {
       const open = isChapterUnlocked(s.stars, chapter.id);
       const done = clearedLevels(s.stars, chapter.id);
