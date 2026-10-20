@@ -8,7 +8,8 @@ export type Subject = "math" | "science";
 export type DemoId =
   | "add-sub" | "group-share" | "fraction" | "perimeter-area" | "angle" | "law"
   | "decimal-mul" | "balance" | "circle" | "cylinder"
-  | "magnet" | "shadow" | "circuit" | "pendulum";
+  | "shapes" | "rmb" | "ruler" | "clock" | "parallel" | "chance" | "number-line" | "percent" | "pigeonhole" | "scale"
+  | "magnet" | "shadow" | "circuit" | "pendulum" | "water";
 
 export type ParamSpec = {
   key: string;
@@ -17,6 +18,8 @@ export type ParamSpec = {
   max: number;
   /** 所有参数都是整数；display = value / scale */
   scale?: number;
+  /** display = value × mul（例如原价以 10 元为一档） */
+  mul?: number;
   unit?: string;
   default: number;
   /** 0/1 开关或选项 */
@@ -85,11 +88,11 @@ export const DEMOS: Record<DemoId, DemoDef> = {
       { key: "a", label: "第一个因数", min: 1, max: 99, scale: 10, default: 12 },
       { key: "b", label: "第二个因数", min: 1, max: 99, scale: 10, default: 5 },
     ] },
-  balance: { id: "balance", subject: "math", title: "天平解方程", grades: [5], summary: "天平两边同时拿走、同时平均分，始终保持平衡。",
+  balance: { id: "balance", subject: "math", title: "天平与等式的性质", grades: [5], summary: "知道 x 是多少，代入算出左边有多重；两边同时加上或减去同样多，天平仍然平衡。（解方程到初中再系统学习）",
     params: [
       { key: "a", label: "x 的个数 a", min: 1, max: 6, default: 3 },
       { key: "b", label: "另放的砝码 b", min: 0, max: 20, default: 4, unit: "g" },
-      { key: "x", label: "x 的真实质量（答案）", min: 1, max: 12, default: 5, unit: "g" },
+      { key: "x", label: "每个 x 的质量", min: 1, max: 12, default: 5, unit: "g" },
     ] },
   circle: { id: "circle", subject: "math", title: "圆的周长和面积", grades: [6], summary: "改变半径，周长和面积实时计算；把圆切开拼成近似长方形。",
     params: [
@@ -102,6 +105,53 @@ export const DEMOS: Record<DemoId, DemoDef> = {
       { key: "h", label: "高 h", min: 1, max: 10, default: 5, unit: "厘米" },
       { key: "open", label: "展开程度", min: 0, max: 10, default: 0 },
     ] },
+  shapes: { id: "shapes", subject: "math", title: "认识图形：分一分", grades: [1], summary: "把图形拖进对应的格子，说一说它们的样子。",
+    params: [{ key: "kind", label: "看哪一类", min: 0, max: 1, default: 0, options: ["平面图形", "立体图形"] }] },
+  rmb: { id: "rmb", subject: "math", title: "欢乐购物街：认识人民币", grades: [1], summary: "选一件商品，付钱、找零，看看找回的钱怎么凑。",
+    params: [
+      { key: "price", label: "商品价格", min: 1, max: 20, default: 7, unit: "元" },
+      { key: "pay", label: "付的钱", min: 0, max: 3, default: 1, options: ["5 元", "10 元", "20 元", "50 元"] },
+    ] },
+  ruler: { id: "ruler", subject: "math", title: "用尺子量长度", grades: [2], summary: "拖动铅笔，看左端没对准 0 时怎样读出长度。",
+    params: [
+      { key: "start", label: "左端对着", min: 0, max: 5, default: 0, unit: "厘米" },
+      { key: "len", label: "铅笔长", min: 1, max: 10, default: 6, unit: "厘米" },
+    ] },
+  clock: { id: "clock", subject: "math", title: "认识时间：几时几分", grades: [2], summary: "拖动分针，看时针怎样跟着慢慢走。",
+    params: [
+      { key: "h", label: "时", min: 1, max: 12, default: 3 },
+      { key: "m", label: "分", min: 0, max: 55, default: 30 },
+    ] },
+  parallel: { id: "parallel", subject: "math", title: "平行与垂直", grades: [4], summary: "旋转一条直线，看两条直线什么时候平行、什么时候垂直。",
+    params: [{ key: "deg", label: "两条直线的夹角", min: 0, max: 180, default: 60, unit: "°" }] },
+  chance: { id: "chance", subject: "math", title: "可能性：摸球试验", grades: [5], summary: "改变袋子里的球，真的随机摸很多次，看结果和猜的一样吗。",
+    params: [
+      { key: "red", label: "红球", min: 0, max: 10, default: 7, unit: "个" },
+      { key: "white", label: "白球", min: 0, max: 10, default: 3, unit: "个" },
+    ] },
+  "number-line": { id: "number-line", subject: "math", title: "生活中的负数：数轴", grades: [6], summary: "在数轴上找正数、0 和负数，比较它们的大小。",
+    params: [
+      { key: "a", label: "第一个数", min: -10, max: 10, default: -3 },
+      { key: "b", label: "第二个数", min: -10, max: 10, default: 2 },
+    ] },
+  percent: { id: "percent", subject: "math", title: "百分数：打折购物", grades: [6], summary: "改变原价和折扣，算出现价和便宜了多少。",
+    params: [
+      { key: "price", label: "原价", min: 1, max: 50, mul: 10, default: 20, unit: "元" },
+      { key: "zhe", label: "打几折", min: 1, max: 9, default: 8, unit: "折" },
+    ] },
+  pigeonhole: { id: "pigeonhole", subject: "math", title: "鸽巢问题", grades: [6], summary: "把东西放进抽屉，无论怎么放，总有一个抽屉至少放几个？",
+    params: [
+      { key: "items", label: "苹果", min: 3, max: 20, default: 7, unit: "个" },
+      { key: "boxes", label: "抽屉", min: 2, max: 9, default: 3, unit: "个" },
+    ] },
+  scale: { id: "scale", subject: "math", title: "比例尺", grades: [6], summary: "改变比例尺和图上距离，看实际距离怎样变化。",
+    params: [
+      { key: "s", label: "比例尺", min: 0, max: 3, default: 2, options: ["1∶1000", "1∶10000", "1∶100000", "1∶1000000"] },
+      { key: "cm", label: "图上距离", min: 1, max: 20, default: 5, unit: "厘米" },
+    ] },
+  water: { id: "water", subject: "science", title: "水的三态变化", grades: [3, 4], summary: "改变温度，看水什么时候结冰、什么时候沸腾。",
+    params: [{ key: "t", label: "温度", min: -20, max: 120, default: 25, unit: "℃" }],
+    experiment: { goal: "观察水在不同温度下的状态变化。", tools: ["烧杯", "冰块", "温度计", "酒精灯或电热水壶（老师操作）"], steps: ["把冰块放进烧杯，用温度计测温度。", "让冰块慢慢融化，观察温度。", "在老师帮助下加热到沸腾，观察水蒸气。"], observe: "冰在 0 ℃ 左右融化成水；水加热到约 100 ℃ 沸腾，变成水蒸气。", explain: "水有固态（冰）、液态（水）和气态（水蒸气）三种状态，温度变化会让它们互相转化。", safety: "加热和沸水实验必须由老师或家长操作，小心烫伤；不要用手摸刚加热过的器材。", think: "冬天窗户上的冰花和夏天冰饮料瓶外的水珠，分别是怎么来的？", virtualNote: "模拟按一个标准大气压设定：0 ℃ 结冰、100 ℃ 沸腾。真实情况下，水在低于 100 ℃ 时也会慢慢蒸发；高原上水的沸点会低一些。" } },
   magnet: { id: "magnet", subject: "science", title: "磁铁能吸住什么", grades: [1, 2], summary: "把磁铁靠近不同物品，看哪些会被吸住。",
     params: [
       { key: "dist", label: "磁铁离物品的距离", min: 1, max: 10, default: 6, unit: "厘米" },
@@ -143,7 +193,7 @@ export function defaultParams(id: DemoId): Params {
 
 export function displayParam(spec: ParamSpec, value: number): string {
   if (spec.options) return spec.options[value] ?? String(value);
-  const text = spec.scale ? fmtScaled(value, Math.round(Math.log10(spec.scale))) : String(value);
+  const text = spec.scale ? fmtScaled(value, Math.round(Math.log10(spec.scale))) : spec.mul ? String(value * spec.mul) : String(value);
   return spec.unit ? `${text} ${spec.unit}` : text;
 }
 
@@ -158,6 +208,9 @@ export function normalizeParams(id: DemoId, input: Params): Params {
   if (id === "fraction" && p.shaded > p.parts) p.shaded = p.parts;
   if (id === "circle" && p.n % 2 === 1) p.n += p.n < 32 ? 1 : -1;
   if (id === "circuit" && p.broken > p.bulbs) p.broken = 0;
+  if (id === "rmb") { while (p.pay < 3 && RMB_NOTES[p.pay] < p.price) p.pay += 1; }
+  if (id === "pigeonhole" && p.items <= p.boxes) p.items = Math.min(20, p.boxes + 1);
+  if (id === "chance" && p.red + p.white === 0) p.red = 1;
   return p;
 }
 
@@ -259,6 +312,93 @@ export function circuit(p: Params) {
 export function pendulum(p: Params) {
   const T = 2 * Math.PI * Math.sqrt(p.len / 100 / 9.8);
   return { period: roundTo(T, 2), ten: roundTo(T * 10, 1), periodNum: T };
+}
+
+
+// ———————— 新增演示的计算 ————————
+
+export const SHAPES = {
+  0: [
+    { name: "三角形", trait: "3 条边，3 个角" },
+    { name: "正方形", trait: "4 条边一样长，4 个直角" },
+    { name: "长方形", trait: "对边一样长，4 个直角" },
+    { name: "圆", trait: "没有角，边是弯弯的" },
+  ],
+  1: [
+    { name: "长方体", trait: "6 个面，相对的面一样大" },
+    { name: "正方体", trait: "6 个面都是一样大的正方形" },
+    { name: "圆柱", trait: "上下两个面是一样大的圆，放倒能滚动" },
+    { name: "球", trait: "圆圆的，能向各个方向滚动" },
+  ],
+} as const;
+
+export const RMB_NOTES = [5, 10, 20, 50] as const;
+
+/** 找零：用 10 元、5 元、1 元凑出找回的钱（尽量用面额大的）。 */
+export function rmb(p: Params) {
+  const pay = RMB_NOTES[p.pay] ?? 10;
+  const change = pay - p.price;
+  const parts: { note: number; count: number }[] = [];
+  let left = change;
+  for (const note of [20, 10, 5, 1]) { const c = Math.floor(left / note); if (c) { parts.push({ note, count: c }); left -= c * note; } }
+  return { pay, change, parts, text: parts.map((x) => `${x.count} 张 ${x.note} 元`).join("、") || "不用找钱" };
+}
+
+export function ruler(p: Params) {
+  return { end: p.start + p.len, length: p.len };
+}
+
+export function clock(p: Params) {
+  const hourAngle = ((p.h % 12) + p.m / 60) * 30;
+  const minuteAngle = p.m * 6;
+  return { hourAngle, minuteAngle, text: `${p.h} 时${p.m === 0 ? "整" : ` ${p.m} 分`}`, digital: `${p.h}:${String(p.m).padStart(2, "0")}`, minuteNumber: p.m / 5 };
+}
+
+export function lineRelation(deg: number): "平行" | "互相垂直" | "相交" {
+  if (deg === 0 || deg === 180) return "平行";
+  if (deg === 90) return "互相垂直";
+  return "相交";
+}
+
+export function chanceWord(red: number, white: number): { red: string; white: string; more: string } {
+  const w = (n: number, total: number) => (n === 0 ? "不可能" : n === total ? "一定" : "可能");
+  const total = red + white;
+  return { red: w(red, total), white: w(white, total), more: red === white ? "一样大" : red > white ? "红球的可能性大" : "白球的可能性大" };
+}
+
+export function numberLine(p: Params) {
+  const cmp = p.a === p.b ? "=" : p.a > p.b ? ">" : "<";
+  return { cmp, text: `${fmtSigned(p.a)} ${cmp} ${fmtSigned(p.b)}` };
+}
+
+export function fmtSigned(n: number): string { return n < 0 ? `−${-n}` : String(n); }
+
+export function percent(p: Params) {
+  const price = p.price * 10; // 元
+  const sale = price * p.zhe / 10; // 整数元
+  return { price, sale, saved: price - sale, pct: p.zhe * 10 };
+}
+
+export function pigeonhole(p: Params) {
+  const q = Math.floor(p.items / p.boxes), r = p.items % p.boxes;
+  return { q, r, atLeast: r ? q + 1 : q };
+}
+
+export const SCALE_DENOMS = [1000, 10000, 100000, 1000000] as const;
+
+export function scale(p: Params) {
+  const denom = SCALE_DENOMS[p.s] ?? 100000;
+  const realCm = p.cm * denom;
+  const m = realCm / 100;
+  return { denom, realCm, m, text: m >= 1000 ? `${m / 1000} 千米` : `${m} 米` };
+}
+
+export function water(p: Params): { state: "冰" | "冰水混合" | "水" | "沸腾" | "水蒸气"; phase: string } {
+  if (p.t < 0) return { state: "冰", phase: "固态" };
+  if (p.t === 0) return { state: "冰水混合", phase: "固态和液态" };
+  if (p.t < 100) return { state: "水", phase: "液态" };
+  if (p.t === 100) return { state: "沸腾", phase: "液态正在变成气态" };
+  return { state: "水蒸气", phase: "气态" };
 }
 
 // ———————————— 讲解脚本：按学段生成 ————————————
@@ -402,11 +542,10 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
       const ax = p.a === 1 ? "x" : `${p.a}x`;
       return steps(grade, [
         { say: `左边放 ${p.a} 个同样重的 x 和 ${p.b} 克砝码，右边放 ${r.c} 克，天平平衡。`, board: [{ kind: "formula" as const, id: "e0", text: r.eq }], scene: { reveal: 1 } },
-        { say: v === 1 ? `想一想：${ax} 加 ${p.b} 等于 ${r.c}，那 ${ax} 是多少？` : `两边同时拿走 ${p.b} 克，天平仍然平衡。`, board: [{ kind: "formula" as const, id: "e1", text: `${ax} + ${p.b} − ${p.b} = ${r.c} − ${p.b}` }], highlight: ["e1"], scene: { reveal: 2 } },
-        { say: `所以 ${ax} 等于 ${r.afterSub}。`, board: [{ kind: "formula" as const, id: "e2", text: `${ax} = ${r.afterSub}` }], scene: { reveal: 3 } },
-        ...(p.a > 1 ? [{ say: `两边同时平均分成 ${p.a} 份。`, board: [{ kind: "formula" as const, id: "e3", text: `${ax} ÷ ${p.a} = ${r.afterSub} ÷ ${p.a}` }], highlight: ["e3"], scene: { reveal: 4 } }] : []),
-        { say: `x 等于 ${r.x}。`, board: [{ kind: "formula" as const, id: "f", text: `x = ${r.x}` }], highlight: ["f"], scene: { reveal: 5 } },
-        { say: "检验：把答案代回原方程。", board: [T(`检验：${p.a === 1 ? "" : `${p.a}×`}${r.x} + ${p.b} = ${r.c} ✓`, "result")] },
+        { say: v === 1 ? `x 是一个字母，可以表示一个数。这里每个 x 重 ${p.x} 克。` : `把 x = ${p.x} 代入：左边一共 ${p.a}×${p.x}+${p.b} = ${r.c} 克，和右边一样重。`, board: [{ kind: "formula" as const, id: "e1", text: `${p.a === 1 ? "" : `${p.a}×`}${p.x} + ${p.b} = ${r.c}` }], highlight: ["e1"], scene: { reveal: 2 } },
+        { say: `两边同时拿走 ${p.b} 克，天平仍然平衡。`, board: [{ kind: "formula" as const, id: "e2", text: `${ax} + ${p.b} − ${p.b} = ${r.c} − ${p.b}` }], highlight: ["e2"], scene: { reveal: 3 } },
+        { say: "等式两边同时加上或减去同一个数，等式仍然成立。这就是等式的性质。", board: [T("等式两边同时 + 或 − 同一个数，仍然相等", "result")], scene: { reveal: 4 } },
+        { say: v === 2 ? `买 ${p.a} 本一样的本子，每本 x 元，再买 ${p.b} 元的笔，一共 ${ax}+${p.b} 元。` : "用这个性质一步步求出 x，叫解方程，到初中会系统学习。", board: [T(v === 2 ? `一共 ${ax}+${p.b} 元` : "解方程：初中学习（课外拓展）", "note")] },
       ]);
     }
     case "circle": {
@@ -429,6 +568,112 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
         { say: "侧面积等于底面周长乘高。", board: [{ kind: "formula" as const, id: "side", text: `S侧 = 2πrh ≈ ${r.side}（平方厘米）` }], highlight: ["side"] },
         { say: "体积等于底面积乘高。", board: [{ kind: "formula" as const, id: "v", text: `V = πr²h ≈ ${r.base}×${p.h} = ${r.volume}（立方厘米）` }], highlight: ["v"] },
         { say: "等底等高的圆锥，体积是圆柱的三分之一。", board: [{ kind: "formula" as const, id: "cone", text: `V锥 = ⅓πr²h ${r.coneExact ? "≈ " : ""}${r.cone}（立方厘米）` }], highlight: ["cone"] },
+      ]);
+    }
+    case "shapes": {
+      const list = SHAPES[(p.kind === 1 ? 1 : 0) as 0 | 1];
+      return steps(grade, [
+        { say: p.kind ? "这些是立体图形，能拿在手里摸一摸。" : "这些是平面图形，是物体的一个面。", board: [T(p.kind ? "立体图形" : "平面图形", "title")], scene: { reveal: 1 } },
+        ...list.map((x, i) => ({ say: `${x.name}：${x.trait}。`, board: [T(`${x.name}：${x.trait}`)], scene: { reveal: i + 2 } })),
+        { say: v === 2 ? (p.kind ? "魔方像正方体，罐头像圆柱，皮球是球。" : "红领巾像三角形，钟面像圆，黑板像长方形。") : "把它们拖进对应的格子里试一试。", board: [T("分一分：形状一样的放一起", "note")] },
+      ]);
+    }
+    case "rmb": {
+      const r = rmb(p);
+      return steps(grade, [
+        { say: `一个玩具 ${p.price} 元。`, board: [T(`价格：${p.price} 元`)], scene: { reveal: 1 } },
+        { say: `付了一张 ${r.pay} 元。`, board: [T(`付：${r.pay} 元`)], scene: { reveal: 2 } },
+        { say: v === 1 ? `想：${p.price} 加几等于 ${r.pay}？` : `找回的钱：${r.pay} 减 ${p.price}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.pay} − ${p.price} = ${r.change}（元）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: r.change ? `可以找回 ${r.text}。` : "正好付清，不用找钱。", board: [T(r.change ? `找回：${r.text}` : "不用找钱", "result")], scene: { reveal: 4 } },
+        { say: "记住：1 元 = 10 角，1 角 = 10 分。", board: [T("1 元 = 10 角", "note")] },
+      ]);
+    }
+    case "ruler": {
+      const r = ruler(p);
+      return steps(grade, [
+        { say: "量长度时，先看铅笔的左端对着几。", board: [T(`左端对着 ${p.start}`)], scene: { reveal: 1 } },
+        { say: `右端对着 ${r.end}。`, board: [T(`右端对着 ${r.end}`)], scene: { reveal: 2 } },
+        p.start === 0
+          ? { say: `左端对准 0，右端对着几就是几厘米：${r.length} 厘米。`, board: [{ kind: "formula" as const, id: "f", text: `长 ${r.length} 厘米` }], highlight: ["f"], scene: { reveal: 3 } }
+          : { say: v === 1 ? `数一数中间有几个 1 厘米：${r.length} 个。` : `没对准 0，就用右端减左端：${r.end} 减 ${p.start}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.end} − ${p.start} = ${r.length}（厘米）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: "1 米 = 100 厘米。量长的东西用米，量短的东西用厘米。", board: [T("1 米 = 100 厘米", "note")] },
+      ]);
+    }
+    case "clock": {
+      const r = clock(p);
+      return steps(grade, [
+        { say: "短的是时针，长的是分针。", board: [T("短：时针　长：分针")], scene: { reveal: 1 } },
+        { say: p.m === 0 ? `分针指着 12，时针指着 ${p.h}。` : `时针走过了 ${p.h}，还没到 ${p.h % 12 + 1}。`, board: [T(`时针：${p.h} 时${p.m ? "多" : ""}`)], scene: { reveal: 2 } },
+        { say: p.m === 0 ? "分针指着 12，就是整时。" : `分针指着 ${r.minuteNumber}，一大格是 5 分，${r.minuteNumber} 大格就是 ${p.m} 分。`, board: [T(`分针：${p.m} 分`)], scene: { reveal: 3 } },
+        { say: `现在是 ${r.text}，也写作 ${r.digital}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.text}（${r.digital}）` }], highlight: ["f"] },
+        { say: v === 1 ? "分针走一圈，时针走一大格，就是 1 时 = 60 分。" : "1 时 = 60 分。", board: [T("1 时 = 60 分", "note")] },
+      ]);
+    }
+    case "parallel": {
+      const rel = lineRelation(p.deg);
+      return steps(grade, [
+        { say: "在同一个平面上，画两条直线。", board: [T("同一平面内的两条直线")], scene: { reveal: 1 } },
+        { say: "转动其中一条，看它们会不会相交。", scene: { reveal: 2 } },
+        { say: rel === "平行" ? "现在两条直线怎么延长都不相交，它们互相平行。" : rel === "互相垂直" ? "两条直线相交成直角，它们互相垂直。" : `两条直线相交，夹角是 ${Math.min(p.deg, 180 - p.deg)} 度。`, board: [T(`现在：${rel}`, "result")], scene: { reveal: 3 } },
+        { say: "同一平面内不相交的两条直线叫平行线；相交成直角的两条直线互相垂直。", board: [T("平行：不相交　垂直：成直角", "note")] },
+      ]);
+    }
+    case "chance": {
+      const w = chanceWord(p.red, p.white);
+      return steps(grade, [
+        { say: `袋子里有 ${p.red} 个红球、${p.white} 个白球。`, board: [T(`红 ${p.red} 个，白 ${p.white} 个`)], scene: { reveal: 1 } },
+        { say: `任意摸一个，${w.red}摸到红球，${w.white}摸到白球。`, board: [T(`红球：${w.red}　白球：${w.white}`)], scene: { reveal: 2 } },
+        { say: p.red === p.white ? "两种球一样多，摸到的可能性一样大。" : `${w.more}，因为它更多。`, board: [T(w.more, "result")], scene: { reveal: 3 } },
+        { say: v === 1 ? "摸一次的结果说不准，摸很多次，结果就会接近我们猜的。" : "动手摸 100 次，看看实际结果。", board: [T("次数越多，越接近猜测", "note")] },
+      ]);
+    }
+    case "number-line": {
+      const r = numberLine(p);
+      return steps(grade, [
+        { say: "数轴上，0 在中间。0 既不是正数，也不是负数。", board: [T("0 是正数和负数的分界")], scene: { reveal: 1 } },
+        { say: "0 右边是正数，左边是负数。", board: [T("右：正数　左：负数")], scene: { reveal: 2 } },
+        { say: `在数轴上找到 ${fmtSigned(p.a)} 和 ${fmtSigned(p.b)}。`, scene: { reveal: 3 } },
+        { say: "数轴上，越往右的数越大。", board: [{ kind: "formula" as const, id: "f", text: r.text }], highlight: ["f"], scene: { reveal: 4 } },
+        { say: v === 2 ? "零下 3 ℃ 记作 −3 ℃，比零上 2 ℃ 冷。" : "所以负数都比 0 小，正数都比 0 大。", board: [T(v === 2 ? "零下 3 ℃ 记作 −3 ℃" : "负数 < 0 < 正数", "note")] },
+      ]);
+    }
+    case "percent": {
+      const r = percent(p);
+      return steps(grade, [
+        { say: `一件衣服原价 ${r.price} 元，现在打 ${p.zhe} 折。`, board: [T(`原价 ${r.price} 元，${p.zhe} 折`)], scene: { reveal: 1 } },
+        { say: `打 ${p.zhe} 折，就是按原价的 ${r.pct}% 出售。`, board: [T(`${p.zhe} 折 = ${r.pct}%`)], scene: { reveal: 2 } },
+        { say: v === 1 ? `也可以先算便宜的部分：原价的 ${100 - r.pct}%。` : `现价 = 原价 × ${r.pct}%。`, board: [{ kind: "formula" as const, id: "f", text: v === 1 ? `${r.price} × ${100 - r.pct}% = ${r.saved}（元），${r.price} − ${r.saved} = ${r.sale}（元）` : `${r.price} × ${r.pct}% = ${r.sale}（元）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: `现价 ${r.sale} 元，便宜了 ${r.saved} 元。`, board: [T(`现价 ${r.sale} 元，便宜 ${r.saved} 元`, "result")], scene: { reveal: 4 } },
+      ]);
+    }
+    case "pigeonhole": {
+      const r = pigeonhole(p);
+      return steps(grade, [
+        { say: `把 ${p.items} 个苹果放进 ${p.boxes} 个抽屉。`, board: [T(`${p.items} 个苹果，${p.boxes} 个抽屉`)], scene: { reveal: 1 } },
+        { say: "先尽量平均放，这样最多的那个抽屉放得最少。", board: [{ kind: "formula" as const, id: "d", text: r.r ? `${p.items} ÷ ${p.boxes} = ${r.q}……${r.r}` : `${p.items} ÷ ${p.boxes} = ${r.q}` }], scene: { reveal: 2 } },
+        r.r ? { say: `每个抽屉放 ${r.q} 个，还剩 ${r.r} 个，不管放进哪个，那个抽屉就有 ${r.atLeast} 个。`, board: [T(`${r.q} + 1 = ${r.atLeast}`)], scene: { reveal: 3 } }
+          : { say: `正好每个抽屉 ${r.q} 个。`, scene: { reveal: 3 } },
+        { say: `所以总有一个抽屉至少放 ${r.atLeast} 个。`, board: [T(`至少 ${r.atLeast} 个`, "result")], highlight: [], scene: { reveal: 4 } },
+        { say: "点“随便放一次”，怎么放都逃不出这个结论。", board: [T("至少数 = 商 + 1（有余数时）", "note")] },
+      ]);
+    }
+    case "scale": {
+      const r = scale(p);
+      return steps(grade, [
+        { say: `比例尺 1∶${r.denom}，表示图上 1 厘米代表实际 ${r.denom} 厘米。`, board: [T(`1∶${r.denom}`)], scene: { reveal: 1 } },
+        { say: `图上量得 ${p.cm} 厘米。`, board: [T(`图上 ${p.cm} 厘米`)], scene: { reveal: 2 } },
+        { say: "实际距离 = 图上距离 ÷ 比例尺，也就是乘比例尺的后项。", board: [{ kind: "formula" as const, id: "f", text: `${p.cm} × ${r.denom} = ${r.realCm}（厘米）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: `换算一下：${r.realCm} 厘米 = ${r.text}。`, board: [T(`实际距离 ${r.text}`, "result")] },
+        { say: "1 米 = 100 厘米，1 千米 = 1000 米。", board: [T("厘米 → 米 → 千米", "note")] },
+      ]);
+    }
+    case "water": {
+      const r = water(p);
+      return steps(grade, [
+        { say: "水有三种样子：冰、水和水蒸气。", board: [T("固态 · 液态 · 气态")], scene: { reveal: 1 } },
+        { say: `现在温度是 ${fmtSigned(p.t)} ℃。`, board: [T(`温度 ${fmtSigned(p.t)} ℃`)], scene: { reveal: 2 } },
+        { say: `这时是${r.state}，${r.phase}。`, board: [T(`${r.state}（${r.phase}）`, "result")], scene: { reveal: 3 } },
+        { say: "0 ℃ 左右冰会融化，水会结冰；约 100 ℃ 水会沸腾。", board: [T("0 ℃ 结冰　100 ℃ 沸腾（一个大气压下）", "note")] },
       ]);
     }
     case "magnet": {
@@ -485,7 +730,18 @@ export function lifeExample(id: DemoId, grade: Grade): string {
     angle: "打开的门和门框之间、剪刀的两片刀刃之间，都有角。",
     law: "4 个同学每人买一支 3 元的笔和一本 5 元的本子，可以算 4×(3+5)。",
     "decimal-mul": "每千克苹果 1.2 元，买 0.5 千克，要付 1.2×0.5 元。",
-    balance: "3 本一样的书加 4 克的书签一共重 19 克，每本书多重？",
+    balance: "一盒笔 x 支，3 盒再加 4 支，一共 3x+4 支；知道 x=5，就是 19 支。",
+    shapes: "魔方像正方体，硬币的面是圆，三角尺是三角形。",
+    rmb: "用 10 元买一支 7 元的笔，售货员要找回 3 元。",
+    ruler: "量橡皮时，左端没对准 0 也没关系，用右端读数减左端读数。",
+    clock: "早上 7 时 30 分出门，分针指着 6，时针在 7 和 8 中间。",
+    parallel: "铁轨的两条钢轨互相平行，十字路口的两条路常常互相垂直。",
+    chance: "抽奖箱里中奖券很少，所以抽中的可能性小。",
+    "number-line": "冬天北方气温零下 10 ℃，记作 −10 ℃。",
+    percent: "商场“满 100 元打八折”，100 元的东西付 80 元。",
+    pigeonhole: "13 个同学中，至少有 2 个人的生日在同一个月。",
+    scale: "地图上两地相距 5 厘米，比例尺 1∶1000000，实际相距 50 千米。",
+    water: "冬天湖面结冰，烧开水时冒出“白气”。",
     circle: "自行车轮子转一圈走的路，就是轮子的周长。",
     cylinder: "做一个圆柱形笔筒要多少纸，看侧面积；能装多少水，看体积。",
     magnet: "冰箱贴能贴在冰箱门上，因为门是铁做的。",
