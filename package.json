@@ -1,13 +1,13 @@
 {
   "name": "kaiqiao",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 5173",
-    "test": "node --test src/lib/math/*.test.ts src/store/*.test.ts",
+    "test": "node --test src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run test:render && npm run build",
     "release": "npm run build && node scripts/release.mjs",
