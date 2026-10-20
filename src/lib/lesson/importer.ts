@@ -45,7 +45,7 @@ const DEMO_HINTS: [RegExp, DemoId][] = [
   [/百分|打.折|折扣/, "percent"], [/负数|零下|数轴/, "number-line"], [/量角器|度数|锐角|钝角/, "angle"], [/平行|垂直/, "parallel"],
   [/钟|几时|时.*分/, "clock"], [/元|角钱|人民币|找回/, "rmb"], [/厘米|尺子|测量/, "ruler"], [/平均分|每人|几组|乘法/, "group-share"],
   [/可能|摸球|一定|不可能/, "chance"], [/比例尺|图上距离/, "scale"], [/抽屉|至少/, "pigeonhole"], [/小数.*乘|乘.*小数/, "decimal-mul"],
-  [/等式|天平|字母表示/, "balance"], [/磁铁/, "magnet"], [/影子/, "shadow"], [/电路|灯泡/, "circuit"], [/摆/, "pendulum"], [/结冰|沸腾|水蒸气/, "water"],
+  [/等式|天平|字母表示/, "balance"], [/磁铁/, "magnet"], [/影子/, "shadow"], [/电路|灯泡/, "circuit"], [/摆/, "pendulum"], [/结冰|沸腾|水蒸气/, "water"], [/杠杆|支点/, "lever"], [/斜面/, "slope"], [/声音|音调|振动/, "sound"], [/昼夜|自转/, "earth"], [/摩擦/, "friction"], [/发芽|种子|豆苗/, "plant"],
 ];
 
 /** 把 "3.25" 转成 [325, 2]；不合法返回 null */

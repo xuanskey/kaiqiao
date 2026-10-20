@@ -76,6 +76,7 @@ try {
   const stages = await server.ssrLoadModule('/src/components/lesson/stages-math.tsx');
   const sci = await server.ssrLoadModule('/src/components/lesson/stages-science.tsx');
   const more = await server.ssrLoadModule('/src/components/lesson/stages-more.tsx');
+  const lab = await server.ssrLoadModule('/src/components/lesson/stages-lab.tsx');
   let lessonCount = 0;
   for (const demo of DEMO_LIST) for (const grade of demo.grades) {
     const html = renderToString(createElement(LessonView, { demo: demo.id, grade, unitTitle: '测试单元', onBack() {} }));
@@ -84,7 +85,7 @@ try {
     if (demo.subject === 'science') for (const text of ['实验目的', '所需器材', '实验步骤', '观察结果', '结果解释', '想一想']) assert.ok(html.includes(text), `${demo.id}: ${text}`);
     lessonCount++;
   }
-  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage, water: more.WaterStage, shapes: more.ShapesStage, rmb: more.RmbStage, ruler: more.RulerStage, clock: more.ClockStage, parallel: more.ParallelStage, chance: more.ChanceStage, 'number-line': more.NumberLineStage, percent: more.PercentStage, pigeonhole: more.PigeonholeStage, scale: more.ScaleStage };
+  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage, water: more.WaterStage, shapes: more.ShapesStage, rmb: more.RmbStage, ruler: more.RulerStage, clock: more.ClockStage, parallel: more.ParallelStage, chance: more.ChanceStage, 'number-line': more.NumberLineStage, percent: more.PercentStage, pigeonhole: more.PigeonholeStage, scale: more.ScaleStage, lever: lab.LeverStage, slope: lab.SlopeStage, sound: lab.SoundStage, earth: lab.EarthStage, friction: lab.FrictionStage, plant: lab.PlantStage };
   for (const demo of DEMO_LIST) assert.ok(stageOf[demo.id], `缺少演示画面：${demo.id}`);
   for (const demo of DEMO_LIST) {
     const html = renderToString(createElement(stageOf[demo.id], { params: defaultParams(demo.id), scene: {}, interactive: true, setParam() {}, reduceMotion: true }));

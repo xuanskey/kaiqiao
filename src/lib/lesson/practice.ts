@@ -1,6 +1,6 @@
 import type { Grade } from "../math/types.ts";
 import type { Rng } from "../math/rng.ts";
-import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, type DemoId, type Params, normalizeParams } from "./demos.ts";
+import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, type DemoId, type Params, normalizeParams } from "./demos.ts";
 
 /**
  * 随堂练习：题目由参数生成，答案由同一套计算函数得出，
@@ -231,6 +231,56 @@ export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng
       const l1 = rng.pick([20, 30, 40]), l2 = l1 + rng.pick([30, 40, 50]);
       return { ...base, kind: "choice", params: { l1, l2 }, prompt: `摆长 ${l1} 厘米和 ${l2} 厘米的两个摆，哪个摆得快（摆动一次时间短）？`, answer: `${l1} 厘米`, choices: choices(`${l1} 厘米`, [`${l2} 厘米`, "一样快"], rng), steps: ["摆长越短，摆得越快。", `${l1} 厘米：约 ${pendulum({ len: l1 }).period} 秒；${l2} 厘米：约 ${pendulum({ len: l2 }).period} 秒。`], traps: { "一样快": "摆长不同，快慢就不同。" } };
     }
+    case "lever": {
+      if (lv === 1) {
+        const ld = rng.int(1, 6); let ed = rng.int(1, 6); if (ed === ld) ed = ld === 6 ? 2 : ld + 1;
+        const r = lever({ load: 2, ld, ed });
+        return { ...base, kind: "choice", params: { load: 2, ld, ed, q: 1 }, prompt: `杠杆的阻力点离支点 ${ld} 格，用力点离支点 ${ed} 格。这是省力杠杆还是费力杠杆？`, answer: r.kind, choices: choices(r.kind, ["省力", "费力", "不省力也不费力"], rng), steps: ["比较用力点、阻力点到支点的距离。", r.kind === "省力" ? "用力点更远，省力。" : "用力点更近，费力。"], traps: { [r.kind === "省力" ? "费力" : "省力"]: "反了：用力点离支点越远越省力。" } };
+      }
+      const load = rng.int(1, 6), ld = rng.int(1, 6);
+      const eds = [1, 2, 3, 4, 5, 6].filter((e) => (load * ld) % e === 0 && e !== ld);
+      const ed = eds.length ? rng.pick(eds) : ld;
+      const r = lever({ load, ld, ed });
+      return { ...base, kind: "fill", params: { load, ld, ed, q: 2 }, prompt: `杠杆尺左边第 ${ld} 格挂 ${load} 个钩码，右边第 ${ed} 格要挂几个钩码才能平衡？`, answer: r.effort, steps: ["平衡时：左边钩码数 × 格数 = 右边钩码数 × 格数。", `${load} × ${ld} = ${r.left}，${r.left} ÷ ${ed} = ${r.effort}。`], traps: { [String(load)]: "格数不同，钩码数也要变。", [String(load * ld * ed)]: "应该用除法：左边的乘积 ÷ 右边的格数。" } };
+    }
+    case "slope": {
+      const h = rng.pick([20, 30, 40]), l1 = rng.pick([60, 80]), l2 = l1 + rng.pick([30, 50]);
+      return { ...base, kind: "choice", params: { h, l1, l2 }, prompt: `两个斜面都高 ${h} 厘米，一个长 ${l1} 厘米，一个长 ${l2} 厘米。沿哪个斜面拉同一辆小车更省力？`, answer: `${l2} 厘米长的`, choices: choices(`${l2} 厘米长的`, [`${l1} 厘米长的`, "一样省力"], rng), steps: ["高度相同时，斜面越长、坡越缓，越省力。", `拉 6 牛的小车：${l1} 厘米约 ${slope({ g: 6, h, len: l1 }).force} 牛，${l2} 厘米约 ${slope({ g: 6, h, len: l2 }).force} 牛（不计摩擦）。`], traps: { [`${l1} 厘米长的`]: "短的斜面更陡，反而费力。", "一样省力": "坡度不同，用力就不同。" } };
+    }
+    case "sound": {
+      if (lv === 1 || rng.int(0, 1) === 0) {
+        const i = rng.int(0, 3);
+        const items = [["用力越大，声音越响。", true], ["用力越大，音调越高。", false], ["钢尺伸出越短，音调越高。", true], ["声音是由物体振动产生的。", true]] as const;
+        return { ...base, kind: "judge", params: { i, q: 1 }, prompt: `判断：${items[i][0]}`, answer: J(items[i][1]), choices: ["对", "错"], steps: ["振动幅度决定声音的强弱，振动快慢决定声音的高低。"], traps: i === 1 ? { "对": "用力大改变的是强弱（响度），不是高低。" } : {} };
+      }
+      const a = rng.pick([6, 8, 10]), b = a + rng.pick([6, 8]);
+      return { ...base, kind: "choice", params: { a, b, q: 2 }, prompt: `钢尺伸出桌面 ${a} 厘米和 ${b} 厘米，用同样的力拨动，哪一次音调高？`, answer: `${a} 厘米`, choices: choices(`${a} 厘米`, [`${b} 厘米`, "一样高"], rng), steps: ["伸出越短，振动越快，音调越高。"], traps: { [`${b} 厘米`]: "反了：越短振动越快，声音越高。" } };
+    }
+    case "earth": {
+      if (rng.int(0, 2) === 0) return { ...base, kind: "choice", params: { q: 2 }, prompt: "地球自西向东自转，所以我们看到太阳从哪个方向升起？", answer: "东方", choices: choices("东方", ["西方", "南方", "北方"], rng), steps: ["地球自西向东转，太阳看起来就东升西落。"], traps: { "西方": "地球自西向东转，太阳看起来从东方升起。" } };
+      const hour = rng.pick([3, 7, 10, 13, 16, 20, 23]);
+      const r = earth({ hour });
+      return { ...base, kind: "choice", params: { hour, q: 1 }, prompt: `春分前后，北京时间 ${hour} 时，北京是白天还是黑夜？`, answer: r.day ? "白天" : "黑夜", choices: ["白天", "黑夜"], steps: ["春分前后约 6 时日出、18 时日落。", `${hour} 时是${r.part}，所以是${r.day ? "白天" : "黑夜"}。`], traps: {} };
+    }
+    case "friction": {
+      if (lv === 1 || rng.int(0, 1) === 0) {
+        const n = rng.int(0, 2);
+        return { ...base, kind: "choice", params: { n, q: 1 }, prompt: "同一个木块（钩码相同），在哪种表面上拉动最费力？", answer: "毛巾", choices: choices("毛巾", ["玻璃", "木板", "一样费力"], rng), steps: ["表面越粗糙，摩擦力越大。", `玻璃约 ${friction({ surf: 0, n }).force} 牛，木板约 ${friction({ surf: 1, n }).force} 牛，毛巾约 ${friction({ surf: 2, n }).force} 牛。`], traps: { "玻璃": "玻璃最光滑，摩擦力最小。" } };
+      }
+      const surf = rng.int(0, 2), n1 = rng.int(0, 1), n2 = n1 + rng.int(1, 3);
+      return { ...base, kind: "choice", params: { surf, n1, n2, q: 2 }, prompt: `木块在${SURFACES[surf].name}上，先加 ${n1} 个钩码拉，再加到 ${n2} 个钩码拉。摩擦力会怎样？`, answer: "变大", choices: choices("变大", ["变小", "不变"], rng), steps: ["压在表面上的物体越重，摩擦力越大。", `约从 ${friction({ surf, n: n1 }).force} 牛变为 ${friction({ surf, n: n2 }).force} 牛。`], traps: { "不变": "加了钩码，压力变大，摩擦力也变大。" } };
+    }
+    case "plant": {
+      if (rng.int(0, 1) === 0) {
+        const water = rng.int(0, 2);
+        const r = plant({ water, light: 1, day: 5 });
+        const w = ["一直不浇水", "保持湿润", "一直泡在水里"][water];
+        return { ...base, kind: "choice", params: { water, q: 1 }, prompt: `绿豆种子${w}，放在温暖的地方 5 天，会发芽吗？`, answer: r.sprout ? "会发芽" : "不会发芽", choices: ["会发芽", "不会发芽"], steps: ["种子发芽需要适量的水、充足的空气和适宜的温度。", r.sprout ? "条件都满足，能发芽。" : `${r.reason}，不能发芽。`], traps: water === 2 ? { "会发芽": "泡在水里缺少空气，种子不容易发芽。" } : {} };
+      }
+      const i = rng.int(0, 2);
+      const items = [["种子发芽一定需要阳光。", false], ["放在暗处的豆苗，叶子会发黄。", true], ["做对比实验时，一次只改变一个条件。", true]] as const;
+      return { ...base, kind: "judge", params: { i, q: 2 }, prompt: `判断：${items[i][0]}`, answer: J(items[i][1]), choices: ["对", "错"], steps: [["大多数种子在暗处也能发芽，阳光对发芽不是必需的。", "豆苗需要阳光才能长出绿叶。", "只改变一个条件，才能知道是哪个条件起了作用。"][i]], traps: i === 0 ? { "对": "绿豆在暗处也能发芽，发芽后才需要阳光。" } : {} };
+    }
   }
 }
 
@@ -268,6 +318,12 @@ export function verifyPractice(q: PracticeQ): string[] {
     case "cylinder": expect = q.level === 3 ? "错" : cylinder(p).volume; break;
     case "shadow": expect = "变短"; break;
     case "pendulum": expect = `${p.l1} 厘米`; break;
+    case "lever": expect = p.q === 1 ? lever(p).kind : lever(p).effort; break;
+    case "slope": expect = slope({ g: 6, h: p.h, len: p.l2 }).forceNum < slope({ g: 6, h: p.h, len: p.l1 }).forceNum ? `${p.l2} 厘米长的` : `${p.l1} 厘米长的`; break;
+    case "sound": expect = p.q === 1 ? J([true, false, true, true][p.i]) : sound({ force: 2, len: p.a }).rate > sound({ force: 2, len: p.b }).rate ? `${p.a} 厘米` : `${p.b} 厘米`; break;
+    case "earth": expect = p.q === 2 ? "东方" : earth(p).day ? "白天" : "黑夜"; break;
+    case "friction": expect = p.q === 1 ? SURFACES.reduce((m, s, i) => (friction({ surf: i, n: p.n }).tenths > friction({ surf: m, n: p.n }).tenths ? i : m), 0) === 2 ? "毛巾" : "?" : friction({ surf: p.surf, n: p.n2 }).tenths > friction({ surf: p.surf, n: p.n1 }).tenths ? "变大" : "不变"; break;
+    case "plant": expect = p.q === 1 ? (plant({ water: p.water, light: 1, day: 5 }).sprout ? "会发芽" : "不会发芽") : J([false, true, true][p.i]); break;
     default: expect = q.answer;
   }
   if (expect !== q.answer) issues.push(`答案不一致：期望 ${expect}，题目给出 ${q.answer}`);

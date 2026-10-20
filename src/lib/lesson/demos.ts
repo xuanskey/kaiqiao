@@ -9,7 +9,8 @@ export type DemoId =
   | "add-sub" | "group-share" | "fraction" | "perimeter-area" | "angle" | "law"
   | "decimal-mul" | "balance" | "circle" | "cylinder"
   | "shapes" | "rmb" | "ruler" | "clock" | "parallel" | "chance" | "number-line" | "percent" | "pigeonhole" | "scale"
-  | "magnet" | "shadow" | "circuit" | "pendulum" | "water";
+  | "magnet" | "shadow" | "circuit" | "pendulum" | "water"
+  | "lever" | "slope" | "sound" | "earth" | "friction" | "plant";
 
 export type ParamSpec = {
   key: string;
@@ -179,6 +180,42 @@ export const DEMOS: Record<DemoId, DemoDef> = {
       { key: "amp", label: "摆角", min: 5, max: 15, default: 10, unit: "°" },
     ],
     experiment: { goal: "研究摆动快慢和哪些因素有关。", tools: ["细线", "摆锤（垫圈）", "铁架台", "秒表", "记录表"], steps: ["一次只改变一个条件，其他条件保持不变。", "数 10 次摆动所用的时间。", "每个条件测 3 次，取中间的数。"], observe: "摆长越长，摆得越慢；改变摆锤质量或小摆角，快慢几乎不变。", explain: "在摆角较小时，摆动一次的时间主要由摆长决定。", safety: "摆锤不要甩得太高，注意别碰到同学。", think: "想让摆 1 秒摆一次（单程），摆长大约要多长？", virtualNote: "动画使用小摆角下的理想公式，不考虑空气阻力；真实测量会有误差，所以要多测几次。" } },
+  lever: { id: "lever", subject: "science", title: "杠杆的科学", grades: [6], summary: "移动支点两边的距离和钩码，找出什么时候省力、什么时候费力。",
+    params: [
+      { key: "load", label: "阻力（钩码）", min: 1, max: 6, default: 3, unit: "个" },
+      { key: "ld", label: "阻力点到支点", min: 1, max: 6, default: 2, unit: "格" },
+      { key: "ed", label: "用力点到支点", min: 1, max: 6, default: 4, unit: "格" },
+    ],
+    experiment: { goal: "研究杠杆在什么情况下省力、什么情况下费力。", tools: ["杠杆尺和支架", "钩码若干", "记录表"], steps: ["先把杠杆尺调到水平平衡。", "在支点一侧某一格挂上钩码（阻力）。", "在另一侧不同格挂钩码，直到杠杆尺重新平衡。", "记录两边的钩码数和格数，找规律。"], observe: "用力点离支点越远，需要的钩码越少；用力点比阻力点离支点近时，需要更多钩码。", explain: "杠杆平衡时，左边“钩码数 × 格数”等于右边“钩码数 × 格数”。用力点到支点的距离大于阻力点到支点的距离，就省力。", safety: "钩码要挂牢，不要让钩码掉下砸到脚。", think: "剪刀、筷子、开瓶器，哪个是省力杠杆，哪个是费力杠杆？", virtualNote: "模拟忽略杠杆尺本身的重量和摩擦；真实实验要先调平，读数可能有小误差。" } },
+  slope: { id: "slope", subject: "science", title: "斜面的作用", grades: [6], summary: "改变斜面的长和高，看沿斜面拉物体需要多大的力。",
+    params: [
+      { key: "g", label: "物体重", min: 2, max: 10, default: 6, unit: "牛" },
+      { key: "h", label: "斜面高", min: 10, max: 50, default: 30, unit: "厘米" },
+      { key: "len", label: "斜面长", min: 60, max: 150, default: 90, unit: "厘米" },
+    ],
+    experiment: { goal: "研究斜面能不能省力，坡度和用力大小有什么关系。", tools: ["木板（做斜面）", "几块书或木块（垫高）", "带钩小车或木块", "测力计", "直尺"], steps: ["用测力计直接提起小车，记下读数。", "用木板搭一个斜面，沿斜面匀速拉小车上去，记下读数。", "高度不变，换长一点的木板（坡度变缓）再测一次。"], observe: "沿斜面拉比直接提起用的力小；高度相同时，斜面越长（坡越缓）越省力。", explain: "斜面把“直接举高”变成“沿着坡慢慢上”，走的路更长，用的力就更小。", safety: "斜面要放稳，小车滑下来时不要用手硬挡。", think: "盘山公路为什么要修得弯弯曲曲？", virtualNote: "模拟按没有摩擦的理想斜面计算，真实测量时读数会比模拟大一些。" } },
+  sound: { id: "sound", subject: "science", title: "声音的高低和强弱", grades: [4], summary: "改变拨钢尺的力度和钢尺伸出的长度，听声音的强弱和高低。",
+    params: [
+      { key: "force", label: "拨动的力", min: 0, max: 4, default: 2, options: ["很轻", "轻", "中等", "重", "很重"] },
+      { key: "len", label: "钢尺伸出桌面", min: 5, max: 20, default: 12, unit: "厘米" },
+    ],
+    experiment: { goal: "研究声音的强弱、高低和什么有关。", tools: ["钢尺", "桌子", "直尺"], steps: ["把钢尺一端压在桌边，另一端伸出桌面。", "长度不变，分别轻拨和重拨，听声音并看振动的幅度。", "力度不变，改变伸出的长度，听声音的高低。"], observe: "用力越大，钢尺振动幅度越大，声音越响；伸出越短，振动越快，声音越高。", explain: "声音是由物体振动产生的。振动幅度大小决定声音强弱，振动快慢决定声音高低。", safety: "压紧钢尺，拨动时不要把脸凑得太近。", think: "吉他上的弦按得越短，声音会怎样变化？", virtualNote: "屏幕上的波形只是示意，真实的声音要动手拨一拨、用耳朵听。" } },
+  earth: { id: "earth", subject: "science", title: "昼夜交替与地球自转", grades: [5, 6], summary: "转动地球，看北京什么时候是白天、什么时候是黑夜，太阳在哪个方向。",
+    params: [{ key: "hour", label: "北京时间", min: 0, max: 23, default: 8, unit: "时" }],
+    experiment: { goal: "用模拟实验理解昼夜交替是怎样产生的。", tools: ["地球仪", "手电筒（代表太阳）", "小贴纸（标出北京）"], steps: ["在暗处用手电筒照着地球仪。", "在北京的位置贴上小贴纸。", "按从西向东（从北极上空看逆时针）的方向慢慢转动地球仪，观察贴纸经过亮面和暗面。"], observe: "被照亮的一半是白天，另一半是黑夜；转动地球仪，白天和黑夜不断交替。", explain: "地球是一个不透明的球体，太阳只能照亮一半；地球自西向东自转，约 24 小时转一圈，就产生了昼夜交替。", safety: "手电筒不要对着眼睛照。", think: "为什么我们看到太阳东升西落？", virtualNote: "模拟按春分、秋分前后简化（约 6 时日出、18 时日落）；真实日出日落时间随季节和地点变化。" } },
+  friction: { id: "friction", subject: "science", title: "摩擦力的秘密", grades: [4], summary: "换不同的表面、加钩码，看用测力计拉动木块需要多大的力。",
+    params: [
+      { key: "surf", label: "接触面", min: 0, max: 2, default: 1, options: ["玻璃", "木板", "毛巾"] },
+      { key: "n", label: "木块上加的钩码", min: 0, max: 4, default: 1, unit: "个" },
+    ],
+    experiment: { goal: "研究摩擦力的大小和什么有关。", tools: ["带钩木块", "测力计", "钩码", "玻璃板、木板、毛巾"], steps: ["把木块放在木板上，用测力计水平匀速拉动，读数。", "表面不变，在木块上加钩码再拉。", "钩码不变，换成玻璃、毛巾表面再拉。", "每次测 3 次，记录读数。"], observe: "表面越粗糙，拉力越大；压在表面上的物体越重，拉力越大。", explain: "匀速拉动时，测力计的读数就等于摩擦力。接触面越粗糙、压得越紧，摩擦力越大。", safety: "拉动时手要稳，不要突然用力把测力计拉坏。", think: "冬天下雪后，为什么要在路面上撒沙子？", virtualNote: "模拟用示意性的摩擦系数（玻璃 0.2、木板 0.4、毛巾 0.7）计算，真实读数和材料、拉法都有关系。" } },
+  plant: { id: "plant", subject: "science", title: "绿豆种子发芽和生长", grades: [3, 4], summary: "改变水分和光照，看绿豆种子会不会发芽、豆苗长成什么样。",
+    params: [
+      { key: "water", label: "水分", min: 0, max: 2, default: 1, options: ["不浇水（干燥）", "湿润（适量）", "泡在水里（太多）"] },
+      { key: "light", label: "放在", min: 0, max: 1, default: 1, options: ["暗处", "有光的窗台"] },
+      { key: "day", label: "天数", min: 0, max: 14, default: 6, unit: "天" },
+    ],
+    experiment: { goal: "研究绿豆种子发芽和豆苗生长需要什么条件。", tools: ["绿豆种子", "几个小杯子", "纸巾或棉花", "水", "直尺和记录表"], steps: ["每个杯子放同样多的种子，只改变一个条件（水分或光照）。", "放在温暖的地方，每天同一时间观察。", "用直尺量豆苗高度，记录叶子颜色。"], observe: "干燥的种子不发芽，完全泡在水里的种子也不容易发芽；湿润的种子 2—3 天发芽。暗处的豆苗又细又长、叶子发黄，有光处的豆苗叶子是绿色的。", explain: "种子发芽需要适量的水、充足的空气和适宜的温度；长出叶子以后，豆苗需要阳光才能变绿、制造养料。", safety: "不要吃实验用的种子；实验后洗手。", think: "种子发芽一定需要阳光吗？怎样设计实验来证明？", virtualNote: "豆苗高度是按常见观察结果设定的示意数字，真实生长速度会受温度、种子品质影响。" } },
 };
 
 export const DEMO_LIST = Object.values(DEMOS);
@@ -399,6 +436,60 @@ export function water(p: Params): { state: "冰" | "冰水混合" | "水" | "沸
   if (p.t < 100) return { state: "水", phase: "液态" };
   if (p.t === 100) return { state: "沸腾", phase: "液态正在变成气态" };
   return { state: "水蒸气", phase: "气态" };
+}
+
+// ———————— v0.9 科学实验的计算 ————————
+
+/** 杠杆：平衡时 阻力 × 阻力臂 = 动力 × 动力臂（忽略杠杆自重）。 */
+export function lever(p: Params) {
+  const effortNum = (p.load * p.ld) / p.ed;
+  const exact = (p.load * p.ld) % p.ed === 0;
+  const effort = exact ? String(effortNum) : roundTo(effortNum, 1);
+  const kind = p.ed > p.ld ? "省力" : p.ed < p.ld ? "费力" : "不省力也不费力";
+  return { effortNum, effort, exact, kind, left: p.load * p.ld };
+}
+
+/** 理想斜面（不计摩擦）：拉力 = 物重 × 高 ÷ 长。 */
+export function slope(p: Params) {
+  const forceNum = (p.g * p.h) / p.len;
+  return { forceNum, force: roundTo(forceNum, 1), saved: roundTo(p.g - forceNum, 1), angle: Math.round((Math.asin(Math.min(1, p.h / p.len)) * 180) / Math.PI) };
+}
+
+/** 钢尺发声：力度决定振幅（响度），伸出长度决定振动快慢（音高）。频率与长度平方成反比，这里只给相对快慢。 */
+export function sound(p: Params) {
+  const loud = ["很轻", "轻", "中等", "响", "很响"][p.force] ?? "中等";
+  const pitch = p.len <= 8 ? "高" : p.len <= 14 ? "中" : "低";
+  const rate = 100 / (p.len * p.len);
+  return { loud, pitch, rate, amp: 6 + p.force * 9, cycles: Math.max(2, Math.min(14, Math.round(180 / p.len / 1.5))) };
+}
+
+/** 昼夜：按春分、秋分简化，北京约 6 时日出、18 时日落；北半球正午太阳在南方。 */
+export function earth(p: Params) {
+  const h = ((p.hour % 24) + 24) % 24;
+  const day = h >= 6 && h < 18;
+  const dir = !day ? "看不到太阳" : h < 10 ? "东方（偏东南）" : h <= 14 ? "南方" : "西方（偏西南）";
+  const part = h < 5 ? "深夜" : h < 6 ? "黎明前" : h < 8 ? "早晨" : h < 11 ? "上午" : h < 13 ? "中午" : h < 17 ? "下午" : h < 18 ? "傍晚" : h < 22 ? "晚上" : "深夜";
+  return { day, dir, part, angle: 180 + (h - 12) * 15 };
+}
+
+export const SURFACES = [{ name: "玻璃", mu: 2 }, { name: "木板", mu: 4 }, { name: "毛巾", mu: 7 }] as const;
+
+/** 摩擦力（示意）：木块重 1 牛，每个钩码 1 牛；摩擦力 = 摩擦系数 × 压力，用“十分之一牛”整数计算。 */
+export function friction(p: Params) {
+  const s = SURFACES[p.surf] ?? SURFACES[1];
+  const weight = 1 + p.n;
+  const tenths = s.mu * weight;
+  return { surface: s.name, weight, tenths, force: fmtScaled(tenths, 1) };
+}
+
+/** 绿豆发芽与生长（示意）：适量水分 2 天发芽；干燥缺水、泡水缺空气都不发芽；暗处细长发黄。 */
+export function plant(p: Params) {
+  const sprout = p.water === 1;
+  const grownDays = sprout ? Math.max(0, p.day - 2) : 0;
+  const mm = sprout ? Math.min(p.light ? 120 : 200, grownDays * (p.light ? 9 : 14)) : 0;
+  const leaf = !sprout || grownDays < 2 ? "还没有叶子" : p.light ? "绿色" : "发黄";
+  const status = p.water === 0 ? "种子太干，没有发芽" : p.water === 2 ? "种子泡在水里缺少空气，没有发芽" : p.day < 2 ? "种子吸水膨胀，还没发芽" : p.day === 2 ? "种子刚刚发芽" : p.light ? "豆苗长得壮，叶子绿" : "豆苗又细又长，叶子发黄";
+  return { sprout: sprout && p.day >= 2, mm, height: fmtScaled(mm, 1), leaf, status, reason: p.water === 0 ? "缺水" : p.water === 2 ? "缺空气" : "" };
 }
 
 // ———————————— 讲解脚本：按学段生成 ————————————
@@ -716,6 +807,66 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
         { say: "做实验时一次只改变一个条件，这叫控制变量。", board: [T("一次只改变一个条件", "note")] },
       ]);
     }
+    case "lever": {
+      const r = lever(p);
+      return steps(grade, [
+        { say: "杠杆有三个点：支点、用力点和阻力点。", board: [T("支点 · 用力点 · 阻力点")], scene: { reveal: 1 } },
+        { say: `阻力点挂 ${p.load} 个钩码，离支点 ${p.ld} 格；用力点离支点 ${p.ed} 格。`, board: [T(`阻力 ${p.load} 个 × ${p.ld} 格`)], scene: { reveal: 2 } },
+        { say: `要平衡，用力点需要 ${r.exact ? "" : "约 "}${r.effort} 个钩码的力。`, board: [{ kind: "formula" as const, id: "f", text: `${p.load} × ${p.ld} = ${r.effort} × ${p.ed}` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: r.kind === "省力" ? "用力点离支点比阻力点远，这是省力杠杆。" : r.kind === "费力" ? "用力点离支点比阻力点近，这是费力杠杆，但能少移动一些距离。" : "两边一样远，不省力也不费力。", board: [T(r.kind, "result")] },
+        { say: "用力点离支点越远，越省力。", board: [T("动力臂越长越省力", "note")] },
+      ]);
+    }
+    case "slope": {
+      const r = slope(p);
+      return steps(grade, [
+        { say: `直接把 ${p.g} 牛的物体提高 ${p.h} 厘米，要用 ${p.g} 牛的力。`, board: [T(`直接提起：${p.g} 牛`)], scene: { reveal: 1 } },
+        { say: `换成沿 ${p.len} 厘米长的斜面拉上去。`, board: [T(`斜面长 ${p.len} 厘米，高 ${p.h} 厘米`)], scene: { reveal: 2 } },
+        { say: `不计摩擦时，拉力约 ${r.force} 牛，比直接提起省了约 ${r.saved} 牛。`, board: [{ kind: "formula" as const, id: "f", text: `${p.g} × ${p.h} ÷ ${p.len} ≈ ${r.force}（牛）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: "高度不变时，斜面越长、坡越缓，越省力。", board: [T("坡越缓越省力", "result")] },
+        { say: "省了力，但要多走一段路。", board: [T("省力不省距离", "note")] },
+      ]);
+    }
+    case "sound": {
+      const r = sound(p);
+      return steps(grade, [
+        { say: "把钢尺压在桌边，拨一下，钢尺在振动，就发出了声音。", board: [T("声音由振动产生")], scene: { reveal: 1 } },
+        { say: `这次拨得${DEMOS.sound.params[0].options![p.force]}，声音${r.loud}。`, board: [T(`振动幅度 → 声音${r.loud}`)], scene: { reveal: 2 } },
+        { say: `钢尺伸出 ${p.len} 厘米，振动${r.pitch === "高" ? "快" : r.pitch === "低" ? "慢" : "不快不慢"}，音调${r.pitch}。`, board: [T(`伸出 ${p.len} 厘米 → 音调${r.pitch}`, "result")], scene: { reveal: 3 } },
+        { say: "用力大小改变的是强弱；伸出长短改变的是高低。", board: [T("幅度大→响　振动快→高", "note")] },
+      ]);
+    }
+    case "earth": {
+      const r = earth(p);
+      return steps(grade, [
+        { say: "太阳只能照亮地球的一半，亮的一半是白天，暗的一半是黑夜。", board: [T("一半白天，一半黑夜")], scene: { reveal: 1 } },
+        { say: "地球自西向东自转，大约 24 小时转一圈。", board: [T("自西向东，约 24 小时一圈")], scene: { reveal: 2 } },
+        { say: `北京时间 ${p.hour} 时，北京是${r.day ? "白天" : "黑夜"}，正是${r.part}。${r.day ? `太阳在${r.dir}。` : ""}`, board: [T(`${p.hour} 时：${r.day ? "白天" : "黑夜"}${r.day ? `，太阳在${r.dir}` : ""}`, "result")], scene: { reveal: 3 } },
+        { say: "地球不停地转，白天和黑夜就不断交替。", board: [T("自转 → 昼夜交替", "note")] },
+        ...(band === "high" ? [{ say: "因为地球自西向东转，我们看到太阳东升西落。", board: [T("太阳东升西落", "note")] }] : []),
+      ]);
+    }
+    case "friction": {
+      const r = friction(p);
+      return steps(grade, [
+        { say: "用测力计水平匀速拉木块，读数就是摩擦力的大小。", board: [T("匀速拉动：拉力 = 摩擦力")], scene: { reveal: 1 } },
+        { say: `木块和钩码一共重 ${r.weight} 牛，放在${r.surface}上。`, board: [T(`${r.surface}，压力 ${r.weight} 牛`)], scene: { reveal: 2 } },
+        { say: `测力计读数约 ${r.force} 牛。`, board: [{ kind: "formula" as const, id: "f", text: `摩擦力 ≈ ${r.force} 牛` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: "表面越粗糙、压得越重，摩擦力越大。", board: [T("越粗糙、越重 → 摩擦力越大", "result")] },
+        { say: "一次只改变一个条件，比较才公平。", board: [T("控制变量", "note")] },
+      ]);
+    }
+    case "plant": {
+      const r = plant(p);
+      const water = DEMOS.plant.params[0].options![p.water];
+      return steps(grade, [
+        { say: `杯子里的绿豆：${water}，放在${p.light ? "有光的窗台" : "暗处"}。`, board: [T(`${water} · ${p.light ? "有光" : "暗处"}`)], scene: { reveal: 1 } },
+        { say: `过了 ${p.day} 天，${r.status}。`, board: [T(`第 ${p.day} 天：${r.status}`, "result")], scene: { reveal: 2 } },
+        ...(r.sprout && p.day > 2 ? [{ say: `豆苗高约 ${r.height} 厘米，叶子${r.leaf}。`, board: [{ kind: "formula" as const, id: "f", text: `高 ≈ ${r.height} 厘米，叶子${r.leaf}` }], highlight: ["f"], scene: { reveal: 3 } }] : [{ say: r.reason ? `没发芽的原因是${r.reason}。` : "再等一等，种子正在吸水。", board: [T(r.reason ? `原因：${r.reason}` : "种子在吸水膨胀", "warn")], scene: { reveal: 3 } }]),
+        { say: "种子发芽需要适量的水、充足的空气和适宜的温度。", board: [T("发芽：水 + 空气 + 温度", "note")] },
+        { say: "长出叶子后，豆苗要晒到阳光，叶子才会变绿。", board: [T("生长：还需要阳光", "note")] },
+      ]);
+    }
   }
 }
 
@@ -748,6 +899,12 @@ export function lifeExample(id: DemoId, grade: Grade): string {
     shadow: low ? "中午操场上的影子短，傍晚影子长。" : "旗杆的影子早晚长、中午短，古人用日晷看时间。",
     circuit: "手电筒里有电池、开关和灯泡，就是一个简单电路。",
     pendulum: "老式摆钟就是利用摆来计时的。",
+    lever: "撬棍撬石头、开瓶器开瓶盖都是省力杠杆；用筷子夹菜是费力杠杆，但很灵活。",
+    slope: "轮椅坡道、盘山公路都是斜面，坡越缓越省力。",
+    sound: "敲鼓用力越大声音越响；吉他的弦按得越短声音越高。",
+    earth: "我们这里是白天时，美国正是黑夜，所以打视频电话要算好时间。",
+    friction: "鞋底有花纹是为了增大摩擦；给自行车链条加油是为了减小摩擦。",
+    plant: low ? "家里泡的豆芽放在暗处，所以又白又长。" : "超市卖的豆芽是在暗处长的，所以细长发黄；放到窗台晒几天，叶子就会变绿。",
   };
   return map[id];
 }

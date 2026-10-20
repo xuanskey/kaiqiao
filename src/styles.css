@@ -650,3 +650,7 @@ summary::-webkit-details-marker { display: none; }
 .ai-actions{display:flex;gap:8px}.ai-actions button{min-height:38px;padding:0 14px;border-radius:8px;border:1px solid #cfdbe6;background:#fff;font-size:13px}.ai-actions button[type=submit]{background:#3d5a72;color:#fff;border-color:#3d5a72}
 .ai-ask{display:flex;gap:6px}.ai-ask input{flex:1;min-height:40px;padding:0 10px;border:1px solid #cfdbe6;border-radius:8px;font-size:14px}.ai-ask button{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 12px;border-radius:8px;background:#3d5a72;color:#fff;font-size:13px}.ai-ask button:disabled{opacity:.5}
 @media(max-width:640px){.class-log li{grid-template-columns:1fr auto}.class-log-bar{grid-column:1/-1;order:3}.import-item{grid-template-columns:1fr auto}.import-line{grid-column:1/-1}.import-open{grid-column:1/-1}}
+
+.ruler-vibrate{animation:ruler-vibrate .12s ease-in-out infinite alternate}
+@keyframes ruler-vibrate{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.ruler-vibrate{animation:none}}

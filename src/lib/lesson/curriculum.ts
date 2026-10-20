@@ -103,9 +103,11 @@ export const JK_SCIENCE: Edition = {
   catalog: {
     "2下": [S("jk-2b-magnet", "磁铁", ["magnet"])],
     "3上": [S("jk-3a-water", "水（水的三态变化）", ["water"])],
-    "3下": [S("jk-3b-shadow", "太阳、地球和月球（影子的变化）", ["shadow"])],
-    "4下": [S("jk-4b-circuit", "电路", ["circuit"])],
+    "3下": [S("jk-3b-plant", "植物的生长变化（种子发芽）", ["plant"]), S("jk-3b-shadow", "太阳、地球和月球（影子的变化）", ["shadow"])],
+    "4上": [S("jk-4a-sound", "声音（声音的高低和强弱）", ["sound"]), S("jk-4a-friction", "运动和力（摩擦力）", ["friction"])],
+    "4下": [S("jk-4b-plant", "植物的生长变化（豆苗生长）", ["plant"]), S("jk-4b-circuit", "电路", ["circuit"])],
     "5上": [S("jk-5a-pendulum", "计量时间（摆的研究）", ["pendulum"])],
+    "6上": [S("jk-6a-earth", "地球的运动（昼夜交替）", ["earth"]), S("jk-6a-lever", "工具与技术（杠杆）", ["lever"]), S("jk-6a-slope", "工具与技术（斜面）", ["slope"])],
   },
 };
 
