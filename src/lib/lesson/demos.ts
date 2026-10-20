@@ -9,6 +9,7 @@ export type DemoId =
   | "add-sub" | "group-share" | "fraction" | "perimeter-area" | "angle" | "law"
   | "decimal-mul" | "balance" | "circle" | "cylinder"
   | "shapes" | "rmb" | "ruler" | "clock" | "parallel" | "chance" | "number-line" | "percent" | "pigeonhole" | "scale"
+  | "make-ten" | "bar-chart" | "poly-area"
   | "magnet" | "shadow" | "circuit" | "pendulum" | "water"
   | "lever" | "slope" | "sound" | "earth" | "friction" | "plant";
 
@@ -150,6 +151,26 @@ export const DEMOS: Record<DemoId, DemoDef> = {
       { key: "s", label: "比例尺", min: 0, max: 3, default: 2, options: ["1∶1000", "1∶10000", "1∶100000", "1∶1000000"] },
       { key: "cm", label: "图上距离", min: 1, max: 20, default: 5, unit: "厘米" },
     ] },
+  "make-ten": { id: "make-ten", subject: "math", title: "凑十法：20 以内进位加法", grades: [1], summary: "把小的数分一分，先凑满 10，再加剩下的。",
+    params: [
+      { key: "a", label: "第一个加数", min: 5, max: 9, default: 9 },
+      { key: "b", label: "第二个加数", min: 2, max: 9, default: 4 },
+    ] },
+  "bar-chart": { id: "bar-chart", subject: "math", title: "条形统计图：最喜欢的水果", grades: [4], summary: "调整每种水果的票数，看条形怎样变化；读出最多、最少、相差多少。",
+    params: [
+      { key: "c0", label: "苹果", min: 0, max: 12, default: 8, unit: "票" },
+      { key: "c1", label: "香蕉", min: 0, max: 12, default: 5, unit: "票" },
+      { key: "c2", label: "橙子", min: 0, max: 12, default: 10, unit: "票" },
+      { key: "c3", label: "葡萄", min: 0, max: 12, default: 3, unit: "票" },
+      { key: "unit", label: "每格表示", min: 0, max: 1, default: 0, options: ["1 票", "2 票"] },
+    ] },
+  "poly-area": { id: "poly-area", subject: "math", title: "多边形的面积：剪一剪、拼一拼", grades: [5], summary: "把平行四边形剪拼成长方形，两个一样的三角形或梯形拼成平行四边形，推出面积公式。",
+    params: [
+      { key: "shape", label: "图形", min: 0, max: 2, default: 0, options: ["平行四边形", "三角形", "梯形"] },
+      { key: "a", label: "底（下底）", min: 2, max: 12, default: 8, unit: "厘米" },
+      { key: "b", label: "上底（梯形）", min: 1, max: 10, default: 4, unit: "厘米" },
+      { key: "h", label: "高", min: 2, max: 7, default: 5, unit: "厘米" },
+    ] },
   water: { id: "water", subject: "science", title: "水的三态变化", grades: [3, 4], summary: "改变温度，看水什么时候结冰、什么时候沸腾。",
     params: [{ key: "t", label: "温度", min: -20, max: 120, default: 25, unit: "℃" }],
     experiment: { goal: "观察水在不同温度下的状态变化。", tools: ["烧杯", "冰块", "温度计", "酒精灯或电热水壶（老师操作）"], steps: ["把冰块放进烧杯，用温度计测温度。", "让冰块慢慢融化，观察温度。", "在老师帮助下加热到沸腾，观察水蒸气。"], observe: "冰在 0 ℃ 左右融化成水；水加热到约 100 ℃ 沸腾，变成水蒸气。", explain: "水有固态（冰）、液态（水）和气态（水蒸气）三种状态，温度变化会让它们互相转化。", safety: "加热和沸水实验必须由老师或家长操作，小心烫伤；不要用手摸刚加热过的器材。", think: "冬天窗户上的冰花和夏天冰饮料瓶外的水珠，分别是怎么来的？", virtualNote: "模拟按一个标准大气压设定：0 ℃ 结冰、100 ℃ 沸腾。真实情况下，水在低于 100 ℃ 时也会慢慢蒸发；高原上水的沸点会低一些。" } },
@@ -248,6 +269,7 @@ export function normalizeParams(id: DemoId, input: Params): Params {
   if (id === "rmb") { while (p.pay < 3 && RMB_NOTES[p.pay] < p.price) p.pay += 1; }
   if (id === "pigeonhole" && p.items <= p.boxes) p.items = Math.min(20, p.boxes + 1);
   if (id === "chance" && p.red + p.white === 0) p.red = 1;
+  if (id === "poly-area" && p.b >= p.a) p.b = Math.max(1, p.a - 1);
   return p;
 }
 
@@ -483,6 +505,38 @@ export function friction(p: Params) {
 }
 
 /** 绿豆发芽与生长（示意）：适量水分 2 天发芽；干燥缺水、泡水缺空气都不发芽；暗处细长发黄。 */
+
+export const FRUITS = ["苹果", "香蕉", "橙子", "葡萄"] as const;
+
+/** 凑十法：a + b，把 b 分成 (10 − a) 和剩下的数。 */
+export function makeTen(p: Params) {
+  const sum = p.a + p.b;
+  const carry = sum > 10;
+  const need = 10 - p.a;
+  const rest = p.b - need;
+  return { sum, carry, need, rest, expr: `${p.a} + ${p.b} = ${sum}`, split: carry ? `${p.b} 分成 ${need} 和 ${rest}` : "" };
+}
+
+/** 条形统计图：读最多、最少、合计和相差。 */
+export function barChart(p: Params) {
+  const counts = [p.c0, p.c1, p.c2, p.c3];
+  const per = p.unit === 1 ? 2 : 1;
+  const max = Math.max(...counts), min = Math.min(...counts);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const names = (v: number) => FRUITS.filter((_, i) => counts[i] === v).join("、");
+  return { counts, per, max, min, total, diff: max - min, maxName: names(max), minName: names(min), cells: counts.map((c) => c / per), tie: counts.filter((c) => c === max).length > 1 };
+}
+
+/** 多边形面积（单位：平方厘米）。面积 ×2 一定是整数，用 fmtScaled 精确显示 .5。 */
+export function polyArea(p: Params) {
+  const twice = p.shape === 0 ? 2 * p.a * p.h : p.shape === 1 ? p.a * p.h : (p.a + p.b) * p.h;
+  const area = fmtScaled(twice * 5, 1);
+  const name = (["平行四边形", "三角形", "梯形"] as const)[p.shape];
+  const formula = p.shape === 0 ? "底 × 高" : p.shape === 1 ? "底 × 高 ÷ 2" : "(上底 + 下底) × 高 ÷ 2";
+  const calc = p.shape === 0 ? `${p.a} × ${p.h} = ${area}` : p.shape === 1 ? `${p.a} × ${p.h} ÷ 2 = ${area}` : `(${p.b} + ${p.a}) × ${p.h} ÷ 2 = ${area}`;
+  return { twice, area, name, formula, calc };
+}
+
 export function plant(p: Params) {
   const sprout = p.water === 1;
   const grownDays = sprout ? Math.max(0, p.day - 2) : 0;
@@ -856,6 +910,54 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
         { say: "一次只改变一个条件，比较才公平。", board: [T("控制变量", "note")] },
       ]);
     }
+    case "make-ten": {
+      const r = makeTen(p);
+      if (!r.carry) return steps(grade, [
+        { say: `${p.a} 加 ${p.b}，一共 ${r.sum}，没有超过 10。`, board: [{ kind: "formula" as const, id: "f", text: r.expr }], highlight: ["f"], scene: { reveal: 1 } },
+        { say: "加起来不满十，直接数就可以，不用凑十。换大一点的数试试。", board: [T("不满 10：直接加", "note")], scene: { reveal: 1 } },
+      ]);
+      return steps(grade, [
+        { say: `${p.a} 加 ${p.b}，十格框里先放 ${p.a} 个红圆片。`, board: [T(`${p.a} + ${p.b} = ?`, "title")], scene: { reveal: 1 } },
+        { say: v === 1 ? `看大数 ${p.a}，还差几个满十？差 ${r.need} 个。` : `${p.a} 和几凑成 10？${p.a} 和 ${r.need} 凑成 10。`, board: [T(`${p.a} + ${r.need} = 10`)], scene: { reveal: 2 } },
+        { say: `把 ${p.b} 分成 ${r.need} 和 ${r.rest}。`, board: [{ kind: "formula" as const, id: "s", text: `${p.b} → ${r.need} 和 ${r.rest}` }], highlight: ["s"], scene: { reveal: 3 } },
+        { say: `先算 ${p.a} 加 ${r.need} 等于 10，再算 10 加 ${r.rest} 等于 ${r.sum}。`, board: [{ kind: "formula" as const, id: "f", text: `${p.a} + ${r.need} = 10，10 + ${r.rest} = ${r.sum}` }], highlight: ["f"], scene: { reveal: 4 } },
+        { say: "看大数，分小数，凑成十，再加几。", board: [T("看大数 → 分小数 → 凑成十 → 加剩下", "note")] },
+      ]);
+    }
+    case "bar-chart": {
+      const r = barChart(p);
+      return steps(grade, [
+        { say: `调查同学们最喜欢的水果，每格表示 ${r.per} 票。`, board: [T(`1 格 = ${r.per} 票`, "title")], scene: { reveal: 1 } },
+        { say: r.per === 2 ? "一格表示 2 票时，半格就是 1 票。" : "数一数每个条形有几格，就是几票。", board: [T(FRUITS.map((f, i) => `${f} ${r.counts[i]}`).join("　"))], scene: { reveal: 2 } },
+        { say: `${r.maxName}的条形最长，${r.max} 票；${r.minName}的最短，${r.min} 票。`, board: [T(`最多：${r.maxName} ${r.max} 票　最少：${r.minName} ${r.min} 票`, "result")], scene: { reveal: 3 } },
+        { say: `最多的比最少的多 ${r.max} 减 ${r.min}，等于 ${r.diff} 票。`, board: [{ kind: "formula" as const, id: "d", text: `${r.max} − ${r.min} = ${r.diff}（票）` }], highlight: ["d"], scene: { reveal: 3 } },
+        { say: `一共调查了 ${r.total} 人。条形统计图能一眼看出谁多谁少。`, board: [{ kind: "formula" as const, id: "t", text: `${r.counts.join(" + ")} = ${r.total}（人）` }], highlight: ["t"] },
+      ]);
+    }
+    case "poly-area": {
+      const r = polyArea(p);
+      if (p.shape === 0) return steps(grade, [
+        { say: `一个平行四边形，底 ${p.a} 厘米，高 ${p.h} 厘米。`, board: [T(`平行四边形：底 ${p.a}，高 ${p.h}`, "title")], scene: { reveal: 1 } },
+        { say: "沿着高剪下左边的直角三角形。", board: [T("沿高剪开")], scene: { reveal: 2 } },
+        { say: "把它平移到右边，拼成一个长方形。", board: [T("平移，拼成长方形")], scene: { reveal: 3 } },
+        { say: `长方形的长就是底，宽就是高，面积不变：${r.calc} 平方厘米。`, board: [{ kind: "formula" as const, id: "f", text: `S = 底 × 高 = ${r.calc}（cm²）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: "平行四边形的面积等于底乘高。", board: [T("S = ah", "note")] },
+      ]);
+      if (p.shape === 1) return steps(grade, [
+        { say: `一个三角形，底 ${p.a} 厘米，高 ${p.h} 厘米。`, board: [T(`三角形：底 ${p.a}，高 ${p.h}`, "title")], scene: { reveal: 1 } },
+        { say: "再拿一个完全一样的三角形，旋转后拼在一起。", board: [T("两个完全一样的三角形")], scene: { reveal: 2 } },
+        { say: `拼成一个平行四边形，面积是 ${p.a} 乘 ${p.h}，等于 ${p.a * p.h}。`, board: [T(`平行四边形：${p.a} × ${p.h} = ${p.a * p.h}`)], scene: { reveal: 3 } },
+        { say: `三角形是它的一半：${r.calc} 平方厘米。`, board: [{ kind: "formula" as const, id: "f", text: `S = 底 × 高 ÷ 2 = ${r.calc}（cm²）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: "别忘了除以 2。", board: [T("S = ah ÷ 2", "note")] },
+      ]);
+      return steps(grade, [
+        { say: `一个梯形，上底 ${p.b} 厘米，下底 ${p.a} 厘米，高 ${p.h} 厘米。`, board: [T(`梯形：上底 ${p.b}，下底 ${p.a}，高 ${p.h}`, "title")], scene: { reveal: 1 } },
+        { say: "再拿一个完全一样的梯形，倒过来拼在一起。", board: [T("两个完全一样的梯形")], scene: { reveal: 2 } },
+        { say: `拼成平行四边形，底是上底加下底：${p.b} 加 ${p.a} 等于 ${p.a + p.b}。`, board: [T(`平行四边形：(${p.b} + ${p.a}) × ${p.h} = ${(p.a + p.b) * p.h}`)], scene: { reveal: 3 } },
+        { say: `梯形是它的一半：${r.calc} 平方厘米。`, board: [{ kind: "formula" as const, id: "f", text: `S = (上底 + 下底) × 高 ÷ 2 = ${r.calc}（cm²）` }], highlight: ["f"], scene: { reveal: 3 } },
+        { say: "梯形面积 =（上底 + 下底）× 高 ÷ 2。", board: [T("S = (a + b)h ÷ 2", "note")] },
+      ]);
+    }
     case "plant": {
       const r = plant(p);
       const water = DEMOS.plant.params[0].options![p.water];
@@ -891,6 +993,9 @@ export function lifeExample(id: DemoId, grade: Grade): string {
     "number-line": "冬天北方气温零下 10 ℃，记作 −10 ℃。",
     percent: "商场“满 100 元打八折”，100 元的东西付 80 元。",
     pigeonhole: "13 个同学中，至少有 2 个人的生日在同一个月。",
+    "make-ten": "盘子里有 9 个饺子，又端来 4 个：先拿 1 个凑满 10，再加 3 个，一共 13 个。",
+    "bar-chart": low ? "班里投票选春游地点，画成条形图，一眼就能看出去哪里的人最多。" : "体检后把全班身高分段统计，画成条形统计图，就能看出哪一段的人最多。",
+    "poly-area": "一块梯形的菜地，上底 6 米、下底 10 米、高 5 米，面积是 (6+10)×5÷2 = 40 平方米。",
     scale: "地图上两地相距 5 厘米，比例尺 1∶1000000，实际相距 50 千米。",
     water: "冬天湖面结冰，烧开水时冒出“白气”。",
     circle: "自行车轮子转一圈走的路，就是轮子的周长。",

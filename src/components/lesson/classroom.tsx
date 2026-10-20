@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState, type ComponentType } from "react";
-import { ArrowLeft, BarChart3, BookOpen, FlaskConical, Hand, MessageCircle, Presentation, ShieldAlert } from "lucide-react";
+import { ArrowLeft, BarChart3, BookOpen, Lightbulb, FlaskConical, Hand, MessageCircle, Presentation, ShieldAlert } from "lucide-react";
 import { DEMOS, defaultParams, displayParam, lessonScript, normalizeParams, type DemoId, type Params, type Subject } from "@/lib/lesson/demos";
 import { EDITIONS, SUBJECT_LABEL, editionsFor, resolveUnits, type Term } from "@/lib/lesson/curriculum";
 import { gradeStyle } from "@/lib/lesson/grade-style";
@@ -17,9 +17,11 @@ import { AiPanel, useAiConfig } from "./ai-panel";
 import { clearClassLog, loadClassLog, masteryOf, recordAnswer, type ClassLog } from "@/lib/lesson/class-log";
 import { boardAt } from "@/lib/lesson/timeline";
 import { clearLesson, peekLesson } from "@/lib/lesson/today";
+import { recordActivity } from "@/lib/activity";
 import { Quiz, type QuizRecord } from "./quiz";
 import { AddSubStage, AngleStage, BalanceStage, CircleStage, CylinderStage, DecimalMulStage, FractionStage, GroupShareStage, LawStage, PerimeterAreaStage, type StageProps } from "./stages-math";
 import { CircuitStage, MagnetStage, PendulumStage, ShadowStage } from "./stages-science";
+import { BarChartStage, MakeTenStage, PolyAreaStage } from "./stages-v10";
 import { EarthStage, FrictionStage, LeverStage, PlantStage, SlopeStage, SoundStage } from "./stages-lab";
 import { ChanceStage, ClockStage, NumberLineStage, ParallelStage, PercentStage, PigeonholeStage, RmbStage, RulerStage, ScaleStage, ShapesStage, WaterStage } from "./stages-more";
 
@@ -28,6 +30,7 @@ const STAGES: Record<DemoId, ComponentType<StageProps>> = {
   "decimal-mul": DecimalMulStage, balance: BalanceStage, circle: CircleStage, cylinder: CylinderStage,
   shapes: ShapesStage, rmb: RmbStage, ruler: RulerStage, clock: ClockStage, parallel: ParallelStage, chance: ChanceStage, "number-line": NumberLineStage, percent: PercentStage, pigeonhole: PigeonholeStage, scale: ScaleStage,
   magnet: MagnetStage, shadow: ShadowStage, circuit: CircuitStage, pendulum: PendulumStage, water: WaterStage,
+  "make-ten": MakeTenStage, "bar-chart": BarChartStage, "poly-area": PolyAreaStage,
   lever: LeverStage, slope: SlopeStage, sound: SoundStage, earth: EarthStage, friction: FrictionStage, plant: PlantStage,
 };
 
@@ -93,6 +96,7 @@ export function Classroom() {
           {u.demos?.length ? <div className="class-unit-actions">{u.demos.map((d) => <button key={d} type="button" className="class-open" onClick={() => { setOpen({ demo: d, unit: u.title, preset: u.preset }); window.scrollTo({ top: 0, behavior: "instant" }); }}><Presentation size={16} />上课</button>)}</div>
             : subject === "math" ? <button type="button" className="class-practice" onClick={() => { setStoreGrade(grade); go("map"); }}>去题库</button> : null}
         </li>)}</ol>}
+    {grade === 3 && subject === "math" ? <section className="class-lab-entry"><Lightbulb size={20} /><div><strong>三年级理解实验室</strong><small>18 个知识单元，配分步讲解、动手小实验和单元小测</small></div><button type="button" onClick={() => { setStoreGrade(3); go("learn"); }}>进入理解实验室</button></section> : null}
     <ClassLogCard log={log} onClear={() => { clearClassLog(window.localStorage); setLog({}); }} />
     <ImportPanel grade={grade} onOpen={(demo) => { const g = DEMOS[demo].grades.includes(grade) ? grade : DEMOS[demo].grades[0]; setOpen({ demo, unit: "导入资料", grade: g }); window.scrollTo({ top: 0, behavior: "instant" }); }} />
   </div>;
@@ -218,7 +222,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
       </dl>
       <p className="experiment-note">{def.experiment.virtualNote}</p>
     </section> : null}
-    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} level={tutor.level} setLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { if (!r.ok) setLastWrong(r); recordAnswer(window.localStorage, demo, r.ok); }} />
+    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} level={tutor.level} setLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { if (!r.ok) setLastWrong(r); recordAnswer(window.localStorage, demo, r.ok); recordActivity(window.localStorage, r.ok); }} />
       : <button type="button" className="quiz-start" onClick={() => ask("quiz")}>开始随堂练习</button>}</div>
   </div>;
 }

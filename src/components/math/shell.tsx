@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { BarChart3, ChevronDown, Home, Library, Lightbulb, NotebookPen, Presentation, ShieldCheck, Volume2, VolumeX, type LucideIcon } from "lucide-react";
+import { BarChart3, ChevronDown, Home, Library, NotebookPen, Presentation, ShieldCheck, Volume2, VolumeX, type LucideIcon } from "lucide-react";
 import { GRADE_LABEL, chapterById } from "@/lib/math/chapters";
 import { unlockAudio } from "@/lib/math/audio";
 import type { Grade, Screen } from "@/lib/math/types";
@@ -8,13 +8,15 @@ import { cn } from "@/lib/utils";
 import { LogoMark, Mascot } from "./mascot";
 
 const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
-  { screen: "home", label: "练习", icon: Home },
+  { screen: "home", label: "首页", icon: Home },
   { screen: "class", label: "课堂", icon: Presentation },
-  { screen: "learn", label: "理解", icon: Lightbulb },
   { screen: "map", label: "题库", icon: Library },
   { screen: "review", label: "错题本", icon: NotebookPen },
   { screen: "report", label: "学情", icon: BarChart3 },
 ];
+
+/** “理解实验室”并入课堂：在理解页时，导航高亮“课堂”。 */
+const navOf = (screen: Screen): Screen => (screen === "learn" ? "class" : screen);
 
 export function AppShell({ screen, children }: { screen: Screen; children: ReactNode }) {
   const go = useMath((s) => s.go);
@@ -40,7 +42,7 @@ export function AppShell({ screen, children }: { screen: Screen; children: React
       <div className="brand"><LogoMark /><div><strong>开窍</strong><span>每天一点，慢慢开窍</span></div></div>
       <p className="nav-caption">我的学习</p>
       <nav className="main-nav" aria-label="主导航">
-        {NAV.map(({ screen: target, label, icon: Icon }) => <button key={target} type="button" onClick={() => go(target)} aria-current={screen === target ? "page" : undefined} className={cn("nav-item", screen === target && "is-active")}>
+        {NAV.map(({ screen: target, label, icon: Icon }) => <button key={target} type="button" onClick={() => go(target)} aria-current={navOf(screen) === target ? "page" : undefined} className={cn("nav-item", navOf(screen) === target && "is-active")}>
           <Icon size={20} /><span>{label}</span>{target === "review" && wrongCount > 0 ? <b className="nav-count">{wrongCount}</b> : null}
         </button>)}
       </nav>
@@ -50,7 +52,7 @@ export function AppShell({ screen, children }: { screen: Screen; children: React
     <div className="workspace">
       {!focus ? <header className="topbar">
         <div className="mobile-brand"><LogoMark /><strong>开窍</strong></div>
-        <span className="desktop-context">小学数学 · 练习空间</span>
+        <span className="desktop-context">小学数学与科学 · 学习空间</span>
         <div className="topbar-actions"><GradePicker /><button type="button" className="icon-button" aria-label={muted ? "打开声音" : "关闭声音"} aria-pressed={!muted} onClick={() => { unlockAudio(); setMuted(!muted); }}>{muted ? <VolumeX size={19} /> : <Volume2 size={19} />}</button></div>
       </header> : null}
       <main className="main-content" ref={main} tabIndex={-1} aria-label="学习内容">
