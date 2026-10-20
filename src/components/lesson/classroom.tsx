@@ -18,6 +18,7 @@ import { boardAt } from "@/lib/lesson/timeline";
 import { Quiz, type QuizRecord } from "./quiz";
 import { AddSubStage, AngleStage, BalanceStage, CircleStage, CylinderStage, DecimalMulStage, FractionStage, GroupShareStage, LawStage, PerimeterAreaStage, type StageProps } from "./stages-math";
 import { CircuitStage, MagnetStage, PendulumStage, ShadowStage } from "./stages-science";
+import { EarthStage, FrictionStage, LeverStage, PlantStage, SlopeStage, SoundStage } from "./stages-lab";
 import { ChanceStage, ClockStage, NumberLineStage, ParallelStage, PercentStage, PigeonholeStage, RmbStage, RulerStage, ScaleStage, ShapesStage, WaterStage } from "./stages-more";
 
 const STAGES: Record<DemoId, ComponentType<StageProps>> = {
@@ -25,6 +26,7 @@ const STAGES: Record<DemoId, ComponentType<StageProps>> = {
   "decimal-mul": DecimalMulStage, balance: BalanceStage, circle: CircleStage, cylinder: CylinderStage,
   shapes: ShapesStage, rmb: RmbStage, ruler: RulerStage, clock: ClockStage, parallel: ParallelStage, chance: ChanceStage, "number-line": NumberLineStage, percent: PercentStage, pigeonhole: PigeonholeStage, scale: ScaleStage,
   magnet: MagnetStage, shadow: ShadowStage, circuit: CircuitStage, pendulum: PendulumStage, water: WaterStage,
+  lever: LeverStage, slope: SlopeStage, sound: SoundStage, earth: EarthStage, friction: FrictionStage, plant: PlantStage,
 };
 
 const MOTION_KEY = "kaiqiao-reduce-motion";
