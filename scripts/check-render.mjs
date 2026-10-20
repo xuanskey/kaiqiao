@@ -70,11 +70,12 @@ try {
   // 互动课堂：目录页、每个演示在每个适用年级的课堂页，以及“动手模式”下的演示画面
   useMath.getState().setGrade(3); useMath.getState().go('class');
   const classHtml = render('互动课堂');
-  for (const text of ['一年级', '六年级', '上册', '下册', '数学', '科学', '人教版', '分数的初步认识']) assert.ok(classHtml.includes(text), text);
+  for (const text of ['一年级', '六年级', '上册', '下册', '数学', '科学', '人教版（2024 新版）', '分数的初步认识', '导入学习资料', '课堂练习记录']) assert.ok(classHtml.includes(text), text);
   const { LessonView } = await server.ssrLoadModule('/src/components/lesson/classroom.tsx');
   const { DEMO_LIST, defaultParams } = await server.ssrLoadModule('/src/lib/lesson/demos.ts');
   const stages = await server.ssrLoadModule('/src/components/lesson/stages-math.tsx');
   const sci = await server.ssrLoadModule('/src/components/lesson/stages-science.tsx');
+  const more = await server.ssrLoadModule('/src/components/lesson/stages-more.tsx');
   let lessonCount = 0;
   for (const demo of DEMO_LIST) for (const grade of demo.grades) {
     const html = renderToString(createElement(LessonView, { demo: demo.id, grade, unitTitle: '测试单元', onBack() {} }));
@@ -83,7 +84,8 @@ try {
     if (demo.subject === 'science') for (const text of ['实验目的', '所需器材', '实验步骤', '观察结果', '结果解释', '想一想']) assert.ok(html.includes(text), `${demo.id}: ${text}`);
     lessonCount++;
   }
-  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage };
+  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage, water: more.WaterStage, shapes: more.ShapesStage, rmb: more.RmbStage, ruler: more.RulerStage, clock: more.ClockStage, parallel: more.ParallelStage, chance: more.ChanceStage, 'number-line': more.NumberLineStage, percent: more.PercentStage, pigeonhole: more.PigeonholeStage, scale: more.ScaleStage };
+  for (const demo of DEMO_LIST) assert.ok(stageOf[demo.id], `缺少演示画面：${demo.id}`);
   for (const demo of DEMO_LIST) {
     const html = renderToString(createElement(stageOf[demo.id], { params: defaultParams(demo.id), scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
     assert.ok(html.includes('<svg') || html.includes('dec-row'), demo.id);
