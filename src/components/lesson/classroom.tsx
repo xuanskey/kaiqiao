@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState, type ComponentType } from "react";
-import { ArrowLeft, BookOpen, FlaskConical, Hand, MessageCircle, Presentation, ShieldAlert } from "lucide-react";
+import { ArrowLeft, BarChart3, BookOpen, FlaskConical, Hand, MessageCircle, Presentation, ShieldAlert } from "lucide-react";
 import { DEMOS, defaultParams, displayParam, lessonScript, normalizeParams, type DemoId, type Params, type Subject } from "@/lib/lesson/demos";
-import { EDITIONS, SUBJECT_LABEL, editionsFor, unitsOf, type Term } from "@/lib/lesson/curriculum";
+import { EDITIONS, SUBJECT_LABEL, editionsFor, resolveUnits, type Term } from "@/lib/lesson/curriculum";
 import { gradeStyle } from "@/lib/lesson/grade-style";
 import { initialPlayer, reducePlayer, sceneAt, type PlayerAction } from "@/lib/lesson/timeline";
 import { TUTOR_ACTIONS, initialTutor, tutorRespond, type TutorIntent } from "@/lib/lesson/tutor";
@@ -11,14 +11,20 @@ import { useMath } from "@/store/math";
 import { cn } from "@/lib/utils";
 import { PageHeading } from "@/components/math/shell";
 import { Board, PlayerControls } from "./board";
+import { ImportPanel } from "./import-panel";
+import { AiPanel, useAiConfig } from "./ai-panel";
+import { clearClassLog, loadClassLog, masteryOf, recordAnswer, type ClassLog } from "@/lib/lesson/class-log";
+import { boardAt } from "@/lib/lesson/timeline";
 import { Quiz, type QuizRecord } from "./quiz";
 import { AddSubStage, AngleStage, BalanceStage, CircleStage, CylinderStage, DecimalMulStage, FractionStage, GroupShareStage, LawStage, PerimeterAreaStage, type StageProps } from "./stages-math";
 import { CircuitStage, MagnetStage, PendulumStage, ShadowStage } from "./stages-science";
+import { ChanceStage, ClockStage, NumberLineStage, ParallelStage, PercentStage, PigeonholeStage, RmbStage, RulerStage, ScaleStage, ShapesStage, WaterStage } from "./stages-more";
 
 const STAGES: Record<DemoId, ComponentType<StageProps>> = {
   "add-sub": AddSubStage, "group-share": GroupShareStage, fraction: FractionStage, "perimeter-area": PerimeterAreaStage, angle: AngleStage, law: LawStage,
   "decimal-mul": DecimalMulStage, balance: BalanceStage, circle: CircleStage, cylinder: CylinderStage,
-  magnet: MagnetStage, shadow: ShadowStage, circuit: CircuitStage, pendulum: PendulumStage,
+  shapes: ShapesStage, rmb: RmbStage, ruler: RulerStage, clock: ClockStage, parallel: ParallelStage, chance: ChanceStage, "number-line": NumberLineStage, percent: PercentStage, pigeonhole: PigeonholeStage, scale: ScaleStage,
+  magnet: MagnetStage, shadow: ShadowStage, circuit: CircuitStage, pendulum: PendulumStage, water: WaterStage,
 };
 
 const MOTION_KEY = "kaiqiao-reduce-motion";
@@ -39,15 +45,18 @@ export function Classroom() {
   const [term, setTerm] = useState<Term>("上");
   const [subject, setSubject] = useState<Subject>("math");
   const [editionId, setEditionId] = useState("pep-math");
-  const [open, setOpen] = useState<{ demo: DemoId; unit: string } | null>(null);
+  const [open, setOpen] = useState<{ demo: DemoId; unit: string; grade?: Grade; preset?: Params } | null>(null);
   const editions = editionsFor(subject);
   const edition = EDITIONS.find((e) => e.id === editionId && e.subject === subject) ?? editions[0];
-  const units = unitsOf(edition, grade, term);
+  const { units, fallbackNote } = resolveUnits(edition, grade, term);
   const style = gradeStyle(grade);
   const go = useMath((s) => s.go);
   const setStoreGrade = useMath((s) => s.setGrade);
 
-  if (open) return <LessonView demo={open.demo} grade={grade} unitTitle={open.unit} onBack={() => { setOpen(null); window.scrollTo({ top: 0, behavior: "instant" }); }} />;
+  const [log, setLog] = useState<ClassLog>({});
+  useEffect(() => { setLog(loadClassLog(typeof window === "undefined" ? undefined : window.localStorage)); }, [open]);
+
+  if (open) return <LessonView demo={open.demo} grade={open.grade ?? grade} unitTitle={open.unit} preset={open.preset} onBack={() => { setOpen(null); window.scrollTo({ top: 0, behavior: "instant" }); }} />;
 
   const chooseSubject = (s: Subject) => { setSubject(s); setEditionId(editionsFor(s)[0].id); };
   return <div className="page-enter classroom">
@@ -62,20 +71,33 @@ export function Classroom() {
       <p className="class-note">{style.label}：{style.tone}</p>
     </section>
     <p className="class-source">{edition.note}</p>
+    {fallbackNote ? <p className="class-fallback" role="note">{fallbackNote}</p> : null}
     {!edition.ready ? <div className="class-empty"><BookOpen size={22} /><p>{edition.name}目录还没有录入。为避免把不同版本的内容混在一起，这里暂不显示课程。</p></div>
       : units.length === 0 ? <div className="class-empty"><FlaskConical size={22} /><p>{GRADE_LABEL[grade]}{term}册的{SUBJECT_LABEL[subject]}暂时没有互动实验。{subject === "science" ? "可以换个学期看看。" : ""}</p></div>
       : <ol className="class-units">{units.map((u, i) => <li key={u.id} className={cn("class-unit", u.demos?.length && "has-demo")}>
           <span className="class-unit-no">{i + 1}</span>
           <div><strong>{u.title}</strong>{u.demos?.length ? <small>{u.demos.map((d) => DEMOS[d].title).join("、")}</small> : <small>{subject === "math" ? "暂无互动课，可去题库练习" : ""}</small>}</div>
-          {u.demos?.length ? <div className="class-unit-actions">{u.demos.map((d) => <button key={d} type="button" className="class-open" onClick={() => { setOpen({ demo: d, unit: u.title }); window.scrollTo({ top: 0, behavior: "instant" }); }}><Presentation size={16} />上课</button>)}</div>
+          {u.demos?.length ? <div className="class-unit-actions">{u.demos.map((d) => <button key={d} type="button" className="class-open" onClick={() => { setOpen({ demo: d, unit: u.title, preset: u.preset }); window.scrollTo({ top: 0, behavior: "instant" }); }}><Presentation size={16} />上课</button>)}</div>
             : subject === "math" ? <button type="button" className="class-practice" onClick={() => { setStoreGrade(grade); go("map"); }}>去题库</button> : null}
         </li>)}</ol>}
+    <ClassLogCard log={log} onClear={() => { clearClassLog(window.localStorage); setLog({}); }} />
+    <ImportPanel grade={grade} onOpen={(demo) => { const g = DEMOS[demo].grades.includes(grade) ? grade : DEMOS[demo].grades[0]; setOpen({ demo, unit: "导入资料", grade: g }); window.scrollTo({ top: 0, behavior: "instant" }); }} />
   </div>;
 }
 
-export function LessonView({ demo, grade, unitTitle, onBack }: { demo: DemoId; grade: Grade; unitTitle: string; onBack: () => void }) {
+function ClassLogCard({ log, onClear }: { log: ClassLog; onClear: () => void }) {
+  const entries = (Object.entries(log) as [DemoId, NonNullable<ClassLog[DemoId]>][]).sort((a, b) => b[1].lastAt - a[1].lastAt);
+  return <section className="class-log" aria-label="课堂练习记录">
+    <header><BarChart3 size={18} /><strong>课堂练习记录</strong><small>只记录各课做了几题、对了几题，保存在本浏览器</small></header>
+    {entries.length === 0 ? <p className="class-log-empty">还没有课堂练习记录。上完课做几道随堂练习，这里会显示掌握情况。</p>
+      : <><ul>{entries.map(([id, e]) => { const m = masteryOf(e); return <li key={id}><span>{DEMOS[id].title}</span><div className="class-log-bar" aria-hidden="true"><i style={{ width: `${Math.round((m.rate ?? 0) * 100)}%` }} /></div><small>{e.correct}/{e.attempts} · {m.label}</small></li>; })}</ul>
+        <button type="button" className="class-log-clear" onClick={() => { if (window.confirm("清除所有课堂练习记录？原来的练习和学情不受影响。")) onClear(); }}>清除课堂记录</button></>}
+  </section>;
+}
+
+export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: DemoId; grade: Grade; unitTitle: string; onBack: () => void; preset?: Params }) {
   const def = DEMOS[demo];
-  const [params, setParams] = useState<Params>(() => defaultParams(demo));
+  const [params, setParams] = useState<Params>(() => normalizeParams(demo, { ...defaultParams(demo), ...(preset ?? {}) }));
   const [tutor, setTutor] = useState(initialTutor);
   const [interactive, setInteractive] = useState(false);
   const [reduceMotion, setReduceMotion] = useReduceMotion();
@@ -87,6 +109,7 @@ export function LessonView({ demo, grade, unitTitle, onBack }: { demo: DemoId; g
   const [player, rawDispatch] = useReducer((s: ReturnType<typeof initialPlayer>, a: PlayerAction) => reducePlayer(steps, s, a), undefined, initialPlayer);
   const dispatch = (a: PlayerAction) => { if (a.type === "play" || a.type === "toggle" || a.type === "restart") setInteractive(false); rawDispatch(a); };
   const quizRef = useRef<HTMLDivElement>(null);
+  const [aiCfg, setAiCfg] = useAiConfig();
 
   // 步骤数变化（换讲法、改参数）时，保证当前步骤仍然有效
   useEffect(() => { if (player.index > steps.length - 1) rawDispatch({ type: "seek", index: steps.length - 1 }); }, [steps.length, player.index]);
@@ -146,7 +169,8 @@ export function LessonView({ demo, grade, unitTitle, onBack }: { demo: DemoId; g
         <section className="tutor" aria-label="老师">
           <div className="tutor-bubble"><MessageCircle size={17} /><p aria-live="polite">{message}</p></div>
           <div className="tutor-actions">{TUTOR_ACTIONS.map((a) => <button key={a.intent} type="button" onClick={() => ask(a.intent)}>{a.label}</button>)}</div>
-          <p className="tutor-note"><ShieldAlert size={13} />离线规则老师：按年级和你的反馈调整讲法，不联网、不调用大模型。</p>
+          <AiPanel cfg={aiCfg} setCfg={setAiCfg} onReply={setMessage} context={() => ({ grade, demo, params, facts: boardAt(steps, steps.length - 1).map((v) => (v.item.kind === "column" ? v.item.lines.join(" ") : v.item.text)), lastWrong: lastWrong ? { prompt: lastWrong.q.prompt, given: lastWrong.given, answer: lastWrong.q.answer } : undefined })} />
+          <p className="tutor-note"><ShieldAlert size={13} />{aiCfg.enabled && aiCfg.apiKey ? "快捷按钮由离线规则老师处理；输入框的问题交给你设置的 AI。" : "离线规则老师：按年级和你的反馈调整讲法，不联网。"}</p>
         </section>
         <label className="motion-toggle"><input type="checkbox" checked={reduceMotion} onChange={(e) => setReduceMotion(e.target.checked)} />减少动态效果</label>
       </aside>
@@ -165,7 +189,7 @@ export function LessonView({ demo, grade, unitTitle, onBack }: { demo: DemoId; g
       </dl>
       <p className="experiment-note">{def.experiment.virtualNote}</p>
     </section> : null}
-    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} level={tutor.level} setLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { if (!r.ok) setLastWrong(r); }} />
+    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} level={tutor.level} setLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { if (!r.ok) setLastWrong(r); recordAnswer(window.localStorage, demo, r.ok); }} />
       : <button type="button" className="quiz-start" onClick={() => ask("quiz")}>开始随堂练习</button>}</div>
   </div>;
 }
