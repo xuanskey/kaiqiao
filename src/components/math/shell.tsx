@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { BarChart3, BookOpen, ChevronDown, Home, Map, ShieldCheck, Volume2, VolumeX, type LucideIcon } from "lucide-react";
+import { BarChart3, ChevronDown, Home, Library, Lightbulb, NotebookPen, ShieldCheck, Volume2, VolumeX, type LucideIcon } from "lucide-react";
 import { GRADE_LABEL, chapterById } from "@/lib/math/chapters";
 import { unlockAudio } from "@/lib/math/audio";
 import type { Grade, Screen } from "@/lib/math/types";
@@ -9,9 +9,9 @@ import { LogoMark, Mascot } from "./mascot";
 
 const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "home", label: "练习", icon: Home },
-  { screen: "learn", label: "理解", icon: BookOpen },
-  { screen: "map", label: "题库", icon: Map },
-  { screen: "review", label: "错题本", icon: BookOpen },
+  { screen: "learn", label: "理解", icon: Lightbulb },
+  { screen: "map", label: "题库", icon: Library },
+  { screen: "review", label: "错题本", icon: NotebookPen },
   { screen: "report", label: "学情", icon: BarChart3 },
 ];
 
