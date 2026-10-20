@@ -1,7 +1,7 @@
 {
   "name": "kaiqiao",
   "private": true,
-  "version": "0.9.0",
+  "version": "0.10.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
@@ -17,24 +17,28 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jszip": "^3.10.2",
+    "lucide-react": "^0.510.0",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.4.299",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "zustand": "^5.0.0",
-    "clsx": "^2.1.1",
     "tailwind-merge": "^3.5.0",
-    "class-variance-authority": "^0.7.1",
-    "lucide-react": "^0.510.0",
-    "@radix-ui/react-slot": "^1.2.4"
+    "tesseract.js": "^7.0.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "vite": "^6.3.0",
-    "@vitejs/plugin-react": "^4.5.0",
     "@tailwindcss/vite": "^4.1.0",
-    "tailwindcss": "^4.1.0",
-    "tw-animate-css": "^1.3.4",
+    "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/node": "^22.16.5"
+    "@vitejs/plugin-react": "^4.5.0",
+    "tailwindcss": "^4.1.0",
+    "tw-animate-css": "^1.3.4",
+    "typescript": "^5.7.0",
+    "vite": "^6.3.0"
   }
 }

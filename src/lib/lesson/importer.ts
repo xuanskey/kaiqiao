@@ -24,7 +24,7 @@ export type ImportItem = {
 
 export type ImportResult = { items: ImportItem[]; summary: { total: number; ok: number; confirm: number; above: number; beyond: number } };
 
-const MAX_TEXT = 20000;
+export const MAX_TEXT = 20000;
 
 const BEYOND: [RegExp, string][] = [
   [/微积分|导数|积分|极限|∫|lim\b|sin|cos|tan|log|矩阵|向量|复数|概率密度|方差|标准差/i, "大学或高中内容"],

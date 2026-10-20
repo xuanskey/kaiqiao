@@ -8,6 +8,7 @@ import { TUTOR_ACTIONS, initialTutor, tutorRespond, type TutorIntent } from "@/l
 import { GRADE_LABEL } from "@/lib/math/chapters";
 import type { Grade } from "@/lib/math/types";
 import { useMath } from "@/store/math";
+import { hushSpeak, speakPrompt } from "@/lib/math/speak";
 import { cn } from "@/lib/utils";
 import { PageHeading } from "@/components/math/shell";
 import { Board, PlayerControls } from "./board";
@@ -15,6 +16,7 @@ import { ImportPanel } from "./import-panel";
 import { AiPanel, useAiConfig } from "./ai-panel";
 import { clearClassLog, loadClassLog, masteryOf, recordAnswer, type ClassLog } from "@/lib/lesson/class-log";
 import { boardAt } from "@/lib/lesson/timeline";
+import { clearLesson, peekLesson } from "@/lib/lesson/today";
 import { Quiz, type QuizRecord } from "./quiz";
 import { AddSubStage, AngleStage, BalanceStage, CircleStage, CylinderStage, DecimalMulStage, FractionStage, GroupShareStage, LawStage, PerimeterAreaStage, type StageProps } from "./stages-math";
 import { CircuitStage, MagnetStage, PendulumStage, ShadowStage } from "./stages-science";
@@ -30,6 +32,14 @@ const STAGES: Record<DemoId, ComponentType<StageProps>> = {
 };
 
 const MOTION_KEY = "kaiqiao-reduce-motion";
+const NARRATE_KEY = "kaiqiao-narrate";
+const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
+
+function useNarrate(): [boolean, (v: boolean) => void] {
+  const [value, setValue] = useState(() => { try { return canSpeak() && localStorage.getItem(NARRATE_KEY) === "1"; } catch { return false; } });
+  const set = (v: boolean) => { setValue(v); try { localStorage.setItem(NARRATE_KEY, v ? "1" : "0"); } catch { /* 忽略 */ } };
+  return [value, set];
+}
 
 function useReduceMotion(): [boolean, (v: boolean) => void] {
   const [value, setValue] = useState(() => {
@@ -47,7 +57,8 @@ export function Classroom() {
   const [term, setTerm] = useState<Term>("上");
   const [subject, setSubject] = useState<Subject>("math");
   const [editionId, setEditionId] = useState("pep-math");
-  const [open, setOpen] = useState<{ demo: DemoId; unit: string; grade?: Grade; preset?: Params } | null>(null);
+  const [open, setOpen] = useState<{ demo: DemoId; unit: string; grade?: Grade; preset?: Params } | null>(() => peekLesson());
+  useEffect(() => { clearLesson(); }, []);
   const editions = editionsFor(subject);
   const edition = EDITIONS.find((e) => e.id === editionId && e.subject === subject) ?? editions[0];
   const { units, fallbackNote } = resolveUnits(edition, grade, term);
@@ -128,6 +139,21 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
   }, [player.playing]);
 
   const setParam = (key: string, value: number) => setParams((p) => normalizeParams(demo, { ...p, [key]: value }));
+  // 语音朗读：换到新的一步时读出老师的话；暂停时停止朗读；离开课堂时停止
+  const [narrate, setNarrate] = useNarrate();
+  const said = useRef<{ index: number; playing: boolean; first: boolean }>({ index: -1, playing: false, first: true });
+  useEffect(() => {
+    const prev = said.current;
+    said.current = { index: player.index, playing: player.playing, first: false };
+    if (!narrate) { hushSpeak(); return; }
+    if (prev.first) return;
+    if (prev.index === player.index && prev.playing && !player.playing) { hushSpeak(); return; }
+    if (prev.index === player.index && prev.playing === player.playing && prev.index !== -1) return;
+    const say = steps[player.index]?.say;
+    if (say) speakPrompt(say);
+  }, [player.index, player.playing, narrate, steps]);
+  useEffect(() => () => hushSpeak(), []);
+
   const scene = sceneAt(steps, player.index);
   const Stage = STAGES[demo];
 
@@ -175,6 +201,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
           <p className="tutor-note"><ShieldAlert size={13} />{aiCfg.enabled && aiCfg.apiKey ? "快捷按钮由离线规则老师处理；输入框的问题交给你设置的 AI。" : "离线规则老师：按年级和你的反馈调整讲法，不联网。"}</p>
         </section>
         <label className="motion-toggle"><input type="checkbox" checked={reduceMotion} onChange={(e) => setReduceMotion(e.target.checked)} />减少动态效果</label>
+        {canSpeak() ? <label className="motion-toggle"><input type="checkbox" checked={narrate} onChange={(e) => { setNarrate(e.target.checked); if (e.target.checked) speakPrompt(steps[player.index]?.say ?? ""); }} />语音朗读老师的话</label> : null}
       </aside>
     </div>
     {def.experiment ? <section className="experiment" aria-label="实验说明">

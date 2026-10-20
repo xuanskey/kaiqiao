@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { classSummary, dateLabel, greeting, requestLesson, todayPicks } from "@/lib/lesson/today";
+import { loadClassLog, type ClassLog } from "@/lib/lesson/class-log";
+import type { DemoId } from "@/lib/lesson/demos";
 import { UnitProgress } from "./learning";
-import { ArrowRight, BookOpen, Check, ChevronRight, Download, Flame, Lightbulb, LockKeyhole, Map as MapIcon, RotateCcw, Search, Sparkles, Star, Target, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpen, FlaskConical, NotebookPen, Presentation, Check, ChevronRight, Download, Flame, Lightbulb, LockKeyhole, Map as MapIcon, RotateCcw, Search, Sparkles, Star, Target, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CHAPTERS, GRADE_LABEL, LEVELS_PER_CHAPTER, chapterById, chaptersOfGrade } from "@/lib/math/chapters";
 import { unlockAudio, playTap } from "@/lib/math/audio";
@@ -15,22 +18,65 @@ import { Meter, Metric, PageHeading } from "./shell";
 
 export function Home() {
   const s = useMath();
+  const now = useNow();
+  const [log, setLog] = useState<ClassLog>({});
+  useEffect(() => { setLog(loadClassLog(typeof window === "undefined" ? undefined : window.localStorage)); }, []);
   const next = nextCampaign(s.stars, s.selectedGrade);
   const chapter = chapterById(next.chapterId);
   const count = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade).length;
   const dailyDone = s.dailyByGrade[s.selectedGrade] === todayStamp();
   const done = chaptersOfGrade(s.selectedGrade).reduce((n, c) => n + clearedLevels(s.stars, c.id), 0);
   const all = chaptersOfGrade(s.selectedGrade).length * LEVELS_PER_CHAPTER;
+  const picks = todayPicks(s.selectedGrade, now);
+  const cls = classSummary(log, now);
   const tap = (action: () => void) => { unlockAudio(); if (!s.muted) playTap(); action(); };
-  return <div className="page-enter">
-    <PageHeading eyebrow={`${GRADE_LABEL[s.selectedGrade]} · 今日练习`} title={dailyDone ? "今天的练习完成啦。" : "今天，也开窍一点。"} description={dailyDone ? "想多练一会儿，就挑个知识点，或去错题本把难题再想一遍。" : "每天 10 道题，先想清楚，再动手。答错也没关系，每道题都有讲解。"} />
-    <div className="home-feature-grid">
-      <section className="daily-card" aria-labelledby="daily-title">
-        <span className="hero-kicker"><span className="status-dot" />{dailyDone ? "今天已完成" : "今天的小目标"}</span>
-        <div className="daily-copy"><h2 id="daily-title">每天一组，<br />把数学练明白。</h2><p>{GRADE_LABEL[s.selectedGrade]} · 10 道基础题<br />答错的题会收进错题本。</p></div>
-        <div className="hero-art"><span className="orbit orbit-one" /><span className="orbit orbit-two" /><span className="math-doodle doodle-one">+</span><span className="math-doodle doodle-two">÷</span><Mascot mood={dailyDone ? "happy" : "idle"} /></div>
-        <Button className="daily-button" size="lg" onClick={() => tap(s.startDaily)}>{dailyDone ? <Check /> : <Sparkles />}{dailyDone ? "再练一组" : "开始每日练习"}<ArrowRight /></Button>
-      </section>
+  const openLesson = (demo: DemoId) => tap(() => { requestLesson(demo, s.selectedGrade, "今日推荐"); s.go("class"); });
+  const plan = [
+    { key: "class", done: cls.today, title: "上一节互动课", detail: picks.math ? `推荐：${picks.math.title}` : "去课堂选一节课", action: () => (picks.math ? openLesson(picks.math.id) : tap(() => s.go("class"))), icon: Presentation },
+    { key: "daily", done: dailyDone, title: "完成每日练习", detail: `${GRADE_LABEL[s.selectedGrade]} · 10 道基础题`, action: () => tap(s.startDaily), icon: Target },
+    { key: "review", done: count === 0, title: count ? "把错题再想一遍" : "错题本已清空", detail: count ? `${count} 道待巩固` : "保持住，继续加油", action: () => tap(() => s.go("review")), icon: NotebookPen },
+  ];
+  const doneCount = plan.filter((x) => x.done).length;
+  const nextStep = plan.find((x) => !x.done);
+  return <div className="page-enter home-v2">
+    <header className="home-hero-head">
+      <div>
+        <p className="eyebrow">{dateLabel(now)} · {GRADE_LABEL[s.selectedGrade]}</p>
+        <h1>{greeting(now.getHours())}，今天也开窍一点。</h1>
+        <p className="page-description">{doneCount === 3 ? "今天的计划全部完成啦，真棒！想多学一点，就去课堂做个实验。" : "按下面三步来：先看懂，再练习，最后把错题弄明白。"}</p>
+      </div>
+      <div className="home-pills" aria-label="今日概况">
+        <span className="home-pill tone-peach"><Flame size={15} />连续 {currentStreak(s.streak, s.lastPlayDate)} 天</span>
+        <span className="home-pill tone-gold"><Star size={15} />{totalStars(s.stars)} 颗星</span>
+      </div>
+    </header>
+
+    <section className="plan-card" aria-labelledby="plan-title">
+      <div className="plan-main">
+        <span className="hero-kicker"><span className="status-dot" />{doneCount === 3 ? "今日计划已完成" : `今日计划 · 还差 ${3 - doneCount} 步`}</span>
+        <div className="plan-head">
+          <ProgressRing value={doneCount} max={3} />
+          <div><h2 id="plan-title">今天的学习计划</h2><p>{nextStep ? `下一步：${nextStep.title}` : "三步都完成了，给自己点个赞！"}</p></div>
+        </div>
+        <ol className="plan-steps">{plan.map((step, i) => { const Icon = step.icon; return <li key={step.key}>
+          <button type="button" className={cn("plan-step", step.done && "is-done", step === nextStep && "is-next")} onClick={step.action}>
+            <span className="plan-step-no">{step.done ? <Check size={15} /> : i + 1}</span>
+            <span className="plan-step-icon"><Icon size={18} /></span>
+            <span className="plan-step-text"><strong>{step.title}</strong><small>{step.detail}</small></span>
+            <ArrowRight size={16} className="plan-step-arrow" />
+          </button>
+        </li>; })}</ol>
+      </div>
+      <div className="plan-art" aria-hidden="true"><span className="orbit orbit-one" /><span className="orbit orbit-two" /><span className="math-doodle doodle-one">+</span><span className="math-doodle doodle-two">÷</span><Mascot mood={doneCount === 3 ? "happy" : "idle"} /></div>
+    </section>
+
+    <div className="section-heading"><h2>今日推荐</h2><span>每天自动换一节</span></div>
+    <div className="pick-grid">
+      {picks.math ? <PickCard tone="math" kicker="数学互动课" title={picks.math.title} summary={picks.math.summary} cta="去上课" icon={Presentation} onClick={() => openLesson(picks.math!.id)} /> : null}
+      {picks.science ? <PickCard tone="science" kicker="科学小实验" title={picks.science.title} summary={picks.science.summary} cta="做实验" icon={FlaskConical} onClick={() => openLesson(picks.science!.id)} /> : null}
+    </div>
+
+    <div className="home-feature-grid home-feature-grid--v2">
       <section className="journey-card" aria-labelledby="journey-title">
         <div className="flex items-center justify-between"><span className="section-kicker"><MapIcon size={17} />我的闯关旅程</span><span className="soft-badge">{GRADE_LABEL[s.selectedGrade]}</span></div>
         <div className="journey-path" aria-hidden="true"><span className={done ? "path-done" : ""}>{done ? <Check size={16} /> : <MapIcon size={15} />}</span><i /><span className="path-current"><Star size={22} /></span><i /><span><LockKeyhole size={15} /></span></div>
@@ -38,8 +84,9 @@ export function Home() {
         <div className="progress-caption"><span>本年级已通关</span><strong>{done} <small>/ {all}</small></strong></div><Meter value={done} max={all} label="本年级闯关进度" />
         <Button variant="secondary" size="lg" className="mt-5 w-full justify-between" onClick={() => tap(() => s.startLevel(next.chapterId, next.level))}>{done ? "继续闯关" : "开始闯关"}<ArrowRight /></Button>
       </section>
+      <section className="learning-entry learning-entry--v2"><span className="mode-icon"><Lightbulb size={24}/></span><div><span className="eyebrow">{s.selectedGrade===3?"原创理解实验室":"按知识点练"}</span><h2>先想明白，再练到会。</h2><p>{s.selectedGrade===3?"三年级 18 个知识单元，配分步讲解和互动实验。":`${GRADE_LABEL[s.selectedGrade]} ${chaptersOfGrade(s.selectedGrade).length} 个题库模块，按知识点自由练习。`}</p></div><Button onClick={() => s.go(s.selectedGrade===3?"learn":"map")}>{s.selectedGrade===3?"去理解":"选知识点"}<ArrowRight/></Button></section>
     </div>
-    <section className="learning-entry"><span className="mode-icon"><Lightbulb size={24}/></span><div><span className="eyebrow">{s.selectedGrade===3?"原创理解实验室":"按知识点练"}</span><h2>先想明白，再练到会。</h2><p>{s.selectedGrade===3?"三年级 18 个知识单元，配分步讲解和互动实验。":`${GRADE_LABEL[s.selectedGrade]} ${chaptersOfGrade(s.selectedGrade).length} 个题库模块，按知识点自由练习。`}</p></div><Button onClick={() => s.go(s.selectedGrade===3?"learn":"map")}>{s.selectedGrade===3?"去理解":"选知识点"}<ArrowRight/></Button></section>
+
     <div className="section-heading"><h2>换个方式练一练</h2><span>按自己的节奏来</span></div>
     <div className="mode-grid">
       <ModeCard icon={BookOpen} tone="peach" title="错题再想想" description={count ? `${count} 道待巩固 · 把难点变熟悉` : "暂时没有错题，继续保持"} onClick={() => tap(() => s.go("review"))} />
@@ -47,9 +94,33 @@ export function Home() {
       <ModeCard icon={Zap} tone="lavender" title="和窍窍比一比" description="60 秒 · 与电脑伙伴一起练" onClick={() => tap(s.startDuel)} />
     </div>
     <div className="section-heading"><h2>每一步，都有记录</h2><span>所有年级累计</span></div>
-    <div className="metrics-grid"><Metric icon={Flame} tone="peach" label="连续练习 · 天" value={String(currentStreak(s.streak, s.lastPlayDate))} /><Metric icon={Star} tone="gold" label="闯关星星" value={String(totalStars(s.stars))} /><Metric icon={Lightbulb} label="成长积分" value={String(s.xp)} /></div>
+    <div className="metrics-grid metrics-grid--4"><Metric icon={Flame} tone="peach" label="连续练习 · 天" value={String(currentStreak(s.streak, s.lastPlayDate))} /><Metric icon={Star} tone="gold" label="闯关星星" value={String(totalStars(s.stars))} /><Metric icon={Lightbulb} label="成长积分" value={String(s.xp)} /><Metric icon={Presentation} tone="blue" label="课堂练习 · 题" value={String(cls.attempts)} /></div>
     <p className="gentle-note"><Sparkles size={14} />不用和别人比，看见自己的进步就很好。</p>
   </div>;
+}
+
+function useNow(): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const t = window.setInterval(() => setNow(new Date()), 60_000); return () => window.clearInterval(t); }, []);
+  return now;
+}
+
+function ProgressRing({ value, max }: { value: number; max: number }) {
+  const r = 26, c = 2 * Math.PI * r, ratio = Math.min(1, value / Math.max(1, max));
+  return <div className="progress-ring" role="img" aria-label={`今日计划完成 ${value}/${max}`}>
+    <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r={r} className="ring-track" /><circle cx="32" cy="32" r={r} className="ring-value" strokeDasharray={`${c * ratio} ${c}`} transform="rotate(-90 32 32)" /></svg>
+    <strong>{value}<small>/{max}</small></strong>
+  </div>;
+}
+
+function PickCard({ tone, kicker, title, summary, cta, icon: Icon, onClick }: { tone: string; kicker: string; title: string; summary: string; cta: string; icon: LucideIcon; onClick: () => void }) {
+  return <button type="button" className={`pick-card pick-${tone}`} onClick={onClick}>
+    <span className="pick-icon"><Icon size={22} /></span>
+    <span className="pick-kicker">{kicker}</span>
+    <strong>{title}</strong>
+    <small>{summary}</small>
+    <span className="pick-cta">{cta}<ArrowRight size={15} /></span>
+  </button>;
 }
 
 function ModeCard({ icon: Icon, tone, title, description, onClick }: { icon: LucideIcon; tone: string; title: string; description: string; onClick: () => void }) {
