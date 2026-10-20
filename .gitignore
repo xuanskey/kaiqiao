@@ -8,3 +8,4 @@ dist/
 .env
 .env.local
 *.zip
+e2e-shots/
