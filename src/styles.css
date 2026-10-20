@@ -422,3 +422,90 @@ summary::-webkit-details-marker { display: none; }
 
 .bank-toolbar,.bank-filters{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:22px 0}.bank-filters{margin-bottom:24px}.bank-filters .learning-search{min-width:210px}.explanation p{white-space:pre-line}
 @media(max-width:640px){.bank-toolbar{gap:12px}.bank-toolbar .theme-tabs,.bank-filters .theme-tabs{width:auto;gap:6px}.bank-filters .learning-search{width:100%}.bank-filters .theme-tabs button{padding-inline:16px}}
+
+/* ===== v0.7 UI polish: readable type, clearer hierarchy, bigger practice surface ===== */
+@media (min-width: 761px) {
+  .app-shell { background: linear-gradient(90deg, #fcfcf8 0 218px, transparent 218px); }
+  .sidebar { background: transparent; }
+}
+@media (max-width: 1100px) and (min-width: 761px) { .app-shell { background: linear-gradient(90deg, #fcfcf8 0 184px, transparent 184px); } }
+
+/* Focus (practice) screens have no sidebar. */
+.app-shell.app-shell--focus { background: none; }
+
+/* Type scale: nothing a child or parent must read sits below 12px. */
+.eyebrow { font-size: 12px; letter-spacing: .1em; color: #5f7056; }
+.desktop-context, .grade-picker label, .section-heading > span, .soft-badge, .chapter-top, .wrong-tags,
+.progress-caption, .progress-caption small, .mode-card p, .metric div > span, .gentle-note, .footnote,
+.review-footer p, .accuracy-ring span, .grade-progress li, .grade-progress summary small, .chapter-card .chapter-foot,
+.hero-kicker, .local-note, .nav-caption, .brand span, .unit-card>div small, .unit-card footer, .keyboard-note,
+.question-encouragement, .combo-badge, .answer-label, .practice-footnote, .sidebar-note p { font-size: 12px; }
+.page-description, .muted-copy, .daily-copy p, .chapter-card > p, .empty-state p, .result-card > p, .recommend-card p { font-size: 14px; }
+.section-heading h2 { font-size: 18px; }
+.mode-card h3 { font-size: 16px; }
+.grade-progress summary { font-size: 14px; }
+.nav-item { font-size: 15px; }
+.nav-item.is-active { box-shadow: inset 3px 0 0 #285847; }
+.grade-picker select { font-size: 14px; }
+
+/* Home: the daily goal leads; understanding studio follows as a quieter strip. */
+.page-heading h1 { font-size: clamp(28px, 2.6vw, 38px); }
+.daily-card { box-shadow: 0 18px 40px -22px #1c413380; }
+.daily-copy h2 { font-size: clamp(28px, 2.7vw, 38px); }
+.daily-button { height: 52px; font-size: 15px; font-weight: 650; padding: 0 22px; border-radius: 14px; }
+.journey-card > button { font-weight: 650; font-size: 15px; }
+.learning-entry { margin: 20px 0 0; background: #fffef9; border-color: #e6ecdf; }
+.learning-entry h2 { font-size: 19px; }
+.mode-card { display: flex; align-items: center; gap: 16px; }
+.mode-icon { margin-bottom: 0; flex-shrink: 0; }
+.mode-arrow { top: 50%; transform: translateY(-50%); }
+.metric strong { font-size: 28px; }
+
+/* Bank cards: tighter, with a clear hover affordance. */
+.unit-card { padding: 20px 20px 16px; display: flex; flex-direction: column; }
+.unit-card h2 { margin: 12px 0 6px; font-size: 19px; }
+.unit-card p { min-height: 0; flex: 1; }
+.unit-card footer { margin-top: 16px; }
+.unit-card:hover { box-shadow: 0 10px 24px -16px #28584766; }
+.unit-card:hover footer svg { transform: translateX(3px); }
+.unit-card footer svg { transition: transform .16s; }
+.learning-search svg { flex-shrink: 0; }
+
+/* Practice: the question is the hero. */
+.practice-page .meter { height: 8px; }
+.practice-page .meter > span { background: linear-gradient(90deg, #7f9d67, #285847); }
+.practice-workspace { align-items: stretch; }
+.question-card { display: flex; flex-direction: column; padding: 28px; }
+.question-prompt { font-size: clamp(40px, 4.6vw, 60px); line-height: 1.35; margin: auto 0; padding: 28px 0; letter-spacing: 0; }
+.question-prompt--long { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.75; }
+.question-encouragement { margin-top: 0; }
+.answer-display { min-height: 76px; font-size: 36px; border-width: 2px; }
+.answer-display:has(i) { border-color: #285847; box-shadow: 0 0 0 4px #28584714; }
+.answer-display i { animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+.keypad-key { min-height: 62px; font-size: 26px; }
+.keypad-key--ok { font-size: 17px; font-weight: 650; }
+.choice-button strong { font-size: 18px; }
+.practice-workspace.has-feedback .question-prompt { margin: 0; padding: 18px 0 0; }
+.feedback-box { border: 1px solid #d5e5c4; }
+.feedback-box--retry { border-color: #efdcb4; }
+
+@media (max-width: 760px) {
+  .nav-item { font-size: 11px; box-shadow: none !important; }
+  .eyebrow { font-size: 11px; }
+  .page-description, .muted-copy, .daily-copy p { font-size: 13px; }
+  .page-heading h1 { font-size: 28px; }
+  .daily-copy h2 { font-size: 28px; }
+  .section-heading h2 { font-size: 16px; }
+  .metrics-grid .metric strong { font-size: 24px; }
+  .metric div > span, .section-heading > span { font-size: 11px; }
+  .learning-entry { margin-top: 15px; }
+  .question-card { padding: 20px; }
+  .question-prompt { font-size: 44px; padding: 18px 0; }
+  .question-prompt--long { font-size: 23px; }
+  .answer-display { min-height: 60px; font-size: 30px; }
+  .keypad-key { min-height: 56px; font-size: 24px; }
+  .keypad-key--ok { font-size: 16px; }
+}
+@media (max-width: 360px) { .question-prompt { font-size: 38px; } }
+@media (prefers-reduced-motion: reduce) { .answer-display i { animation: none; } }
