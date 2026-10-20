@@ -215,11 +215,11 @@ export function BalanceStage({ params, scene, interactive }: StageProps) {
   const reveal = interactive ? 9 : scene.reveal ?? 0;
   const [guess, setGuess] = useState(1);
   useEffect(() => setGuess(1), [params.a, params.b, params.x]);
-  const removed = !interactive && reveal >= 2;
+  const removed = !interactive && reveal >= 3;
   const leftMass = interactive ? params.a * guess + params.b : params.a * params.x + (removed ? 0 : params.b);
   const rightMass = interactive ? r.c : removed ? r.afterSub : r.c;
   const tilt = Math.max(-12, Math.min(12, (rightMass - leftMass) * 1.5));
-  const boxes = reveal >= 4 && !interactive ? 1 : params.a;
+  const boxes = params.a;
   return <figure className="stage"><svg viewBox="0 0 440 230" role="img" aria-label={`方程 ${r.eq}`}>
     <polygon points="220,200 200,225 240,225" fill={C.ink} />
     <line x1="220" y1="200" x2="220" y2="70" stroke={C.ink} strokeWidth="4" />
@@ -232,10 +232,10 @@ export function BalanceStage({ params, scene, interactive }: StageProps) {
       </g>
       <g transform="translate(340 70)">
         <line x1="0" y1="0" x2="0" y2="40" stroke="#888" /><path d="M-62 40 h124 l-12 14 h-100z" fill={C.soft} stroke={C.line} />
-        <g transform="translate(-24 16)"><rect width="48" height="22" rx="3" fill={C.gold} stroke={C.goldDark} /><text x="24" y="16" textAnchor="middle" fontSize="12">{reveal >= 4 && !interactive ? r.x : rightMass}g</text></g>
+        <g transform="translate(-24 16)"><rect width="48" height="22" rx="3" fill={C.gold} stroke={C.goldDark} /><text x="24" y="16" textAnchor="middle" fontSize="12">{rightMass}g</text></g>
       </g>
     </g>
-    <text x="220" y="26" textAnchor="middle" className="stage-result">{interactive ? (leftMass === rightMass ? `平衡了！x = ${guess}` : leftMass > rightMass ? "左边重了，x 猜大了" : "右边重了，x 猜小了") : reveal >= 5 ? `x = ${r.x}` : r.eq}</text>
+    <text x="220" y="26" textAnchor="middle" className="stage-result">{interactive ? (leftMass === rightMass ? `平衡了！x = ${guess}` : leftMass > rightMass ? "左边重了，x 猜大了" : "右边重了，x 猜小了") : reveal >= 2 ? `x = ${params.x} 时：${params.a}×${params.x}+${removed ? 0 : params.b} = ${leftMass}` : r.eq}</text>
     {interactive ? <foreignObject x="80" y="196" width="280" height="34"><label className="stage-slider">猜 x：<input type="range" min="1" max="12" value={guess} onChange={(e) => setGuess(Number(e.target.value))} aria-label="猜 x 的值" /><b>{guess}</b></label></foreignObject> : null}
   </svg></figure>;
 }
