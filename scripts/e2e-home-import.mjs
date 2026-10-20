@@ -57,6 +57,29 @@ try {
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('heading', { name: '互动课堂' }).waitFor();
   ok('从推荐课返回课程目录正常');
+  // v0.11 新演示：凑十法、条形统计图、多边形面积
+  await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '一年级' }).click();
+  await page.locator('li', { hasText: '20 以内的进位加法' }).getByRole('button', { name: '上课' }).first().click();
+  await page.getByRole('heading', { name: '凑十法：20 以内进位加法' }).waitFor();
+  await page.getByRole('button', { name: '让我自己试试' }).first().click();
+  await page.getByRole('button', { name: '第二个加数加 1' }).click();
+  await page.locator('.stage text', { hasText: '10 + 4 = 14' }).waitFor();
+  ok('凑十法：动手把 9+4 改成 9+5，画面显示 10 + 4 = 14');
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '四年级' }).click();
+  await page.locator('li', { hasText: '条形统计图' }).getByRole('button', { name: '上课' }).first().click();
+  await page.getByRole('button', { name: '让我自己试试' }).first().click();
+  await page.getByRole('button', { name: '葡萄加 1 票' }).click();
+  await page.locator('.stage text', { hasText: '相差 6 票' }).waitFor();
+  ok('条形统计图：给葡萄加 1 票，相差从 7 票变为 6 票');
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '五年级' }).click();
+  await page.locator('li', { hasText: '多边形的面积' }).getByRole('button', { name: '上课' }).first().click();
+  await page.getByRole('button', { name: '完整过程' }).click();
+  await page.locator('.stage text', { hasText: 'S = 8 × 5 = 40 cm²' }).waitFor();
+  ok('多边形面积：完整过程显示平行四边形剪拼与 S = 8 × 5 = 40 cm²');
+  await page.getByRole('button', { name: '返回课程目录' }).click();
+  await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '三年级' }).click();
   // 导入
   const fileInput = page.locator('.import-panel input[type=file]').first();
   await fileInput.setInputFiles({ name: 'lesson.pdf', mimeType: 'application/pdf', buffer: minimalPdf(['12+35=', '48-19=']) });
@@ -91,6 +114,12 @@ try {
     }
   }
   await page.screenshot({ path: `${out}/import-desktop.png`, fullPage: true });
+  await page.evaluate(() => { const d = new Date(); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; localStorage.setItem('kaiqiao-activity', JSON.stringify({ [k]: { n: 12, ok: 9 } })); });
+  await page.reload();
+  await page.locator('.week-card').waitFor();
+  assert.equal(await page.locator('.week-copy strong').innerText(), '12 题');
+  assert.ok((await page.locator('.week-copy span').innerText()).includes('答对 75%'));
+  ok('首页“这一周”：读取本机记录，显示 12 题、答对 75%，今天的柱子高亮');
   const m = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await m.goto(BASE);
   await m.getByRole('heading', { name: '今天的学习计划' }).waitFor();

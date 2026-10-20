@@ -1,4 +1,5 @@
 import { unitById } from "../lib/math/units.ts";
+import { recordActivity } from "../lib/activity.ts";
 import { create } from "zustand";
 import { CHAPTERS, DAILY_COUNT, DRILL_COUNT, QUESTIONS_PER_LEVEL, SPRINT_COUNT, SPRINT_SECONDS } from "../lib/math/chapters.ts";
 import { isCorrect, starsFor } from "../lib/math/grade.ts";
@@ -311,6 +312,7 @@ export const useMath = create<MathState>((set, get) => ({
     const q = session.questions[session.index];
     if (!q) return false;
     const ok = isCorrect(q, given);
+    if (typeof window !== "undefined" && window.localStorage) recordActivity(window.localStorage, ok);
     const ms = Math.max(200, performance.now() - session.shownAt);
     const combo = ok ? session.combo + 1 : 0;
     const skill = q.skill ?? inferSkill(q);

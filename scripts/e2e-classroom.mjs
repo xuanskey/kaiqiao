@@ -251,12 +251,14 @@ try {
   await page.locator('.import-item.is-above-grade', { hasText: '解方程' }).waitFor();
   ok('导入资料：1.2×0.5 算出 0.6；“1O+5”标为需确认；解方程标为超出年级');
   // 原有功能回归
-  await page.getByRole('button', { name: '练习' }).first().click();
+  await page.getByRole('button', { name: '首页' }).first().click();
   await page.getByRole('button', { name: '题库' }).first().click();
   await page.getByText('按知识点练').first().waitFor();
-  await page.getByRole('button', { name: '理解' }).first().click();
+  await page.getByRole('button', { name: '课堂' }).first().click();
+  await page.getByRole('button', { name: '进入理解实验室' }).click();
   await page.getByText('数学，自己想明白。').waitFor();
-  ok('原有练习、题库、理解页面正常');
+  assert.equal(await page.locator('.nav-item.is-active').first().innerText(), '课堂');
+  ok('原有首页、题库正常；理解实验室并入课堂，导航高亮“课堂”');
   // 手机
   const m = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   m.on('pageerror', (e) => errors.push(String(e))); m.on('response', (r) => { if (r.status() >= 400) console.log('HTTP', r.status(), r.url()); });

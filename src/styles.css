@@ -723,3 +723,27 @@ summary::-webkit-details-marker { display: none; }
   .metrics-grid--4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .plan-step, .pick-card, .progress-ring .ring-value { transition: none; } .spin { animation: none; } }
+.stage-steppers { display: flex; gap: 14px; justify-content: center; font-size: 12px; color: #476247; }
+.stage-steppers label { display: inline-flex; align-items: center; gap: 5px; }
+.stage-steppers button { width: 24px; height: 24px; border-radius: 7px; border: 1px solid #cad9bc; background: #eef4e6; color: #285847; font-size: 14px; line-height: 1; }
+.stage-steppers b { min-width: 16px; text-align: center; font-size: 14px; }
+.class-lab-entry { display: flex; align-items: center; gap: 14px; margin: 18px 0; padding: 16px 18px; border-radius: 18px; background: #fffbef; border: 1px solid #efe2bd; color: #6b5420; }
+.class-lab-entry > div { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.class-lab-entry strong { font-size: 15px; color: #263e34; }
+.class-lab-entry small { font-size: 12px; color: #7a6a43; }
+.class-lab-entry button { padding: 9px 14px; border-radius: 12px; background: #285847; color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; }
+@media (max-width: 760px) { .class-lab-entry { flex-wrap: wrap; } .class-lab-entry button { width: 100%; } }
+.week-card { display: grid; grid-template-columns: 180px minmax(0,1fr); align-items: end; gap: 20px; padding: 20px 22px; border-radius: 20px; background: #fff; border: 1px solid #e8ece2; }
+.week-copy { display: flex; flex-direction: column; gap: 6px; align-self: center; }
+.week-copy strong { font-size: 26px; font-weight: 700; letter-spacing: -.04em; color: #263e34; font-variant-numeric: tabular-nums; }
+.week-copy span { font-size: 12px; color: #68765e; line-height: 1.6; }
+.week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; list-style: none; margin: 0; padding: 0; }
+.week-bars li { display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; }
+.week-bar { width: 100%; max-width: 34px; height: 84px; border-radius: 10px; background: #f1f4ec; display: flex; align-items: flex-end; overflow: hidden; }
+.week-bar i { display: block; width: 100%; background: linear-gradient(180deg, #5c9a76, #285847); border-radius: 10px; transition: height .5s ease; }
+.week-bars li.is-today .week-bar i { background: linear-gradient(180deg, #f3cf6e, #d7a63b); }
+.week-bars small { font-size: 10px; color: #6d7b73; }
+.week-bars li.is-today small { color: #285847; font-weight: 700; }
+.week-bars b { position: absolute; top: -16px; font-size: 10px; color: #285847; font-weight: 650; }
+@media (max-width: 760px) { .week-card { grid-template-columns: 1fr; gap: 14px; padding: 18px; } .week-bars { gap: 6px; } .week-bar { height: 70px; } }
+@media (prefers-reduced-motion: reduce) { .week-bar i { transition: none; } }

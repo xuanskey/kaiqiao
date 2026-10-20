@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { classSummary, dateLabel, greeting, requestLesson, todayPicks } from "@/lib/lesson/today";
 import { loadClassLog, type ClassLog } from "@/lib/lesson/class-log";
+import { loadActivity, weekSummary, type Activity } from "@/lib/activity";
 import type { DemoId } from "@/lib/lesson/demos";
 import { UnitProgress } from "./learning";
 import { ArrowRight, BookOpen, FlaskConical, NotebookPen, Presentation, Check, ChevronRight, Download, Flame, Lightbulb, LockKeyhole, Map as MapIcon, RotateCcw, Search, Sparkles, Star, Target, Timer, Trophy, Zap, type LucideIcon } from "lucide-react";
@@ -93,10 +94,30 @@ export function Home() {
       <ModeCard icon={Timer} tone="blue" title="90 秒小挑战" description="先求答对，再试试快一点" onClick={() => tap(s.startSprint)} />
       <ModeCard icon={Zap} tone="lavender" title="和窍窍比一比" description="60 秒 · 与电脑伙伴一起练" onClick={() => tap(s.startDuel)} />
     </div>
+    <div className="section-heading"><h2>这一周</h2><span>练习和课堂的答题都算</span></div>
+    <WeekCard />
     <div className="section-heading"><h2>每一步，都有记录</h2><span>所有年级累计</span></div>
     <div className="metrics-grid metrics-grid--4"><Metric icon={Flame} tone="peach" label="连续练习 · 天" value={String(currentStreak(s.streak, s.lastPlayDate))} /><Metric icon={Star} tone="gold" label="闯关星星" value={String(totalStars(s.stars))} /><Metric icon={Lightbulb} label="成长积分" value={String(s.xp)} /><Metric icon={Presentation} tone="blue" label="课堂练习 · 题" value={String(cls.attempts)} /></div>
     <p className="gentle-note"><Sparkles size={14} />不用和别人比，看见自己的进步就很好。</p>
   </div>;
+}
+
+export function WeekCard() {
+  const now = useNow();
+  const [act, setAct] = useState<Activity>({});
+  useEffect(() => { setAct(loadActivity(typeof window === "undefined" ? undefined : window.localStorage)); }, []);
+  const w = weekSummary(act, now);
+  const top = Math.max(10, ...w.days.map((d) => d.n));
+  return <section className="week-card" aria-label="最近 7 天学习记录">
+    <div className="week-copy">
+      <strong>{w.n ? `${w.n} 题` : "还没开始"}</strong>
+      <span>{w.n ? `最近 7 天学了 ${w.activeDays} 天${w.rate === null ? "" : ` · 答对 ${w.rate}%`}` : "最近 7 天的答题会画在这里"}</span>
+    </div>
+    <ol className="week-bars">{w.days.map((d) => <li key={d.stamp} className={cn(d.today && "is-today", d.n > 0 && "has-data")}>
+      <span className="week-bar" title={`${d.label}：${d.n} 题，答对 ${d.ok} 题`}><i style={{ height: `${Math.max(d.n ? 8 : 0, Math.round((d.n / top) * 100))}%` }} /></span>
+      <small>{d.label}</small><b>{d.n || ""}</b>
+    </li>)}</ol>
+  </section>;
 }
 
 function useNow(): Date {
@@ -202,7 +223,9 @@ export function Report() {
       <section className="accuracy-card"><div className="accuracy-ring" style={{ '--accuracy': `${acc ?? 0}%` } as import('react').CSSProperties}><div><strong>{acc === null ? '—' : acc}<small>{acc === null ? '' : '%'}</small></strong><span>{acc === null ? '等待第一次练习' : '累计正确率'}</span></div></div><p>{s.stats.answered ? `答对 ${s.stats.correct} / ${s.stats.answered} 题` : '还没有练习记录，开始一组就好。'}</p></section>
       <div className="report-metrics"><Metric icon={Target} label="累计答题" value={String(s.stats.answered)} /><Metric icon={Flame} tone="peach" label="连续练习 · 天" value={String(streak)} /><Metric icon={Star} tone="gold" label="闯关星星" value={String(totalStars(s.stars))} /><Metric icon={Lightbulb} tone="lavender" label="成长积分" value={String(s.xp)} /></div>
     </div>
-    <div className="report-columns"><div>
+    <div className="section-heading"><h2>最近 7 天</h2><span>每天做了多少题</span></div>
+    <WeekCard />
+    <div className="report-columns mt-5"><div>
       <section className="recommend-card"><span className="section-kicker"><Lightbulb size={18} />接下来，练什么？</span><h2>{wrong.length ? '把错题变成拿手题。' : '保持练习，慢慢积累。'}</h2><p>{recommendation}</p><Button onClick={wrong.length ? s.startReview : s.startDaily}>{wrong.length ? '重做本年级错题' : '练一组本年级题目'}<ArrowRight /></Button></section>
       <section className="surface-card mt-5"><div className="section-heading mt-0"><h2>值得再巩固的地方</h2><span>所有年级</span></div>{weak.length ? <ul className="skill-list">{weak.slice(0, 4).map((row) => <li key={row.id}><div className="progress-caption"><strong>{row.label}</strong><span>{Math.round(row.acc * 100)}% · {row.seen} 次作答</span></div><Meter value={row.acc * 100} max={100} label={`${row.label}正确率`} /></li>)}</ul> : <p className="muted-copy leading-relaxed">{s.stats.answered ? '暂未发现有足够记录的薄弱项。继续练习，让小结更清楚。' : '完成练习后，这里会显示需要巩固的考点。'}</p>}<p className="footnote">每个考点至少有 3 次作答，才会纳入分析。</p>{pace ? <p className="pace-note"><Timer size={16} />{pace.line}</p> : null}{s.sprintBest ? <p className="pace-note"><Trophy size={16} />限时最好成绩：{s.sprintBest} 题（所有年级）</p> : null}</section>
     </div><div>

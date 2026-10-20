@@ -41,6 +41,7 @@ const LEVELS: [RegExp, number, string][] = [
 ];
 
 const DEMO_HINTS: [RegExp, DemoId][] = [
+  [/(平行四边形|三角形|梯形).*面积|面积.*(平行四边形|三角形|梯形)|上底|下底|多边形/, "poly-area"], [/凑十|进位加法/, "make-ten"], [/统计图|条形|票数/, "bar-chart"],
   [/圆柱|圆锥/, "cylinder"], [/圆/, "circle"], [/分数|几分之/, "fraction"], [/周长|面积|长方形|正方形/, "perimeter-area"],
   [/百分|打.折|折扣/, "percent"], [/负数|零下|数轴/, "number-line"], [/量角器|度数|锐角|钝角/, "angle"], [/平行|垂直/, "parallel"],
   [/钟|几时|时.*分/, "clock"], [/元|角钱|人民币|找回/, "rmb"], [/厘米|尺子|测量/, "ruler"], [/平均分|每人|几组|乘法/, "group-share"],

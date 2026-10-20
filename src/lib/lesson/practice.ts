@@ -1,6 +1,6 @@
 import type { Grade } from "../math/types.ts";
 import type { Rng } from "../math/rng.ts";
-import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, type DemoId, type Params, normalizeParams } from "./demos.ts";
+import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, makeTen, barChart, polyArea, FRUITS, type DemoId, type Params, normalizeParams } from "./demos.ts";
 
 /**
  * 随堂练习：题目由参数生成，答案由同一套计算函数得出，
@@ -200,6 +200,42 @@ export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng
       const r = pigeonhole(p);
       return { ...base, kind: "fill", params: p, prompt: `把 ${p.items} 个苹果放进 ${p.boxes} 个抽屉，总有一个抽屉至少放几个？`, answer: String(r.atLeast), steps: [r.r ? `${p.items} ÷ ${p.boxes} = ${r.q}……${r.r}` : `${p.items} ÷ ${p.boxes} = ${r.q}`, r.r ? `${r.q} + 1 = ${r.atLeast}` : `至少 ${r.q} 个`], traps: r.r ? { [String(r.q)]: "还有余下的苹果，要放进某个抽屉，所以商还要加 1。", [String(r.q + r.r)]: "是商加 1，不是商加余数。" } : {} };
     }
+    case "make-ten": {
+      if (lv === 1) { const a = rng.int(5, 9), need = 10 - a; return { ...base, kind: "fill", params: { a, b: need, q: 1 }, prompt: `${a} 和几凑成 10？`, answer: String(need), steps: [`${a} + ${need} = 10`], traps: { [String(10 + a)]: "是“凑成 10”，想：几加几等于 10。" } }; }
+      let a = rng.int(lv === 2 ? 8 : 5, 9), b = rng.int(11 - a, 9);
+      if (a + b <= 10) b = 11 - a;
+      const p = normalizeParams(demo, { a, b });
+      const r = makeTen(p);
+      if (lv === 2) return { ...base, kind: "fill", params: { ...p, q: 2 }, prompt: `${p.a} + ${p.b} = （　）`, answer: String(r.sum), steps: [r.split, `${p.a} + ${r.need} = 10`, `10 + ${r.rest} = ${r.sum}`], traps: { [String(r.sum - 1)]: "数的时候少数了一个，用凑十法再算一遍。", [String(r.rest)]: `别忘了前面凑成的 10：10 + ${r.rest}。` } };
+      return { ...base, kind: "fill", params: { ...p, q: 3 }, prompt: `算 ${p.a} + ${p.b} 时，把 ${p.b} 分成 ${r.need} 和几？`, answer: String(r.rest), steps: [`${p.a} 和 ${r.need} 凑成 10`, `${p.b} − ${r.need} = ${r.rest}`], traps: { [String(r.need)]: `${r.need} 是用来凑十的，问的是剩下的那部分。` } };
+    }
+    case "bar-chart": {
+      const counts = [0, 1, 2, 3].map(() => rng.int(1, 12));
+      const unit = lv === 3 ? 1 : 0;
+      if (unit === 1) for (let i = 0; i < 4; i++) counts[i] += counts[i] % 2; // 每格 2 票时用偶数，避免半格歧义
+      const p = normalizeParams(demo, { c0: counts[0], c1: counts[1], c2: counts[2], c3: counts[3], unit });
+      const r = barChart(p);
+      const list = FRUITS.map((f, i) => `${f} ${r.counts[i]} 票`).join("，");
+      if (lv === 1) {
+        if (r.tie) { const i = r.counts.indexOf(r.max); return { ...base, kind: "fill", params: { ...p, q: 3, i }, prompt: `条形统计图中每格表示 1 票：${list}。${FRUITS[i]}的条形有几格？`, answer: String(r.counts[i]), steps: [`每格 1 票，${r.counts[i]} 票就是 ${r.counts[i]} 格。`], traps: {} }; }
+        const ans = r.maxName;
+        return { ...base, kind: "choice", params: { ...p, q: 1 }, prompt: `${list}。哪种水果的条形最长？`, answer: ans, choices: choices(ans, FRUITS.filter((f) => f !== ans), rng), steps: [`票数最多的条形最长：${r.maxName} ${r.max} 票。`], traps: { [r.minName.split("、")[0]]: "条形越长，票数越多；这个是最短的。" } };
+      }
+      if (lv === 2) return { ...base, kind: "fill", params: { ...p, q: 2 }, prompt: `${list}。票数最多的比最少的多几票？`, answer: String(r.diff), steps: [`最多 ${r.max} 票，最少 ${r.min} 票`, `${r.max} − ${r.min} = ${r.diff}（票）`], traps: { [String(r.max + r.min)]: "“多几票”用减法。" } };
+      const i = rng.int(0, 3);
+      return { ...base, kind: "fill", params: { ...p, q: 3, i }, prompt: `条形统计图中每格表示 2 票，${FRUITS[i]}有 ${r.counts[i]} 票，它的条形有几格？`, answer: String(r.counts[i] / 2), steps: [`每格 2 票：${r.counts[i]} ÷ 2 = ${r.counts[i] / 2}（格）`], traps: { [String(r.counts[i])]: "每格表示 2 票，格数是票数除以 2。" } };
+    }
+    case "poly-area": {
+      const shape = lv === 1 ? 0 : lv === 2 ? 1 : 2;
+      const p = normalizeParams(demo, { shape, a: rng.int(3, 12), b: rng.int(1, 9), h: rng.int(2, 7) });
+      const r = polyArea(p);
+      const prompt = p.shape === 0 ? `平行四边形的底是 ${p.a} 厘米，高是 ${p.h} 厘米，面积是多少平方厘米？` : p.shape === 1 ? `三角形的底是 ${p.a} 厘米，高是 ${p.h} 厘米，面积是多少平方厘米？` : `梯形的上底是 ${p.b} 厘米，下底是 ${p.a} 厘米，高是 ${p.h} 厘米，面积是多少平方厘米？`;
+      const traps: Record<string, string> = {};
+      if (p.shape === 1) traps[String(p.a * p.h)] = "三角形的面积是同底同高平行四边形的一半，别忘了除以 2。";
+      if (p.shape === 2) { traps[String((p.a + p.b) * p.h)] = "两个梯形才拼成平行四边形，要除以 2。"; traps[String(p.a * p.h)] = "梯形的底是上底加下底。"; }
+      if (p.shape === 0) traps[String(2 * (p.a + p.h))] = "这是周长的算法，面积是底乘高。";
+      return { ...base, kind: "fill", params: { ...p, q: 1 }, prompt, answer: r.area, steps: [`${r.name}面积 = ${r.formula}`, `${r.calc}（平方厘米）`], traps };
+    }
     case "scale": {
       const p = normalizeParams(demo, { s: rng.int(lv === 1 ? 0 : 1, 3), cm: rng.int(1, lv === 3 ? 20 : 9) });
       const r = scale(p);
@@ -314,6 +350,9 @@ export function verifyPractice(q: PracticeQ): string[] {
     case "pigeonhole": expect = String(pigeonhole(p).atLeast); break;
     case "scale": { const r = scale(p); expect = r.m >= 1000 ? String(r.m / 1000) : String(r.m); break; }
     case "water": expect = water(p).state; break;
+    case "make-ten": expect = p.q === 1 ? String(10 - p.a) : p.q === 2 ? String(makeTen(p).sum) : String(makeTen(p).rest); break;
+    case "bar-chart": { const r = barChart(p); expect = p.q === 1 ? r.maxName : p.q === 2 ? String(r.diff) : String(r.counts[p.i] / r.per); break; }
+    case "poly-area": expect = polyArea(p).area; break;
     case "circle": { const r = circle(p); expect = p.askArea ? r.area : r.perimeter; break; }
     case "cylinder": expect = q.level === 3 ? "错" : cylinder(p).volume; break;
     case "shadow": expect = "变短"; break;
