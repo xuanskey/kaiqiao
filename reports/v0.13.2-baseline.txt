@@ -1,0 +1,135 @@
+v0.13.1 bf164c3；同一最终状态回归脚本，Chromium 153，Node 24
+
+✗ 手机 A 连对两题：题干/答案/解析锁定，下一题升级: The input did not match the regular expression /难度：标准/. Input:
+
+'随堂练习\n难度：提高 · 本次 2/2'
+
+✗ 手机 B 连错两题：提示/解析锁定，下一题降级: The input did not match the regular expression /难度：标准/. Input:
+
+'随堂练习\n难度：简单 · 本次 0/2'
+
+✗ 手机 C 输入时再难一点：清空旧输入: 新题不能保留旧输入
+
+'123456' !== ''
+
+✗ 手机 C 输入时简单一点：清空旧输入: 新题不能保留旧输入
+
+'123456' !== ''
+
+✗ 手机 C 输入时给我出一道题：清空旧输入: 新题不能保留旧输入
+
+'123456' !== ''
+
+✗ 手机 D 反馈时重新出题：清反馈，保留历史: 新题不能保留旧反馈
+
+1 !== 0
+
+✗ 手机 E 连错后的同类再练：保留原难度和知识点: The input did not match the regular expression /难度：标准/. Input:
+
+'随堂练习\n难度：简单 · 本次 0/2'
+
+✗ 手机 同源状态：我没听懂仅安排下一题，不打断输入: Expected values to be strictly equal:
++ actual - expected
+
++ '13.2 ÷ 3 = （　）'
+- '4.8 ÷ 0.6 = （　）'
+
+✗ 手机 同批次重复提交只计一次: 课堂记录仅在提交时增加
+
+2 !== 1
+
+✗ 手机 选择题：选项和反馈属于同一题，换题解锁: Expected values to be strictly equal:
+
+1 !== 0
+
+✗ 手机 F 旧 AI 不能覆盖换讲法，随后新请求正常: 过期 AI 不覆盖离线操作
++ actual - expected
+
++ '过期回答 A'
+- '换一种想法来讲。'
+
+✗ 电脑 A 连对两题：题干/答案/解析锁定，下一题升级: The input did not match the regular expression /难度：标准/. Input:
+
+'随堂练习\n难度：提高 · 本次 2/2'
+
+✗ 电脑 B 连错两题：提示/解析锁定，下一题降级: The input did not match the regular expression /难度：标准/. Input:
+
+'随堂练习\n难度：简单 · 本次 0/2'
+
+✗ 电脑 C 输入时再难一点：清空旧输入: 新题不能保留旧输入
+
+'123456' !== ''
+
+✗ 电脑 C 输入时简单一点：清空旧输入: 新题不能保留旧输入
+
+'123456' !== ''
+
+✗ 电脑 C 输入时给我出一道题：清空旧输入: 新题不能保留旧输入
+
+'123456' !== ''
+
+✗ 电脑 D 反馈时重新出题：清反馈，保留历史: 新题不能保留旧反馈
+
+1 !== 0
+
+✗ 电脑 E 连错后的同类再练：保留原难度和知识点: The input did not match the regular expression /难度：标准/. Input:
+
+'随堂练习\n难度：简单 · 本次 0/2'
+
+✗ 电脑 同源状态：我没听懂仅安排下一题，不打断输入: Expected values to be strictly equal:
++ actual - expected
+
++ '13.2 ÷ 3 = （　）'
+- '4.8 ÷ 0.6 = （　）'
+
+✗ 电脑 同批次重复提交只计一次: 课堂记录仅在提交时增加
+
+2 !== 1
+
+✗ 电脑 选择题：选项和反馈属于同一题，换题解锁: Expected values to be strictly equal:
+
+1 !== 0
+
+✗ 电脑 F 旧 AI 不能覆盖换讲法，随后新请求正常: 过期 AI 不覆盖离线操作
++ actual - expected
+
++ '过期回答 A'
+- '换一种想法来讲。'
+
+✗ 390px 全部 25 数学演示 + 11 科学实验：直达、板书、作答、换题: Expected values to be strictly equal:
+
+1 !== 0
+
+✗ 1280px 全部 25 数学演示 + 11 科学实验：直达、板书、作答、换题: Expected values to be strictly equal:
+
+1 !== 0
+
+✗ AI 清除密钥时取消，迟到回复不回写: 无效请求必须取消
+
+false !== true
+
+✗ AI 禁用时取消，迟到回复不回写: 无效请求必须取消
+
+false !== true
+
+✗ AI 修改模型时取消，迟到回复不回写: 无效请求必须取消
+
+false !== true
+
+✗ AI 离开课程时取消，迟到回复不回写: 无效请求必须取消
+
+false !== true
+
+✗ AI 切换课程时取消，迟到回复不回写: 无效请求必须取消
+
+false !== true
+
+✓ AI network后退出 loading，可再次提问
+✓ AI http后退出 loading，可再次提问
+✓ AI timeout后退出 loading，可再次提问
+✗ AI timeout-ignores-abort后退出 loading，可再次提问: page.waitForFunction: Timeout 5000ms exceeded.
+✗ AI cancel后退出 loading，可再次提问: locator.click: Timeout 5000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: '取消请求', exact: true })[22m
+
+状态回归：3 通过，31 失败
