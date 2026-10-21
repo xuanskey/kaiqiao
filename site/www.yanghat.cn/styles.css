@@ -116,3 +116,12 @@ p{text-wrap:pretty}
   .footer-bottom{font-size:12px}
 }
 @media(max-width:359px){.sprout-drawing{right:-6px}.nav-cta{font-size:12px;padding-inline:10px}.lessons-head h2{font-size:28px}}
+
+.promo{display:grid;grid-template-columns:1fr minmax(240px,340px);gap:64px;align-items:center;padding-top:84px;padding-bottom:20px;scroll-margin-top:24px}
+.promo-copy h2{font-family:var(--serif);font-size:40px;font-weight:500;line-height:1.5;letter-spacing:-.5px;margin-top:20px}
+.promo-copy .section-description{font-size:15px;margin-top:16px;max-width:460px}
+.promo-copy .button{margin-top:26px}
+.promo-frame{border-radius:28px;overflow:hidden;background:var(--forest);box-shadow:0 18px 40px #244f3e1f;border:6px solid var(--white);aspect-ratio:9/16}
+.promo-frame video{display:block;width:100%;height:100%;object-fit:cover}
+@media(max-width:820px){.promo{gap:32px;grid-template-columns:1fr minmax(200px,280px)}.promo-copy h2{font-size:34px}.promo-copy .section-description{font-size:13px}}
+@media(max-width:640px){.promo{grid-template-columns:1fr;padding-top:56px;gap:28px}.promo-copy h2{font-size:30px}.promo-frame{width:min(100%,320px);justify-self:center}}

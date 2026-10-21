@@ -4,6 +4,12 @@
 
 覆盖一至六年级的部分基础题型。现有 52 个出题模块、18 个三年级原创知识单元，以及“互动课堂”（25 个数学演示、11 个科学实验，数量按代码实际统计）；教材版本、学期与目录尚未逐项核对，不能当作完整教材同步。
 
+## 宣传片
+
+[![开窍 45 秒宣传片](site/www.yanghat.cn/assets/kaiqiao-promo-poster.jpg)](https://www.yanghat.cn/#video)
+
+45 秒竖屏（1080×1920）产品宣传片，片中凑十法、分数乘法面积模型、小数除法和随堂练习均为真实产品录屏。[在线观看](https://www.yanghat.cn/#video) · [下载 MP4](site/www.yanghat.cn/assets/kaiqiao-promo.mp4)
+
 ## 使用
 
 正式入口：[开窍在线练习](https://kaiqiao.yanghat.cn) · [养习主站](https://www.yanghat.cn)
@@ -61,6 +67,11 @@ npm run test:smoke  # 浏览器冒烟测试（先 npm run build；需要 Playwri
 先邀请少量家长试用，记录是否愿意连续使用、哪些解析看不懂，再验证“练习计划 + 人工解读报告”的付费服务。具体流程见 [PILOT.md](PILOT.md)。收入尚未验证，不承诺提分。
 
 许可证见 [LICENSE](LICENSE)。
+
+## v0.13.1 随堂练习修复
+
+- 修复：随堂练习提交答案后若难度自动调整（如“标准”升到“提高”），题目会立刻换成新难度的下一题，导致题干与刚填的答案、解析对不上。现在反馈期间始终显示刚作答的那道题，点“下一题”才换题。
+- 主站 www.yanghat.cn 新增 45 秒产品宣传片（真实产品录屏），README 增加宣传片入口。
 
 ## v0.13.0 质量强化与体验完善
 

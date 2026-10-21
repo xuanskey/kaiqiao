@@ -18,6 +18,8 @@ export function Quiz({ demo, grade, level, setLevel, nonce, onRecord }: { demo: 
   const [draft, setDraft] = useState("");
   const [result, setResult] = useState<QuizRecord | null>(null);
   const [history, setHistory] = useState<boolean[]>([]);
+  // 提交后难度可能调整，useMemo 会立刻生成新题；反馈期间必须继续显示刚作答的那道题。
+  const shown = result ? result.q : q;
   const submit = (given: string) => {
     if (!given.trim() || result) return;
     const r = checkAnswer(q, given);
@@ -34,16 +36,16 @@ export function Quiz({ demo, grade, level, setLevel, nonce, onRecord }: { demo: 
   const correct = history.filter(Boolean).length;
   return <section className="quiz" aria-label="随堂练习">
     <header><strong>随堂练习</strong><span>难度：{LEVEL[level]} · 本次 {correct}/{history.length}</span></header>
-    <p className="quiz-prompt">{q.prompt}</p>
-    {q.choices ? <div className="quiz-choices">{q.choices.map((c) => <button key={c} type="button" disabled={!!result} className={result ? (c === q.answer ? "is-right" : c === result.given ? "is-wrong" : "") : ""} onClick={() => submit(c)}>{c}</button>)}</div>
+    <p className="quiz-prompt">{shown.prompt}</p>
+    {shown.choices ? <div className="quiz-choices">{shown.choices.map((c) => <button key={c} type="button" disabled={!!result} className={result ? (c === shown.answer ? "is-right" : c === result.given ? "is-wrong" : "") : ""} onClick={() => submit(c)}>{c}</button>)}</div>
       : <form className="quiz-fill" onSubmit={(e) => { e.preventDefault(); submit(draft); }}>
-        <input value={draft} onChange={(e) => setDraft(e.target.value)} inputMode={/^[\d.]+$/.test(q.answer) ? "decimal" : "text"} aria-label="填写答案" placeholder="写下答案" disabled={!!result} />
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} inputMode={/^[\d.]+$/.test(shown.answer) ? "decimal" : "text"} aria-label="填写答案" placeholder="写下答案" disabled={!!result} />
         <button type="submit" disabled={!draft.trim() || !!result}>提交</button>
       </form>}
     {result ? <div className={result.ok ? "quiz-feedback is-ok" : "quiz-feedback is-bad"} role="status">
-      <p>{result.ok ? <><CheckCircle2 size={18} />答对了！</> : <><XCircle size={18} />还差一点。正确答案：{q.answer}</>}</p>
+      <p>{result.ok ? <><CheckCircle2 size={18} />答对了！</> : <><XCircle size={18} />还差一点。正确答案：{shown.answer}</>}</p>
       {!result.ok && result.hint ? <p className="quiz-hint">{result.hint}</p> : null}
-      <ol>{q.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+      <ol>{shown.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
       <div className="quiz-actions"><button type="button" onClick={nextQ}>下一题</button>{!result.ok ? <button type="button" onClick={variant}><RefreshCw size={15} />同类再练一道</button> : null}</div>
     </div> : null}
   </section>;
