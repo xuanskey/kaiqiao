@@ -72,14 +72,37 @@ export function sanitizeReply(text: unknown, maxLen = 400): string {
     .slice(0, maxLen);
 }
 
-export type AiResult = { ok: true; text: string } | { ok: false; error: string };
+export type AiResult = { ok: true; text: string } | { ok: false; error: string; cancelled?: boolean };
 
-export async function askAi(cfg: AiConfig, ctx: AiContext, fetchImpl: typeof fetch = fetch, timeoutMs = 20000): Promise<AiResult> {
+/** 每节课一个请求域。离线操作先同步失效旧请求，异步回复再检查身份。 */
+export function createAiRequests() {
+  let current: AbortController | null = null;
+  const cancel = () => { const old = current; current = null; old?.abort(); };
+  return {
+    cancel,
+    begin: () => { cancel(); current = new AbortController(); return current; },
+    isCurrent: (request: AbortController) => current === request && !request.signal.aborted,
+  };
+}
+export type AiRequests = ReturnType<typeof createAiRequests>;
+
+export async function askAi(cfg: AiConfig, ctx: AiContext, fetchImpl: typeof fetch = fetch, timeoutMs = 20000, signal?: AbortSignal): Promise<AiResult> {
   if (!cfg.enabled || !cfg.apiKey) return { ok: false, error: "还没有开启 AI 老师" };
   if (!validBaseUrl(cfg.baseUrl)) return { ok: false, error: "服务地址必须以 https:// 开头" };
+  if (signal?.aborted) return { ok: false, error: "请求已取消", cancelled: true };
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
+  let timedOut = false;
+  const cancel = () => ctrl.abort();
+  signal?.addEventListener("abort", cancel, { once: true });
+  let onAbort: () => void;
+  const aborted = new Promise<AiResult>((resolve) => {
+    onAbort = () => resolve(timedOut
+      ? { ok: false, error: "等待太久，已取消" }
+      : { ok: false, error: "请求已取消", cancelled: true });
+    ctrl.signal.addEventListener("abort", onAbort, { once: true });
+  });
+  const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, timeoutMs);
+  const request = async (): Promise<AiResult> => {
     const res = await fetchImpl(`${cfg.baseUrl.replace(/\/+$/, "")}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
@@ -91,9 +114,15 @@ export async function askAi(cfg: AiConfig, ctx: AiContext, fetchImpl: typeof fet
     const data = await res.json();
     const text = sanitizeReply(data?.choices?.[0]?.message?.content);
     return text ? { ok: true, text } : { ok: false, error: "没有收到有效回答" };
-  } catch (e) {
-    return { ok: false, error: (e as Error)?.name === "AbortError" ? "等待太久，已取消" : "网络连接失败" };
+  };
+  try {
+    // 覆盖 fetch 和响应体读取；即使传输层不响应 abort，界面也按时结束等待。
+    return await Promise.race([request(), aborted]);
+  } catch {
+    return { ok: false, error: "网络连接失败" };
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
+    ctrl.signal.removeEventListener("abort", onAbort!);
   }
 }
