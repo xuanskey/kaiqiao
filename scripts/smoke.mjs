@@ -6,6 +6,7 @@
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
+import { runStateRegression } from './state-regression.mjs';
 
 const started = Date.now();
 const server = await preview({ preview: { host: '127.0.0.1', port: 0, strictPort: false }, logLevel: 'error' });
@@ -172,7 +173,8 @@ try {
     await done();
     ok('损坏的存档/课堂记录/AI 设置：不崩溃，原数据保留或先另存');
   }
-  console.log(`冒烟测试通过：${passed} 项，用时 ${Math.round((Date.now() - started) / 1000)} 秒`);
+  const statePassed = await runStateRegression(browser, BASE);
+  console.log(`浏览器测试通过：原有冒烟 ${passed} 项 + 状态回归 ${statePassed} 项，共 ${passed + statePassed} 项，用时 ${Math.round((Date.now() - started) / 1000)} 秒`);
 } finally {
   await browser.close();
   await server.close();
