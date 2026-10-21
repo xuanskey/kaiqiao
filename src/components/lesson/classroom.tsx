@@ -14,6 +14,7 @@ import { PageHeading } from "@/components/math/shell";
 import { Board, PlayerControls } from "./board";
 import { ImportPanel } from "./import-panel";
 import { AiPanel, useAiConfig } from "./ai-panel";
+import { createAiRequests } from "@/lib/lesson/ai";
 import { clearClassLog, loadClassLog, masteryOf, recordAnswer, type ClassLog } from "@/lib/lesson/class-log";
 import { boardAt } from "@/lib/lesson/timeline";
 import { clearLesson, peekLesson } from "@/lib/lesson/today";
@@ -114,8 +115,16 @@ function ClassLogCard({ log, onClear }: { log: ClassLog; onClear: () => void }) 
   </section>;
 }
 
-export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: DemoId; grade: Grade; unitTitle: string; onBack: () => void; preset?: Params }) {
+type LessonProps = { demo: DemoId; grade: Grade; unitTitle: string; onBack: () => void; preset?: Params };
+export function LessonView(props: LessonProps) {
+  // 切课/年级有独立的课堂状态及请求域，旧课堂的 cleanup 会取消其请求。
+  return <LessonSession key={`${props.demo}:${props.grade}`} {...props} />;
+}
+
+function LessonSession({ demo, grade, unitTitle, onBack, preset }: LessonProps) {
   const def = DEMOS[demo];
+  const [aiRequests] = useState(createAiRequests);
+  useEffect(() => () => aiRequests.cancel(), [aiRequests]);
   const [params, setParams] = useState<Params>(() => normalizeParams(demo, { ...defaultParams(demo), ...(preset ?? {}) }));
   const [tutor, setTutor] = useState(initialTutor);
   const [interactive, setInteractive] = useState(false);
@@ -144,7 +153,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
     return () => { cancelAnimationFrame(raf); document.removeEventListener("visibilitychange", onHide); };
   }, [player.playing]);
 
-  const setParam = (key: string, value: number) => setParams((p) => normalizeParams(demo, { ...p, [key]: value }));
+  const setParam = (key: string, value: number) => { aiRequests.cancel(); setParams((p) => normalizeParams(demo, { ...p, [key]: value })); };
   // 语音朗读：换到新的一步时读出老师的话；暂停时停止朗读；离开课堂时停止
   const [narrate, setNarrate] = useNarrate();
   const said = useRef<{ index: number; playing: boolean; first: boolean }>({ index: -1, playing: false, first: true });
@@ -164,6 +173,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
   const Stage = STAGES[demo];
 
   const ask = (intent: TutorIntent) => {
+    aiRequests.cancel();
     const reply = tutorRespond(intent, demo, grade, tutor, lastWrong);
     setTutor(reply.state);
     setMessage(reply.text);
@@ -176,7 +186,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
   };
 
   return <div className={cn("page-enter lesson-view", reduceMotion && "reduce-motion")}>
-    <button type="button" className="back-button" onClick={onBack}><ArrowLeft size={17} />返回课程目录</button>
+    <button type="button" className="back-button" onClick={() => { aiRequests.cancel(); onBack(); }}><ArrowLeft size={17} />返回课程目录</button>
     <header className="lesson-head">
       <p className="eyebrow">{GRADE_LABEL[grade]} · {def.subject === "math" ? "数学" : "科学"} · {unitTitle}</p>
       <h1>{def.title}</h1>
@@ -203,7 +213,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
         <section className="tutor" aria-label="老师">
           <div className="tutor-bubble"><MessageCircle size={17} /><p aria-live="polite">{message}</p></div>
           <div className="tutor-actions">{TUTOR_ACTIONS.map((a) => <button key={a.intent} type="button" onClick={() => ask(a.intent)}>{a.label}</button>)}</div>
-          <AiPanel cfg={aiCfg} setCfg={setAiCfg} onReply={setMessage} context={() => ({ grade, demo, params, facts: boardAt(steps, steps.length - 1).map((v) => (v.item.kind === "column" ? v.item.lines.join(" ") : v.item.text)), lastWrong: lastWrong ? { prompt: lastWrong.q.prompt, given: lastWrong.given, answer: lastWrong.q.answer } : undefined })} />
+          <AiPanel requests={aiRequests} cfg={aiCfg} setCfg={(cfg) => { aiRequests.cancel(); setAiCfg(cfg); }} onReply={setMessage} context={() => ({ grade, demo, params, facts: boardAt(steps, steps.length - 1).map((v) => (v.item.kind === "column" ? v.item.lines.join(" ") : v.item.text)), lastWrong: lastWrong ? { prompt: lastWrong.q.prompt, given: lastWrong.given, answer: lastWrong.q.answer } : undefined })} />
           <p className="tutor-note"><ShieldAlert size={13} />{aiCfg.enabled && aiCfg.apiKey ? "快捷按钮由离线规则老师处理；输入框的问题交给你设置的 AI。" : "离线规则老师：按年级和你的反馈调整讲法，不联网。"}</p>
         </section>
         <label className="motion-toggle"><input type="checkbox" checked={reduceMotion} onChange={(e) => setReduceMotion(e.target.checked)} />减少动态效果</label>
@@ -224,7 +234,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
       </dl>
       <p className="experiment-note">{def.experiment.virtualNote}</p>
     </section> : null}
-    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} level={tutor.level} setLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { if (!r.ok) setLastWrong(r); recordAnswer(window.localStorage, demo, r.ok); recordActivity(window.localStorage, r.ok); }} />
+    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} nextLevel={tutor.level} setNextLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { aiRequests.cancel(); if (!r.ok) setLastWrong(r); recordAnswer(window.localStorage, demo, r.ok); recordActivity(window.localStorage, r.ok); }} />
       : <button type="button" className="quiz-start" onClick={() => ask("quiz")}>开始随堂练习</button>}</div>
   </div>;
 }
