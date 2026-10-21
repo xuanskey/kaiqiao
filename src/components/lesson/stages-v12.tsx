@@ -1,4 +1,4 @@
-import { decimalDiv, fractionMul } from "@/lib/lesson/demos";
+import { cycleText, decimalDiv, fractionMul } from "@/lib/lesson/demos";
 import type { StageProps } from "./stages-math";
 
 const C = { ink: "#285847", line: "#cad9bc", soft: "#eef4e6", red: "#c8553d", blue: "#4b6fa8", gold: "#dfbd76", goldDark: "#bf9d50", paper: "#fffdf7", sky: "#dbe7f5", sun: "#f4e2b5" };
@@ -32,7 +32,7 @@ export function DecimalDivStage({ params, scene, interactive, setParam }: StageP
       {rows.map((x, i) => <li key={i} className={x.zero ? "is-zero" : undefined}><span>{`${x.cur} ÷ ${r.D}`}</span><b>{`商 ${x.q}`}</b><small>{`余 ${x.rem}${x.zero ? "（添 0）" : ""}`}</small></li>)}
       {r.rows.length > 6 ? <li className="is-more">……</li> : null}
     </ol> : null}
-    {reveal >= 4 && r.recurring && r.cycle ? <p className="ddiv-tip">余数重复出现，商是<em>循环小数</em>{`，循环节是 ${r.cycle}`}</p> : null}
+    {reveal >= 4 && r.recurring && r.cycle ? <p className="ddiv-tip">余数重复出现，商是<em>循环小数</em>{`，${cycleText(r.cycle)}`}；保留两位小数看第三位，四舍五入</p> : null}
     {reveal >= 5 && !r.recurring ? <p className="ddiv-check">{`验算：${r.exact} × ${r.bText} = ${r.aText}`}</p> : null}
     {interactive ? <div className="ddiv-controls">
       <Stepper label="被除数" value={r.aText} onDown={() => setParam("a", params.a - 1)} onUp={() => setParam("a", params.a + 1)} small={[() => setParam("a", params.a - 10), () => setParam("a", params.a + 10)]} />

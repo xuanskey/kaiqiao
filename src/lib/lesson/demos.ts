@@ -553,6 +553,26 @@ export function polyArea(p: Params) {
   return { twice, area, name, formula, calc };
 }
 
+/** 多边形面积的画法（单位：格，1 格 = 1 厘米）。演示画面和测试都用这里的顶点，保证“画出来的”和“算出来的”是同一个图形。
+ *  shape：原图形；cut：平行四边形沿高剪下的三角形（平移 a 格后补到右边）；copy：三角形/梯形再拿一个完全一样的、旋转 180° 拼上；
+ *  whole：拼成的长方形或平行四边形，wholeBase 是它的底。 */
+export function polyShapes(p: Params) {
+  const { a, h, b } = p;
+  const off = Math.min(3, Math.max(1, Math.floor(a / 3)));
+  const s = Math.min(2, Math.max(0, Math.floor((a - b) / 2)));
+  type Pt = [number, number];
+  if (p.shape === 0) {
+    const shape: Pt[] = [[0, 0], [a, 0], [a + off, h], [off, h]];
+    return { off, s, heightX: off, shape, cut: [[0, 0], [off, h], [off, 0]] as Pt[], copy: null, whole: [[off, 0], [a + off, 0], [a + off, h], [off, h]] as Pt[], wholeBase: a, width: a + off };
+  }
+  if (p.shape === 1) {
+    const shape: Pt[] = [[0, 0], [a, 0], [off, h]];
+    return { off, s, heightX: off, shape, cut: null, copy: [[a, 0], [a + off, h], [off, h]] as Pt[], whole: [[0, 0], [a, 0], [a + off, h], [off, h]] as Pt[], wholeBase: a, width: a + off };
+  }
+  const shape: Pt[] = [[0, 0], [a, 0], [s + b, h], [s, h]];
+  return { off, s, heightX: s, shape, cut: null, copy: [[a, 0], [a + b, 0], [s + b + a, h], [s + b, h]] as Pt[], whole: [[0, 0], [a + b, 0], [s + b + a, h], [s, h]] as Pt[], wholeBase: a + b, width: a + b + s };
+}
+
 /** 小数除法：a、b 都用“十分之几”的整数表示，商就是 a ÷ b。
  *  除数是整数（b 是 10 的倍数）时直接除；除数是一位小数时，被除数和除数同时 ×10。
  *  用整数竖式逐位求商；不能除尽时继续在余数后添 0，并找出循环节。 */
@@ -577,12 +597,17 @@ export function decimalDiv(p: Params) {
     if (i === intLen) qs += ".";
     const cur = rem * 10 + d, q = Math.floor(cur / D);
     rem = cur % D; qs += q;
-    if (started || q > 0 || i >= intLen - 1) { started = true; if (cur > 0 || q > 0) rows.push({ cur, q, rem, zero: false }); }
+    if (started || q > 0 || i >= intLen - 1) {
+      started = true;
+      // 商中间的 0 也要写一行（例如 40.8 ÷ 4 的“0 ÷ 4 商 0”），只跳过商最前面不够商 1 的 0
+      if (cur > 0 || q > 0 || rows.length > 0) rows.push({ cur, q, rem, zero: false });
+    }
   });
   const seen = new Map<number, number>();
   let repeat: { start: number; end: number } | null = null;
   if (rem && !qs.includes(".")) qs += ".";
-  for (let extra = 0; rem && extra < 8; extra++) {
+  // 余数只可能是 1 … D−1，最多 D 步之内一定会重复，所以一定能找到完整的循环节
+  for (let extra = 0; rem && extra <= D + 1; extra++) {
     if (seen.has(rem)) { repeat = { start: seen.get(rem)!, end: qs.length }; break; }
     seen.set(rem, qs.length);
     const cur = rem * 10, q = Math.floor(cur / D);
@@ -593,6 +618,11 @@ export function decimalDiv(p: Params) {
   const cycle = repeat ? qs.slice(repeat.start, repeat.end) : "";
   const quotient = exact ?? approx2;
   return { aText, bText, intDivisor, D, newA, newB, padZero, exact, recurring: exact === null, approx2, quotient, shown, cycle, rows, addedZero: rows.some((r) => r.zero), expr: `${aText} ÷ ${bText}` };
+}
+
+/** 循环节的说法：短的直接读出来，太长的只说有几位。 */
+export function cycleText(cycle: string): string {
+  return cycle.length <= 6 ? `循环节是 ${cycle}` : `循环节有 ${cycle.length} 位（${cycle.slice(0, 6)}……）`;
 }
 
 /** 分数乘法：mode 0 是分数 × 整数，mode 1 是分数 × 分数。 */
@@ -986,16 +1016,24 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
     }
     case "make-ten": {
       const r = makeTen(p);
-      if (!r.carry) return steps(grade, [
+      if (!r.carry) return steps(grade, r.sum === 10 ? [
+        { say: `${p.a} 加 ${p.b}，十格框正好放满，一共 10。`, board: [{ kind: "formula" as const, id: "f", text: r.expr }], highlight: ["f"], scene: { reveal: 1 } },
+        { say: `${p.a} 和 ${p.b} 正好凑成 10，没有剩下的，不用再加。换大一点的数试试凑十法。`, board: [T("正好凑成 10", "note")], scene: { reveal: 1 } },
+      ] : [
         { say: `${p.a} 加 ${p.b}，一共 ${r.sum}，没有超过 10。`, board: [{ kind: "formula" as const, id: "f", text: r.expr }], highlight: ["f"], scene: { reveal: 1 } },
         { say: "加起来不满十，直接数就可以，不用凑十。换大一点的数试试。", board: [T("不满 10：直接加", "note")], scene: { reveal: 1 } },
       ]);
+      // 第一个数比较小时（如 5 + 9），课本更常用“看大数 9，分小数 5”；演示仍拆第二个数，并补充另一种分法
+      const bigFirst = p.a >= p.b;
+      const other = 10 - p.b, otherRest = p.a - other;
       return steps(grade, [
         { say: `${p.a} 加 ${p.b}，十格框里先放 ${p.a} 个红圆片。`, board: [T(`${p.a} + ${p.b} = ?`, "title")], scene: { reveal: 1 } },
-        { say: v === 1 ? `看大数 ${p.a}，还差几个满十？差 ${r.need} 个。` : `${p.a} 和几凑成 10？${p.a} 和 ${r.need} 凑成 10。`, board: [T(`${p.a} + ${r.need} = 10`)], scene: { reveal: 2 } },
+        { say: v === 1 ? `${bigFirst ? `看大数 ${p.a}` : `先看 ${p.a}`}，还差几个满十？差 ${r.need} 个。` : `${p.a} 和几凑成 10？${p.a} 和 ${r.need} 凑成 10。`, board: [T(`${p.a} + ${r.need} = 10`)], scene: { reveal: 2 } },
         { say: `把 ${p.b} 分成 ${r.need} 和 ${r.rest}。`, board: [{ kind: "formula" as const, id: "s", text: `${p.b} → ${r.need} 和 ${r.rest}` }], highlight: ["s"], scene: { reveal: 3 } },
         { say: `先算 ${p.a} 加 ${r.need} 等于 10，再算 10 加 ${r.rest} 等于 ${r.sum}。`, board: [{ kind: "formula" as const, id: "f", text: `${p.a} + ${r.need} = 10，10 + ${r.rest} = ${r.sum}` }], highlight: ["f"], scene: { reveal: 4 } },
-        { say: "看大数，分小数，凑成十，再加几。", board: [T("看大数 → 分小数 → 凑成十 → 加剩下", "note")] },
+        bigFirst
+          ? { say: "看大数，分小数，凑成十，再加几。", board: [T("看大数 → 分小数 → 凑成十 → 加剩下", "note")] }
+          : { say: `也可以看大数 ${p.b}，分小数 ${p.a}：把 ${p.a} 分成 ${other} 和 ${otherRest}，${p.b} 加 ${other} 等于 10，10 加 ${otherRest} 也等于 ${r.sum}。`, board: [{ kind: "formula" as const, id: "o", text: `${p.b} + ${other} = 10，10 + ${otherRest} = ${r.sum}` }, T("看大数 → 分小数 → 凑成十 → 加剩下", "note")], highlight: ["o"] },
       ]);
     }
     case "bar-chart": {
@@ -1003,8 +1041,12 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
       return steps(grade, [
         { say: `调查同学们最喜欢的水果，每格表示 ${r.per} 票。`, board: [T(`1 格 = ${r.per} 票`, "title")], scene: { reveal: 1 } },
         { say: r.per === 2 ? "一格表示 2 票时，半格就是 1 票。" : "数一数每个条形有几格，就是几票。", board: [T(FRUITS.map((f, i) => `${f} ${r.counts[i]}`).join("　"))], scene: { reveal: 2 } },
-        { say: `${r.maxName}的条形最长，${r.max} 票；${r.minName}的最短，${r.min} 票。`, board: [T(`最多：${r.maxName} ${r.max} 票　最少：${r.minName} ${r.min} 票`, "result")], scene: { reveal: 3 } },
-        { say: `最多的比最少的多 ${r.max} 减 ${r.min}，等于 ${r.diff} 票。`, board: [{ kind: "formula" as const, id: "d", text: `${r.max} − ${r.min} = ${r.diff}（票）` }], highlight: ["d"], scene: { reveal: 3 } },
+        ...(r.diff === 0 ? [
+          { say: `四个条形一样长，每种水果都是 ${r.max} 票，一样多，没有最多和最少。`, board: [T(`每种都是 ${r.max} 票，一样多`, "result")], scene: { reveal: 3 } },
+        ] : [
+          { say: `${r.maxName}的条形最长，${r.max} 票；${r.minName}的最短，${r.min} 票。`, board: [T(`最多：${r.maxName} ${r.max} 票　最少：${r.minName} ${r.min} 票`, "result")], scene: { reveal: 3 } },
+          { say: `最多的比最少的多 ${r.max} 减 ${r.min}，等于 ${r.diff} 票。`, board: [{ kind: "formula" as const, id: "d", text: `${r.max} − ${r.min} = ${r.diff}（票）` }], highlight: ["d"], scene: { reveal: 3 } },
+        ]),
         { say: `一共调查了 ${r.total} 人。条形统计图能一眼看出谁多谁少。`, board: [{ kind: "formula" as const, id: "t", text: `${r.counts.join(" + ")} = ${r.total}（人）` }], highlight: ["t"] },
       ]);
     }
@@ -1046,7 +1088,7 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
           : { say: v === 1 ? units : `除数 ${r.bText} 是小数，先把它变成整数：被除数和除数同时乘 10，商不变，${r.expr} 变成 ${r.newA} 除以 ${r.newB}。${r.padZero ? "被除数的位数不够，在末尾添 0 补足。" : ""}`, board: [{ kind: "formula" as const, id: "t", text: `${r.expr} → ${r.newA} ÷ ${r.newB}（同时 ×10，商不变）` }], highlight: ["t"], scene: { reveal: 2 } },
         { say: `用竖式一位一位地除${r.addedZero ? "，有余数就在余数后面添 0 继续除" : ""}。`, board: [{ kind: "column" as const, id: "col", lines: rowText }], highlight: ["col"], scene: { reveal: 3 } },
         r.recurring
-          ? { say: `一直除不尽，商是循环小数 ${r.shown}${r.cycle ? `，循环节是 ${r.cycle}` : ""}。保留两位小数约是 ${r.approx2}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${r.shown} ≈ ${r.approx2}` }], highlight: ["f"], scene: { reveal: 4 } }
+          ? { say: `一直除不尽，余数重复出现，商是循环小数 ${r.shown}，${cycleText(r.cycle)}。保留两位小数，看第三位小数四舍五入，约是 ${r.approx2}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${r.shown} ≈ ${r.approx2}` }], highlight: ["f"], scene: { reveal: 4 } }
           : { say: `${r.expr} 等于 ${r.exact}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${r.exact}` }], highlight: ["f"], scene: { reveal: 4 } },
         r.intDivisor
           ? { say: "记住：除数是整数，按整数除法去除；整数部分不够商 1 就商 0，点上小数点；有余数就添 0 继续除。", board: [T("商的小数点对齐 · 不够商 1 就商 0 · 添 0 继续除", "note")], scene: { reveal: 5 } }

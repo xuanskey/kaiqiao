@@ -25,6 +25,7 @@ export function AppShell({ screen, children }: { screen: Screen; children: React
   const wrong = useMath((s) => s.wrong);
   const grade = useMath((s) => s.selectedGrade);
   const storageError = useMath((s) => s.storageError);
+  const storageNotice = useMath((s) => s.storageNotice);
   const main = useRef<HTMLElement>(null);
   const previousScreen = useRef(screen);
   const focus = ["play", "duel", "result"].includes(screen);
@@ -57,6 +58,7 @@ export function AppShell({ screen, children }: { screen: Screen; children: React
       </header> : null}
       <main className="main-content" ref={main} tabIndex={-1} aria-label="学习内容">
         {storageError ? <p role="alert" className="storage-alert">{storageError}</p> : null}
+        {storageNotice ? <p role="status" className="storage-alert storage-notice">{storageNotice}<button type="button" onClick={() => useMath.setState({ storageNotice: null })}>知道了</button></p> : null}
         {children}
       </main>
     </div>

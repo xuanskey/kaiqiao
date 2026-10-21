@@ -110,6 +110,30 @@ try {
   assert.ok(fm.includes('3/4 × 2/3 = 1/2') && fm.includes('第一个分数取 2/4'), '分数乘法面积模型');
   const fm0 = renderToString(createElement(v12.FractionMulStage, { params: { mode: 0, n1: 2, d1: 9, k: 3, n2: 1, d2: 2 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
   assert.ok(fm0.includes('= 2/3') && fm0.includes('3 个 2/9'), '分数乘整数画面');
+  // v0.13：演示画面里的结果与参考实现（reference.ts，独立算法）一致——动画和公式同步
+  const ref = await server.ssrLoadModule('/src/lib/lesson/reference.ts');
+  const stage = (C, params) => renderToString(createElement(C, { params, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+  let synced = 0;
+  for (let a = 1; a <= 999; a += 37) for (let b = 1; b <= 99; b += 7) {
+    const q = ref.rat(a, b), exact = ref.terminating(q);
+    const html = stage(v12.DecimalDivStage, { a, b });
+    assert.ok(html.includes(exact ?? ref.roundHalfUp(q, 2)), `小数除法画面 ${a}/${b}`);
+    if (!exact) { const period = ref.expand(q).period; assert.ok(html.includes(period.length <= 6 ? `循环节是 ${period}` : `循环节有 ${period.length} 位`), `循环节 ${a}/${b}`); }
+    synced++;
+  }
+  for (let d1 = 2; d1 <= 9; d1++) for (let n1 = 1; n1 < d1; n1++) for (const [mode, k, n2, d2] of [[0, 4, 1, 2], [1, 3, 2, 3], [1, 3, 5, 9]]) {
+    const q = mode === 0 ? ref.mul(ref.rat(n1, d1), ref.rat(k)) : ref.mul(ref.rat(n1, d1), ref.rat(n2, d2));
+    assert.ok(stage(v12.FractionMulStage, { mode, n1, d1, k, n2, d2 }).includes(ref.fracText(q)), `分数乘法画面 ${n1}/${d1}`);
+    synced++;
+  }
+  for (let a = 5; a <= 9; a++) for (let b = 2; b <= 9; b++) { assert.ok(stage(v10.MakeTenStage, { a, b }).includes(`= ${a + b}`), `凑十法画面 ${a}+${b}`); synced++; }
+  for (const shape of [0, 1, 2]) for (let a = 3; a <= 12; a += 3) for (let h = 2; h <= 7; h += 2) {
+    const b = 2, twice = shape === 0 ? 2 * a * h : shape === 1 ? a * h : (a + b) * h;
+    assert.ok(stage(v10.PolyAreaStage, { shape, a, b, h }).includes(`= ${ref.terminating(ref.rat(twice, 2))} cm²`), `多边形面积画面 ${shape} ${a} ${h}`); synced++;
+  }
+  assert.ok(stage(v10.BarChartStage, { c0: 4, c1: 4, c2: 4, c3: 4, unit: 0 }).includes('一样多'));
+  assert.ok(stage(v12.DecimalDivStage, { a: 408, b: 40 }).includes('0 ÷ 4'), '商中间的 0');
+  console.log(`Stage/formula sync: ${synced} parameter sets checked against the independent reference`);
   console.log(`Classroom: ${lessonCount} lesson pages and ${DEMO_LIST.length} interactive stages rendered`);
   console.log('Existing screens, 18 unit lessons, 3 lab types, unit completion/report and 5 input-state render checks passed (not browser interaction tests)');
 } finally {

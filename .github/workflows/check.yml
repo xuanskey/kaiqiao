@@ -23,3 +23,26 @@ jobs:
       - run: npm run release
       - name: Check release artifacts
         run: git diff --exit-code -- docs/
+
+  # 浏览器冒烟测试：只装 Chromium（headless shell），用本地 vite preview 打开构建产物，不访问外网。
+  # 视觉对比和全量浏览器测试不在这里跑。
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - run: npm run build
+      - name: Browser smoke test
+        run: npm run test:smoke

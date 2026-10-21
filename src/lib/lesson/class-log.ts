@@ -27,12 +27,36 @@ export function loadClassLog(store: KV | undefined): ClassLog {
   } catch { return {}; }
 }
 
+/**
+ * 写入前读出原始内容：能识别的对象原样保留其他键（包括本版本不认识的课），只更新这一课；
+ * 原始内容不是合法 JSON 对象时，先另存到 `${CLASS_LOG_KEY}.unreadable` 再重新记录，不直接覆盖丢弃。
+ */
 export function recordAnswer(store: KV | undefined, demo: DemoId, ok: boolean, now = Date.now()): ClassLog {
   const log = loadClassLog(store);
   const cur = log[demo] ?? { attempts: 0, correct: 0, lastAt: 0 };
   log[demo] = { attempts: cur.attempts + 1, correct: cur.correct + (ok ? 1 : 0), lastAt: now };
-  try { store?.setItem(CLASS_LOG_KEY, JSON.stringify(log)); } catch { /* 存储满或被禁用时不影响上课 */ }
+  try {
+    const raw = store?.getItem(CLASS_LOG_KEY) ?? null;
+    let base: Record<string, unknown> = {};
+    if (raw) {
+      let parsed: unknown = null;
+      try { parsed = JSON.parse(raw); } catch { /* 下面另存 */ }
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) base = parsed as Record<string, unknown>;
+      else if (!keepCopy(store, `${CLASS_LOG_KEY}.unreadable`, raw)) return log; // 另存失败就不写，保护原数据
+    }
+    store?.setItem(CLASS_LOG_KEY, JSON.stringify({ ...base, [demo]: log[demo] }));
+  } catch { /* 存储满或被禁用时不影响上课 */ }
   return log;
+}
+
+/** 把原始文本另存一份（已有相同内容视为成功），写后读回确认。 */
+export function keepCopy(store: Pick<KV, "getItem" | "setItem"> | undefined, key: string, raw: string): boolean {
+  try {
+    if (store?.getItem(key) === raw) return true;
+    const target = store?.getItem(key) == null ? key : `${key}-${Date.now()}`;
+    store?.setItem(target, raw);
+    return store?.getItem(target) === raw;
+  } catch { return false; }
 }
 
 export function clearClassLog(store: KV | undefined) {
