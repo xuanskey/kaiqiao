@@ -747,3 +747,19 @@ summary::-webkit-details-marker { display: none; }
 .week-bars b { position: absolute; top: -16px; font-size: 10px; color: #285847; font-weight: 650; }
 @media (max-width: 760px) { .week-card { grid-template-columns: 1fr; gap: 14px; padding: 18px; } .week-bars { gap: 6px; } .week-bar { height: 70px; } }
 @media (prefers-reduced-motion: reduce) { .week-bar i { transition: none; } }
+
+/* v0.12 小数除法 */
+.ddiv{gap:12px}
+.ddiv-tip{margin:0;font-size:14px;color:#476247;text-align:center}
+.ddiv-tip em{font-style:normal;font-weight:650;color:#285847;background:#fbf1d4;border-radius:6px;padding:0 4px}
+.ddiv-shift{display:grid;gap:8px;justify-items:center}
+.ddiv-rows{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-variant-numeric:tabular-nums;width:min(100%,320px)}
+.ddiv-rows li{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;padding:4px 10px;border-radius:8px;background:#f6faef;font-size:14px;color:#285847}
+.ddiv-rows li.is-zero{background:#fff8e6}
+.ddiv-rows li.is-more{display:block;text-align:center;background:none}
+.ddiv-rows small{color:#768369;font-size:12px}
+.ddiv-check{margin:0;font-size:13px;color:#768369}
+.ddiv-controls{display:grid;gap:8px;justify-items:center}
+.ddiv-stepper{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;font-size:13px;color:#476247}
+.ddiv-stepper button{min-width:40px;height:32px;border-radius:8px;border:1px solid #cad9bc;background:#eef4e6;color:#285847;font-size:13px}
+.ddiv-stepper b{min-width:44px;text-align:center;font-size:16px;font-variant-numeric:tabular-nums}

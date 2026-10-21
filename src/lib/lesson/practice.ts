@@ -1,6 +1,7 @@
 import type { Grade } from "../math/types.ts";
 import type { Rng } from "../math/rng.ts";
-import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, makeTen, barChart, polyArea, FRUITS, type DemoId, type Params, normalizeParams } from "./demos.ts";
+import { fmtScaled } from "./num.ts";
+import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, makeTen, barChart, polyArea, decimalDiv, fractionMul, FRUITS, type DemoId, type Params, normalizeParams } from "./demos.ts";
 
 /**
  * 随堂练习：题目由参数生成，答案由同一套计算函数得出，
@@ -236,6 +237,54 @@ export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng
       if (p.shape === 0) traps[String(2 * (p.a + p.h))] = "这是周长的算法，面积是底乘高。";
       return { ...base, kind: "fill", params: { ...p, q: 1 }, prompt, answer: r.area, steps: [`${r.name}面积 = ${r.formula}`, `${r.calc}（平方厘米）`], traps };
     }
+    case "decimal-div": {
+      if (lv === 1) {
+        // 除数是整数：商是一位小数
+        let q = rng.int(11, 99); if (q % 10 === 0) q += 1;
+        const d = rng.int(2, 9);
+        const p = normalizeParams(demo, { a: q * d, b: d * 10 });
+        const r = decimalDiv(p);
+        return { ...base, kind: "fill", params: { ...p, q: 1 }, prompt: `${r.aText} ÷ ${r.bText} = （　）`, answer: r.quotient, steps: ["除数是整数，按整数除法去除。", "商的小数点要和被除数的小数点对齐。", `${r.expr} = ${r.quotient}`], traps: { [String(q)]: "商的小数点要和被除数的小数点对齐，别漏了小数点。" } };
+      }
+      if (lv === 2) {
+        // 除数是一位小数：商是整数
+        const b = rng.pick([2, 4, 5, 6, 8, 12, 15, 16, 24, 25]);
+        const m = rng.int(2, Math.min(30, Math.floor(999 / b)));
+        const p = normalizeParams(demo, { a: m * b, b });
+        const r = decimalDiv(p);
+        return { ...base, kind: "fill", params: { ...p, q: 2 }, prompt: `${r.aText} ÷ ${r.bText} = （　）`, answer: r.quotient, steps: [`除数是小数，被除数和除数同时乘 10：${r.newA} ÷ ${r.newB}`, `${r.newA} ÷ ${r.newB} = ${r.quotient}`], traps: { [fmtScaled(m, 1)]: "除数扩大到原来的 10 倍，被除数也要扩大到原来的 10 倍，商才不变。", [String(m * 10)]: "被除数和除数要同时扩大相同的倍数。" } };
+      }
+      // 提高：商是循环小数，保留两位小数
+      let p = normalizeParams(demo, { a: 100, b: 30 });
+      for (let tries = 0; tries < 50; tries++) {
+        const d = rng.pick([3, 6, 7, 9]);
+        p = normalizeParams(demo, { a: rng.int(10, 300), b: d * 10 });
+        if (decimalDiv(p).recurring) break;
+      }
+      const r = decimalDiv(p);
+      const n1000 = Math.floor((p.a * 1000) / p.b), trunc = `${Math.floor(n1000 / 1000)}.${String(Math.floor((n1000 % 1000) / 10)).padStart(2, "0")}`;
+      const traps: Record<string, string> = {};
+      if (trunc !== r.approx2) traps[trunc] = "保留两位小数要看第三位小数，四舍五入。";
+      return { ...base, kind: "fill", params: { ...p, q: 3 }, prompt: `${r.aText} ÷ ${r.bText} 的商保留两位小数约是多少？`, answer: r.approx2, steps: [`${r.expr} = ${r.shown}`, "除到第三位小数，再四舍五入。", `≈ ${r.approx2}`], traps };
+    }
+    case "fraction-mul": {
+      if (lv === 3) {
+        const d = rng.int(2, 9), n = rng.int(1, d - 1), N = d * rng.int(3, 12);
+        const ans = String((N * n) / d);
+        const traps: Record<string, string> = {};
+        if (n > 1) traps[String(N / d)] = `这是 1/${d} 的人数，要求的是 ${n}/${d}，再乘 ${n}。`;
+        return { ...base, kind: "fill", params: { N, n, d, q: 3 }, prompt: `学校合唱队有 ${N} 人，其中 ${n}/${d} 是女生。女生有多少人？`, answer: ans, steps: [`求 ${N} 的 ${n}/${d} 是多少，用乘法。`, `${N} × ${n}/${d} = ${ans}（人）`], traps };
+      }
+      const mode = lv === 1 ? 0 : 1;
+      const d1 = rng.int(2, 9), d2 = rng.int(2, 9);
+      const p = normalizeParams(demo, { mode, d1, n1: rng.int(1, d1 - 1), k: rng.int(2, 9), d2, n2: rng.int(1, d2 - 1) });
+      const r = fractionMul(p);
+      const traps: Record<string, string> = {};
+      if (r.raw !== r.simplest) traps[r.raw] = "结果要约成最简分数。";
+      if (mode === 0) traps[`${p.n1 * p.k}/${p.d1 * p.k}`] = "分数乘整数，只用分子乘整数，分母不变。";
+      else traps[`${p.n1 + p.n2}/${p.d1 + p.d2}`] = "分数乘分数是分子乘分子、分母乘分母，不是相加。";
+      return { ...base, kind: "fill", params: { ...p, q: lv }, prompt: `${r.expr} = （　）（写成最简分数，如 3/4；能化成整数的写整数）`, answer: r.simplest, steps: mode === 0 ? [`${r.a} × ${p.k} 表示 ${p.k} 个 ${r.a} 相加。`, `分子乘整数，分母不变：${r.calc} = ${r.raw}`, `约分：${r.simplest}`] : [`分子乘分子，分母乘分母：${r.calc} = ${r.raw}`, `约分：${r.simplest}`], traps };
+    }
     case "scale": {
       const p = normalizeParams(demo, { s: rng.int(lv === 1 ? 0 : 1, 3), cm: rng.int(1, lv === 3 ? 20 : 9) });
       const r = scale(p);
@@ -353,6 +402,8 @@ export function verifyPractice(q: PracticeQ): string[] {
     case "make-ten": expect = p.q === 1 ? String(10 - p.a) : p.q === 2 ? String(makeTen(p).sum) : String(makeTen(p).rest); break;
     case "bar-chart": { const r = barChart(p); expect = p.q === 1 ? r.maxName : p.q === 2 ? String(r.diff) : String(r.counts[p.i] / r.per); break; }
     case "poly-area": expect = polyArea(p).area; break;
+    case "decimal-div": { const r = decimalDiv(p); expect = p.q === 3 ? r.approx2 : r.quotient; break; }
+    case "fraction-mul": expect = p.q === 3 ? String((p.N * p.n) / p.d) : fractionMul(p).simplest; break;
     case "circle": { const r = circle(p); expect = p.askArea ? r.area : r.perimeter; break; }
     case "cylinder": expect = q.level === 3 ? "错" : cylinder(p).volume; break;
     case "shadow": expect = "变短"; break;
@@ -378,7 +429,7 @@ export function verifyPractice(q: PracticeQ): string[] {
 
 /** 规范化学生输入，便于比较（全角转半角、去空格）。 */
 export function normalizeAnswer(s: string): string {
-  return s.replace(/\s+/g, "").replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/。/g, ".").replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+  return s.replace(/\s+/g, "").replace(/／/g, "/").replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/。/g, ".").replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 }
 
 export function checkAnswer(q: PracticeQ, given: string): { ok: boolean; hint?: string } {
