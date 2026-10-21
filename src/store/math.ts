@@ -21,7 +21,7 @@ import { randomRng } from "../lib/math/rng.ts";
 import { SKILL_DRILL, inferSkill, isSkillId, touchSkill, type SkillId } from "../lib/math/skills.ts";
 import type { AnswerLog, Grade, PlayKind, Question, Screen, WrongItem } from "../lib/math/types.ts";
 
-import { SAVE_KEY, SAVE_VERSION, emptyPersist, parseSave, type PersistShape } from "../lib/math/save.ts";
+import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, parseSave, salvageSave, type PersistShape } from "../lib/math/save.ts";
 
 type Session = {
   kind: PlayKind;
@@ -57,6 +57,8 @@ type MathState = PersistShape & {
   lastStars: number;
   storageError: string | null;
   storageBlocked: boolean;
+  /** 存档容错读取后的说明（不是错误，不阻止保存） */
+  storageNotice: string | null;
   setGrade: (grade: Grade) => void;
   restore: (data: PersistShape) => boolean;
   hydrate: () => void;
@@ -166,6 +168,17 @@ function newSession(kind: PlayKind, questions: Question[], extra?: Partial<Sessi
   };
 }
 
+/** 把读不懂的原始存档另存到 UNREADABLE_KEY（已有不同内容时加时间戳），写后读回确认；失败返回 null。 */
+function keepUnreadableCopy(raw: string): string | null {
+  try {
+    const existing = localStorage.getItem(UNREADABLE_KEY);
+    if (existing === raw) return UNREADABLE_KEY;
+    const key = existing === null ? UNREADABLE_KEY : `${UNREADABLE_KEY}-${Date.now()}`;
+    localStorage.setItem(key, raw);
+    return localStorage.getItem(key) === raw ? key : null;
+  } catch { return null; }
+}
+
 export const useMath = create<MathState>((set, get) => ({
   ...emptyPersist(),
   screen: "home",
@@ -175,13 +188,29 @@ export const useMath = create<MathState>((set, get) => ({
   lastStars: 0,
   storageError: null,
   storageBlocked: false,
+  storageNotice: null,
   hydrate: () => {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      set({ ...(raw ? parseSave(JSON.parse(raw)) : emptyPersist()), storageError: null, storageBlocked: false });
-    } catch {
-      set({ storageError: "无法读取原存档，已保护原数据。当前练习暂不保存，请先导出备份或恢复有效备份。", storageBlocked: true });
+    let raw: string | null;
+    try { raw = localStorage.getItem(SAVE_KEY); } catch {
+      set({ storageError: "浏览器不允许读取本机存储（可能是隐私模式或禁用了网站数据）。当前练习不会保存。", storageBlocked: true, storageNotice: null });
+      return;
     }
+    if (!raw) { set({ ...emptyPersist(), storageError: null, storageBlocked: false, storageNotice: null }); return; }
+    let json: unknown = undefined;
+    try { json = JSON.parse(raw); } catch { /* 不是合法 JSON，下面按损坏处理 */ }
+    try {
+      set({ ...parseSave(json), storageError: null, storageBlocked: false, storageNotice: null });
+      return;
+    } catch { /* 严格校验没通过，尝试容错读取 */ }
+    // 容错读取：先把原始存档另存一份（写入并读回确认），成功后才使用能识别的部分；另存失败就保持只读保护。
+    const salvaged = json === undefined ? null : salvageSave(json);
+    const copied = salvaged ? keepUnreadableCopy(raw) : null;
+    if (salvaged && copied) {
+      set({ ...salvaged.data, storageError: null, storageBlocked: false,
+        storageNotice: `存档里有 ${salvaged.dropped} 条记录无法识别，已跳过，其余记录照常使用。原始存档已在本浏览器另存一份，没有删除。` });
+      return;
+    }
+    set({ storageError: "无法读取原存档，已保护原数据。当前练习暂不保存，请先在学情页下载原存档或恢复有效备份。", storageBlocked: true, storageNotice: null });
   },
   persist: () => {
     if (get().storageBlocked) return;
@@ -201,7 +230,7 @@ export const useMath = create<MathState>((set, get) => ({
     try {
       const checked = parseSave(data);
       localStorage.setItem(SAVE_KEY, JSON.stringify(checked));
-      set({ ...checked, session: null, duel: null, sprintRemain: 0, screen: "report", storageError: null, storageBlocked: false });
+      set({ ...checked, session: null, duel: null, sprintRemain: 0, screen: "report", storageError: null, storageBlocked: false, storageNotice: null });
       return true;
     } catch {
       set({ storageError: "恢复失败，原有记录未被替换。请检查文件或浏览器存储空间。" });

@@ -195,7 +195,7 @@ export function LessonView({ demo, grade, unitTitle, onBack, preset }: { demo: D
       <aside className="lesson-side">
         <section className="param-panel" aria-label="调节参数">
           <header><strong>调节参数</strong><small>结果由真实计算得出</small></header>
-          {def.params.filter((p) => !(demo === "group-share" && ((params.mode === 0 && p.key === "total") || (params.mode === 1 && p.key === "each"))) && !(demo === "fraction-mul" && ((params.mode === 0 && (p.key === "n2" || p.key === "d2")) || (params.mode === 1 && p.key === "k")))).map((spec) => spec.options
+          {def.params.filter((p) => !(demo === "group-share" && ((params.mode === 0 && p.key === "total") || (params.mode === 1 && p.key === "each"))) && !(demo === "fraction-mul" && ((params.mode === 0 && (p.key === "n2" || p.key === "d2")) || (params.mode === 1 && p.key === "k"))) && !(demo === "poly-area" && params.shape !== 2 && p.key === "b")).map((spec) => spec.options
             ? <div key={spec.key} className="param-options" role="group" aria-label={spec.label}><span>{spec.label}</span><div>{spec.options.map((o, i) => <button key={o} type="button" aria-pressed={params[spec.key] === i} onClick={() => setParam(spec.key, i)} disabled={demo === "circuit" && spec.key === "broken" && i > params.bulbs}>{o}</button>)}</div></div>
             : <label key={spec.key} className="param-range"><span>{spec.label}<b>{displayParam(spec, params[spec.key])}</b></span>
               <input type="range" min={spec.min} max={demo === "fraction" && spec.key === "shaded" ? params.parts : spec.max} step={demo === "circle" && spec.key === "n" ? 2 : 1} value={params[spec.key]} onChange={(e) => setParam(spec.key, Number(e.target.value))} aria-label={spec.label} /></label>)}

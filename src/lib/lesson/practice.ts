@@ -1,6 +1,6 @@
 import type { Grade } from "../math/types.ts";
 import type { Rng } from "../math/rng.ts";
-import { fmtScaled } from "./num.ts";
+import { fmtScaled, gcd } from "./num.ts";
 import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, makeTen, barChart, polyArea, decimalDiv, fractionMul, FRUITS, type DemoId, type Params, normalizeParams } from "./demos.ts";
 
 /**
@@ -33,8 +33,19 @@ function choices(answer: string, wrong: string[], rng: Rng): string[] {
   return rng.shuffle(list);
 }
 
+/** 1 … d−1 里和 d 互质的数（用来出最简分数）。 */
+function coprimeTo(d: number): number[] { return Array.from({ length: d - 1 }, (_, i) => i + 1).filter((n) => gcd(n, d) === 1); }
+
 /** level：1 简单、2 标准、3 提高 */
 export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng, n = 0): PracticeQ {
+  const q = buildPractice(demo, grade, level, rng, n);
+  // 易错提示的“错误答案”恰好等于正确答案时（如 7 + 6 拆成 3 和 3），这条提示没有意义，去掉
+  const right = normalizeAnswer(q.answer);
+  q.traps = Object.fromEntries(Object.entries(q.traps).filter(([k]) => normalizeAnswer(k) !== right));
+  return q;
+}
+
+function buildPractice(demo: DemoId, grade: Grade, level: number, rng: Rng, n = 0): PracticeQ {
   const lv = Math.max(1, Math.min(3, Math.round(level)));
   const id = `${demo}-${lv}-${n}-${rng.int(0, 1e6)}`;
   const base = { id, demo, level: lv, traps: {} as Record<string, string> };
@@ -244,7 +255,7 @@ export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng
         const d = rng.int(2, 9);
         const p = normalizeParams(demo, { a: q * d, b: d * 10 });
         const r = decimalDiv(p);
-        return { ...base, kind: "fill", params: { ...p, q: 1 }, prompt: `${r.aText} ÷ ${r.bText} = （　）`, answer: r.quotient, steps: ["除数是整数，按整数除法去除。", "商的小数点要和被除数的小数点对齐。", `${r.expr} = ${r.quotient}`], traps: { [String(q)]: "商的小数点要和被除数的小数点对齐，别漏了小数点。" } };
+        return { ...base, kind: "fill", params: { ...p, q: 1 }, prompt: `${r.aText} ÷ ${r.bText} = （　）`, answer: r.quotient, steps: ["除数是整数，按整数除法去除。", "商的小数点要和被除数的小数点对齐。", `${r.expr} = ${r.quotient}`], traps: { [String(q)]: "商的小数点要和被除数的小数点对齐，别漏了小数点。", [fmtScaled(q, 2)]: `小数点点错位置了：被除数 ${r.aText} 是一位小数，商的小数点和它对齐。` } };
       }
       if (lv === 2) {
         // 除数是一位小数：商是整数
@@ -269,7 +280,7 @@ export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng
     }
     case "fraction-mul": {
       if (lv === 3) {
-        const d = rng.int(2, 9), n = rng.int(1, d - 1), N = d * rng.int(3, 12);
+        const d = rng.int(2, 9), n = rng.pick(coprimeTo(d)), N = d * rng.int(3, 12);
         const ans = String((N * n) / d);
         const traps: Record<string, string> = {};
         if (n > 1) traps[String(N / d)] = `这是 1/${d} 的人数，要求的是 ${n}/${d}，再乘 ${n}。`;
@@ -277,13 +288,20 @@ export function makePractice(demo: DemoId, grade: Grade, level: number, rng: Rng
       }
       const mode = lv === 1 ? 0 : 1;
       const d1 = rng.int(2, 9), d2 = rng.int(2, 9);
-      const p = normalizeParams(demo, { mode, d1, n1: rng.int(1, d1 - 1), k: rng.int(2, 9), d2, n2: rng.int(1, d2 - 1) });
+      // 题目里的分数都用最简分数，和课本一致
+      const p = normalizeParams(demo, { mode, d1, n1: rng.pick(coprimeTo(d1)), k: rng.int(2, 9), d2, n2: rng.pick(coprimeTo(d2)) });
       const r = fractionMul(p);
       const traps: Record<string, string> = {};
-      if (r.raw !== r.simplest) traps[r.raw] = "结果要约成最简分数。";
-      if (mode === 0) traps[`${p.n1 * p.k}/${p.d1 * p.k}`] = "分数乘整数，只用分子乘整数，分母不变。";
-      else traps[`${p.n1 + p.n2}/${p.d1 + p.d2}`] = "分数乘分数是分子乘分子、分母乘分母，不是相加。";
-      return { ...base, kind: "fill", params: { ...p, q: lv }, prompt: `${r.expr} = （　）（写成最简分数，如 3/4；能化成整数的写整数）`, answer: r.simplest, steps: mode === 0 ? [`${r.a} × ${p.k} 表示 ${p.k} 个 ${r.a} 相加。`, `分子乘整数，分母不变：${r.calc} = ${r.raw}`, `约分：${r.simplest}`] : [`分子乘分子，分母乘分母：${r.calc} = ${r.raw}`, `约分：${r.simplest}`], traps };
+      if (r.raw !== r.simplest) traps[r.raw] = `${r.raw} 还能约分：分子和分母同时除以 ${r.num / Number(r.simplest.split("/")[0])}，结果要写成最简分数。`;
+      if (mode === 0) {
+        traps[`${p.n1 * p.k}/${p.d1 * p.k}`] = "分数乘整数，只用分子乘整数，分母不变。";
+        traps[`${p.n1}/${p.d1 * p.k}`] = "整数要和分子相乘，不是和分母相乘：分母不变。";
+      } else {
+        traps[`${p.n1 + p.n2}/${p.d1 + p.d2}`] = "分数乘分数是分子乘分子、分母乘分母，不是相加。";
+        traps[`${p.n1 * p.n2}/${p.d1 + p.d2}`] = "分子乘对了，但分母也要相乘，不是相加。";
+        traps[`${p.n1 * p.d2}/${p.d1 * p.n2}`] = "这是除法的算法（乘倒数）。分数乘分数直接分子乘分子、分母乘分母。";
+      }
+      return { ...base, kind: "fill", params: { ...p, q: lv }, prompt: `${r.expr} = （　）（写成最简分数，如 3/4；能化成整数的写整数${r.mixed ? "，也可以写成带分数，如 1又1/2" : ""}）`, answer: r.simplest, steps: mode === 0 ? [`${r.a} × ${p.k} 表示 ${p.k} 个 ${r.a} 相加。`, `分子乘整数，分母不变：${r.calc} = ${r.raw}`, `约分：${r.simplest}`] : [`分子乘分子，分母乘分母：${r.calc} = ${r.raw}`, `约分：${r.simplest}`], traps };
     }
     case "scale": {
       const p = normalizeParams(demo, { s: rng.int(lv === 1 ? 0 : 1, 3), cm: rng.int(1, lv === 3 ? 20 : 9) });
@@ -432,8 +450,47 @@ export function normalizeAnswer(s: string): string {
   return s.replace(/\s+/g, "").replace(/／/g, "/").replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/。/g, ".").replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 }
 
+/** 把 "3"、"3/4"、"2又1/4" 读成 [分子, 分母, 是否带分数]；读不懂返回 null。 */
+function readFraction(s: string): { n: number; d: number; mixed: boolean; whole: number; fn: number } | null {
+  let m = /^(\d+)$/.exec(s);
+  if (m) return { n: Number(m[1]), d: 1, mixed: false, whole: Number(m[1]), fn: 0 };
+  m = /^(\d+)\/(\d+)$/.exec(s);
+  if (m && Number(m[2]) > 0) return { n: Number(m[1]), d: Number(m[2]), mixed: false, whole: 0, fn: Number(m[1]) };
+  m = /^(\d+)又(\d+)\/(\d+)$/.exec(s);
+  if (m && Number(m[3]) > 0) return { n: Number(m[1]) * Number(m[3]) + Number(m[2]), d: Number(m[3]), mixed: true, whole: Number(m[1]), fn: Number(m[2]) };
+  return null;
+}
+
+/** 没有对应的易错提示时，按错误的类型给一句有针对性的话。 */
+function smartHint(q: PracticeQ, g: string): string | undefined {
+  if (q.demo === "decimal-div" && /^\d+(\.\d+)?$/.test(g) && /^\d+(\.\d+)?$/.test(q.answer)) {
+    const digits = (x: string) => x.replace(".", "").replace(/^0+/, "").replace(/0+$/, "");
+    if (q.params.q === 3) {
+      const places = (g.split(".")[1] ?? "").length;
+      if (places !== 2) return "题目要求保留两位小数：除到第三位小数，再四舍五入，结果写到小数点后第二位。";
+    }
+    if (digits(g) === digits(q.answer) && Number(g) !== Number(q.answer))
+      return q.params.b % 10 === 0
+        ? "数字都对了，小数点的位置不对：除数是整数时，商的小数点要和被除数的小数点对齐。"
+        : "数字都对了，小数点的位置不对：先把除数变成整数，被除数的小数点也向右移动同样多位，商的小数点再和移动后的被除数对齐。";
+  }
+  if (q.demo === "fraction-mul") {
+    const a = readFraction(q.answer), x = readFraction(g);
+    if (a && x && x.n * a.d === a.n * x.d) {
+      if (x.d === 1 || a.d === 1) return "大小算对了，但能化成整数的要写成整数。";
+      return "大小算对了，但还没约成最简分数：分子和分母还有公因数，继续约分。";
+    }
+  }
+  return undefined;
+}
+
 export function checkAnswer(q: PracticeQ, given: string): { ok: boolean; hint?: string } {
   const g = normalizeAnswer(given);
-  const ok = g === normalizeAnswer(q.answer);
-  return ok ? { ok } : { ok, hint: q.traps[g] ?? q.traps[given.trim()] };
+  if (g === normalizeAnswer(q.answer)) return { ok: true };
+  // 分数乘法：假分数写成最简的带分数（如 9/4 写成 2又1/4）也算对
+  if (q.demo === "fraction-mul") {
+    const a = readFraction(normalizeAnswer(q.answer)), x = readFraction(g);
+    if (a && x && x.mixed && x.n * a.d === a.n * x.d && x.whole > 0 && x.fn > 0 && x.fn < x.d && gcd(x.fn, x.d) === 1) return { ok: true };
+  }
+  return { ok: false, hint: q.traps[g] ?? q.traps[given.trim()] ?? smartHint(q, g) };
 }

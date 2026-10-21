@@ -1,4 +1,5 @@
 import { shiftStamp, todayStamp } from "./math/progress.ts";
+import { keepCopy } from "./lesson/class-log.ts";
 
 /**
  * 每天做了多少题：只在本浏览器保存“日期 → 题数、答对数”，最多保留 60 天，
@@ -36,7 +37,16 @@ export function recordActivity(store: KV | undefined, ok: boolean, now = new Dat
   const d = a[today] ?? { n: 0, ok: 0 };
   a[today] = { n: d.n + 1, ok: d.ok + (ok ? 1 : 0) };
   const next = prune(a, today);
-  try { store?.setItem(ACTIVITY_KEY, JSON.stringify(next)); } catch { /* 存储已满或隐私模式时忽略，不影响练习 */ }
+  try {
+    // 原始内容读不懂（不是 JSON 对象）时先另存一份再覆盖，另存失败就不写
+    const raw = store?.getItem(ACTIVITY_KEY) ?? null;
+    if (raw) {
+      let ok = false;
+      try { const v = JSON.parse(raw); ok = !!v && typeof v === "object" && !Array.isArray(v); } catch { /* 读不懂 */ }
+      if (!ok && !keepCopy(store, `${ACTIVITY_KEY}.unreadable`, raw)) return next;
+    }
+    store?.setItem(ACTIVITY_KEY, JSON.stringify(next));
+  } catch { /* 存储已满或隐私模式时忽略，不影响练习 */ }
   return next;
 }
 
