@@ -21,9 +21,9 @@ try {
     const board = await page.locator('.board').innerText();
     assert.ok(board.includes('72 ÷ 4') && board.includes('= 18'), board);
     await page.getByRole('button', { name: '让我自己试试' }).first().click();
-    await page.getByRole('button', { name: '除数加 0.1' }).click(); // 7.2 ÷ 0.5 = 14.4
+    await page.getByRole('button', { name: '除数加 0.1', exact: true }).click(); // 7.2 ÷ 0.5 = 14.4
     await page.locator('.ddiv .dec-answer', { hasText: '14.4' }).waitFor();
-    await page.getByRole('button', { name: '除数减 0.1' }).click(); await page.getByRole('button', { name: '除数减 0.1' }).click(); await page.getByRole('button', { name: '除数加 1' }).click(); // 7.2 ÷ 1.3
+    await page.getByRole('button', { name: '除数减 0.1', exact: true }).click(); await page.getByRole('button', { name: '除数减 0.1', exact: true }).click(); await page.getByRole('button', { name: '除数加 1', exact: true }).click(); // 7.2 ÷ 1.3
     await page.locator('.ddiv', { hasText: '循环小数' }).waitFor();
     ok(`${tag}：动手改除数，商和循环小数实时更新`);
     await page.screenshot({ path: `${out}/v12-decimal-div-${tag}.png`, fullPage: true });

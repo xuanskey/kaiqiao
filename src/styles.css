@@ -763,3 +763,6 @@ summary::-webkit-details-marker { display: none; }
 .ddiv-stepper{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;font-size:13px;color:#476247}
 .ddiv-stepper button{min-width:40px;height:32px;border-radius:8px;border:1px solid #cad9bc;background:#eef4e6;color:#285847;font-size:13px}
 .ddiv-stepper b{min-width:44px;text-align:center;font-size:16px;font-variant-numeric:tabular-nums}
+.ddiv .dec-row{flex-wrap:wrap;justify-content:center;max-width:100%}
+.ddiv .dec-answer{max-width:100%;overflow-wrap:anywhere}
+@media (max-width: 520px){.ddiv .dec-row{font-size:18px;gap:8px}.ddiv .dec-card{min-width:48px;padding:6px 10px}.ddiv-rows li{font-size:13px;gap:8px}}
