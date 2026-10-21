@@ -10,6 +10,7 @@ export type DemoId =
   | "decimal-mul" | "balance" | "circle" | "cylinder"
   | "shapes" | "rmb" | "ruler" | "clock" | "parallel" | "chance" | "number-line" | "percent" | "pigeonhole" | "scale"
   | "make-ten" | "bar-chart" | "poly-area"
+  | "decimal-div" | "fraction-mul"
   | "magnet" | "shadow" | "circuit" | "pendulum" | "water"
   | "lever" | "slope" | "sound" | "earth" | "friction" | "plant";
 
@@ -171,6 +172,20 @@ export const DEMOS: Record<DemoId, DemoDef> = {
       { key: "b", label: "上底（梯形）", min: 1, max: 10, default: 4, unit: "厘米" },
       { key: "h", label: "高", min: 2, max: 7, default: 5, unit: "厘米" },
     ] },
+  "decimal-div": { id: "decimal-div", subject: "math", title: "小数除法：除数是小数怎么办", grades: [5], summary: "除数是整数时，商的小数点和被除数的小数点对齐；除数是小数时，先把除数变成整数，被除数跟着扩大同样的倍数，商不变。",
+    params: [
+      { key: "a", label: "被除数", min: 1, max: 999, scale: 10, default: 72 },
+      { key: "b", label: "除数", min: 1, max: 99, scale: 10, default: 4 },
+    ] },
+  "fraction-mul": { id: "fraction-mul", subject: "math", title: "分数乘法：求一个数的几分之几", grades: [6], summary: "分数乘整数就是求几个相同分数的和；分数乘分数，在长方形里先取几分之几，再取它的几分之几。",
+    params: [
+      { key: "mode", label: "算式", min: 0, max: 1, default: 1, options: ["分数 × 整数", "分数 × 分数"] },
+      { key: "n1", label: "第一个分数的分子", min: 1, max: 8, default: 3 },
+      { key: "d1", label: "第一个分数的分母", min: 2, max: 9, default: 4 },
+      { key: "k", label: "整数", min: 2, max: 9, default: 3 },
+      { key: "n2", label: "第二个分数的分子", min: 1, max: 8, default: 2 },
+      { key: "d2", label: "第二个分数的分母", min: 2, max: 9, default: 3 },
+    ] },
   water: { id: "water", subject: "science", title: "水的三态变化", grades: [3, 4], summary: "改变温度，看水什么时候结冰、什么时候沸腾。",
     params: [{ key: "t", label: "温度", min: -20, max: 120, default: 25, unit: "℃" }],
     experiment: { goal: "观察水在不同温度下的状态变化。", tools: ["烧杯", "冰块", "温度计", "酒精灯或电热水壶（老师操作）"], steps: ["把冰块放进烧杯，用温度计测温度。", "让冰块慢慢融化，观察温度。", "在老师帮助下加热到沸腾，观察水蒸气。"], observe: "冰在 0 ℃ 左右融化成水；水加热到约 100 ℃ 沸腾，变成水蒸气。", explain: "水有固态（冰）、液态（水）和气态（水蒸气）三种状态，温度变化会让它们互相转化。", safety: "加热和沸水实验必须由老师或家长操作，小心烫伤；不要用手摸刚加热过的器材。", think: "冬天窗户上的冰花和夏天冰饮料瓶外的水珠，分别是怎么来的？", virtualNote: "模拟按一个标准大气压设定：0 ℃ 结冰、100 ℃ 沸腾。真实情况下，水在低于 100 ℃ 时也会慢慢蒸发；高原上水的沸点会低一些。" } },
@@ -270,6 +285,7 @@ export function normalizeParams(id: DemoId, input: Params): Params {
   if (id === "pigeonhole" && p.items <= p.boxes) p.items = Math.min(20, p.boxes + 1);
   if (id === "chance" && p.red + p.white === 0) p.red = 1;
   if (id === "poly-area" && p.b >= p.a) p.b = Math.max(1, p.a - 1);
+  if (id === "fraction-mul") { if (p.n1 >= p.d1) p.n1 = p.d1 - 1; if (p.n2 >= p.d2) p.n2 = p.d2 - 1; }
   return p;
 }
 
@@ -535,6 +551,64 @@ export function polyArea(p: Params) {
   const formula = p.shape === 0 ? "底 × 高" : p.shape === 1 ? "底 × 高 ÷ 2" : "(上底 + 下底) × 高 ÷ 2";
   const calc = p.shape === 0 ? `${p.a} × ${p.h} = ${area}` : p.shape === 1 ? `${p.a} × ${p.h} ÷ 2 = ${area}` : `(${p.b} + ${p.a}) × ${p.h} ÷ 2 = ${area}`;
   return { twice, area, name, formula, calc };
+}
+
+/** 小数除法：a、b 都用“十分之几”的整数表示，商就是 a ÷ b。
+ *  除数是整数（b 是 10 的倍数）时直接除；除数是一位小数时，被除数和除数同时 ×10。
+ *  用整数竖式逐位求商；不能除尽时继续在余数后添 0，并找出循环节。 */
+export function decimalDiv(p: Params) {
+  const aText = fmtScaled(p.a, 1), bText = fmtScaled(p.b, 1);
+  const intDivisor = p.b % 10 === 0;
+  const D = intDivisor ? p.b / 10 : p.b; // 转化后的整数除数
+  const s = intDivisor && p.a % 10 !== 0 ? 1 : 0; // 转化后被除数的小数位数（整数被除数不带小数部分）
+  const newA = intDivisor ? aText : String(p.a), newB = String(D);
+  const padZero = !intDivisor && p.a % 10 === 0; // 例如 5 ÷ 2.5 → 50 ÷ 25，被除数末尾补 0
+  // 精确商：a ÷ b 能在 6 位小数内除尽就是有限小数
+  let exact: string | null = null;
+  for (let k = 0; k <= 6 && exact === null; k++) { const n = p.a * 10 ** k; if (n % p.b === 0) exact = fmtScaled(n / p.b, k); }
+  const n100 = Math.round((p.a * 100) / p.b);
+  const approx2 = `${Math.floor(n100 / 100)}.${String(n100 % 100).padStart(2, "0")}`;
+  // 竖式：逐位除
+  const digits = String(intDivisor && s === 0 ? p.a / 10 : p.a).padStart(s + 1, "0").split("").map(Number);
+  const intLen = digits.length - s;
+  const rows: { cur: number; q: number; rem: number; zero: boolean }[] = [];
+  let rem = 0, started = false, qs = "";
+  digits.forEach((d, i) => {
+    if (i === intLen) qs += ".";
+    const cur = rem * 10 + d, q = Math.floor(cur / D);
+    rem = cur % D; qs += q;
+    if (started || q > 0 || i >= intLen - 1) { started = true; if (cur > 0 || q > 0) rows.push({ cur, q, rem, zero: false }); }
+  });
+  const seen = new Map<number, number>();
+  let repeat: { start: number; end: number } | null = null;
+  if (rem && !qs.includes(".")) qs += ".";
+  for (let extra = 0; rem && extra < 8; extra++) {
+    if (seen.has(rem)) { repeat = { start: seen.get(rem)!, end: qs.length }; break; }
+    seen.set(rem, qs.length);
+    const cur = rem * 10, q = Math.floor(cur / D);
+    rem = cur % D; qs += q; rows.push({ cur, q, rem, zero: true });
+  }
+  const n4 = Math.floor((p.a * 10000) / p.b);
+  const shown = exact ?? `${Math.floor(n4 / 10000)}.${String(n4 % 10000).padStart(4, "0")}…`;
+  const cycle = repeat ? qs.slice(repeat.start, repeat.end) : "";
+  const quotient = exact ?? approx2;
+  return { aText, bText, intDivisor, D, newA, newB, padZero, exact, recurring: exact === null, approx2, quotient, shown, cycle, rows, addedZero: rows.some((r) => r.zero), expr: `${aText} ÷ ${bText}` };
+}
+
+/** 分数乘法：mode 0 是分数 × 整数，mode 1 是分数 × 分数。 */
+export function fractionMul(p: Params) {
+  const isInt = p.mode === 0;
+  const num = isInt ? p.n1 * p.k : p.n1 * p.n2, den = isInt ? p.d1 : p.d1 * p.d2;
+  const g = gcd(num, den) || 1;
+  const sn = num / g, sd = den / g;
+  const simplest = sd === 1 ? String(sn) : `${sn}/${sd}`;
+  const a = `${p.n1}/${p.d1}`, b = isInt ? String(p.k) : `${p.n2}/${p.d2}`;
+  const raw = `${num}/${den}`;
+  const mixed = sd !== 1 && sn > sd ? `${Math.floor(sn / sd)}又${sn % sd}/${sd}` : "";
+  // 先约分：交叉约分（分数 × 整数时，整数和分母约分）
+  const cross = isInt ? gcd(p.k, p.d1) : Math.max(gcd(p.n1, p.d2), gcd(p.n2, p.d1));
+  return { isInt, num, den, raw, simplest, mixed, a, b, reduced: g > 1, cross: cross > 1, expr: `${a} × ${b}`,
+    calc: isInt ? `${p.n1}×${p.k}/${p.d1}` : `(${p.n1}×${p.n2})/(${p.d1}×${p.d2})`, smaller: !isInt };
 }
 
 export function plant(p: Params) {
@@ -958,6 +1032,46 @@ export function lessonScript(id: DemoId, raw: Params, grade: Grade, variant = 0)
         { say: "梯形面积 =（上底 + 下底）× 高 ÷ 2。", board: [T("S = (a + b)h ÷ 2", "note")] },
       ]);
     }
+    case "decimal-div": {
+      const r = decimalDiv(p);
+      const rowText = r.rows.slice(0, 6).map((x) => `${x.cur} ÷ ${r.D}：商 ${x.q}，余 ${x.rem}${x.zero ? "（添 0）" : ""}`);
+      if (r.rows.length > 6) rowText.push("……");
+      const story = r.intDivisor ? `一根 ${r.aText} 米长的绳子，平均剪成 ${r.newB} 段，每段长多少米？` : `一根 ${r.aText} 米长的绳子，每 ${r.bText} 米剪一段，能剪几段？`;
+      const units = !r.intDivisor ? `${r.aText} 是 ${p.a} 个 0.1，${r.bText} 是 ${p.b} 个 0.1。${p.a} 个 0.1 里有几个 ${p.b} 个 0.1，就是算 ${p.a} 除以 ${p.b}。`
+        : `把 ${r.aText} 看成 ${p.a} 个 0.1，平均分成 ${r.D} 份，再看每份是多少个 0.1。`;
+      return steps(grade, [
+        { say: v === 2 ? story : `计算 ${r.aText} 除以 ${r.bText}。`, board: [T(`${r.expr} = ?`, "title")], scene: { reveal: 1 } },
+        r.intDivisor
+          ? { say: v === 1 ? units : `除数 ${r.bText} 是整数，按整数除法的方法去除，商的小数点要和被除数的小数点对齐。`, board: [T("除数是整数：商的小数点和被除数的小数点对齐")], scene: { reveal: 2 } }
+          : { say: v === 1 ? units : `除数 ${r.bText} 是小数，先把它变成整数：被除数和除数同时乘 10，商不变，${r.expr} 变成 ${r.newA} 除以 ${r.newB}。${r.padZero ? "被除数的位数不够，在末尾添 0 补足。" : ""}`, board: [{ kind: "formula" as const, id: "t", text: `${r.expr} → ${r.newA} ÷ ${r.newB}（同时 ×10，商不变）` }], highlight: ["t"], scene: { reveal: 2 } },
+        { say: `用竖式一位一位地除${r.addedZero ? "，有余数就在余数后面添 0 继续除" : ""}。`, board: [{ kind: "column" as const, id: "col", lines: rowText }], highlight: ["col"], scene: { reveal: 3 } },
+        r.recurring
+          ? { say: `一直除不尽，商是循环小数 ${r.shown}${r.cycle ? `，循环节是 ${r.cycle}` : ""}。保留两位小数约是 ${r.approx2}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${r.shown} ≈ ${r.approx2}` }], highlight: ["f"], scene: { reveal: 4 } }
+          : { say: `${r.expr} 等于 ${r.exact}。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${r.exact}` }], highlight: ["f"], scene: { reveal: 4 } },
+        r.intDivisor
+          ? { say: "记住：除数是整数，按整数除法去除；整数部分不够商 1 就商 0，点上小数点；有余数就添 0 继续除。", board: [T("商的小数点对齐 · 不够商 1 就商 0 · 添 0 继续除", "note")], scene: { reveal: 5 } }
+          : { say: "记住：先移动除数的小数点，使它变成整数；除数的小数点向右移动几位，被除数的小数点也向右移动几位，位数不够的用 0 补足。", board: [T("除数变整数 · 被除数跟着移动同样多位 · 商不变", "note")], scene: { reveal: 5 } },
+      ]);
+    }
+    case "fraction-mul": {
+      const r = fractionMul(p);
+      const result = r.mixed ? `${r.simplest}（${r.mixed}）` : r.simplest;
+      if (r.isInt) return steps(grade, [
+        { say: v === 2 ? `每人吃 ${r.a} 块蛋糕，${p.k} 个人一共吃多少块？` : `计算 ${r.a} 乘 ${p.k}。`, board: [T(`${r.expr} = ?`, "title")], scene: { reveal: 1 } },
+        { say: `${r.a} 乘 ${p.k}，就是求 ${p.k} 个 ${r.a} 相加的和。`, board: [{ kind: "formula" as const, id: "add", text: `${Array(p.k).fill(r.a).join(" + ")}` }], highlight: ["add"], scene: { reveal: 2 } },
+        { say: v === 1 ? `一共有 ${p.n1} 乘 ${p.k}，也就是 ${r.num} 个 1/${p.d1}。` : `分数乘整数，用分子和整数相乘的积作分子，分母不变：${p.n1} 乘 ${p.k} 得 ${r.num}，分母还是 ${p.d1}。`, board: [{ kind: "formula" as const, id: "c", text: `${r.expr} = ${r.calc} = ${r.raw}` }], highlight: ["c"], scene: { reveal: 3 } },
+        { say: r.reduced ? `能约分的要约分，结果是 ${result}。${r.cross ? `也可以先把 ${p.k} 和 ${p.d1} 约分再乘，计算更简便。` : ""}` : `结果是 ${result}，已经是最简分数。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${result}` }], highlight: ["f"], scene: { reveal: 4 } },
+        { say: "分数乘整数：分子乘整数，分母不变，能约分的先约分。", board: [T("分子 × 整数，分母不变", "note")], scene: { reveal: 4 } },
+      ]);
+      return steps(grade, [
+        { say: v === 2 ? `一块地的 ${r.a} 种蔬菜，蔬菜地的 ${r.b} 种白菜，白菜地占这块地的几分之几？` : `计算 ${r.a} 乘 ${r.b}，就是求 ${r.a} 的 ${r.b} 是多少。`, board: [T(`${r.expr} = ?`, "title")], scene: { reveal: 1 } },
+        { say: `把一个长方形看作单位“1”，竖着平均分成 ${p.d1} 份，涂出 ${p.n1} 份，就是它的 ${r.a}。`, board: [T(`先取整体的 ${r.a}`)], scene: { reveal: 1 } },
+        { say: `再横着把它平均分成 ${p.d2} 份，取其中的 ${p.n2} 份，就是 ${r.a} 的 ${r.b}。`, board: [T(`再取 ${r.a} 的 ${r.b}`)], scene: { reveal: 2 } },
+        { say: v === 1 ? `整个长方形被分成了 ${p.d1} 乘 ${p.d2} 等于 ${r.den} 个小格，重叠的部分有 ${p.n1} 乘 ${p.n2} 等于 ${r.num} 格，所以是 ${r.raw}。` : `数一数：一共 ${r.den} 小格，重叠部分 ${r.num} 格，就是 ${r.raw}。分子乘分子，分母乘分母。`, board: [{ kind: "formula" as const, id: "c", text: `${r.expr} = ${r.calc} = ${r.raw}` }], highlight: ["c"], scene: { reveal: 3 } },
+        { say: r.reduced ? `约成最简分数是 ${result}。${r.cross ? "计算时也可以先交叉约分，再乘。" : ""}` : `${r.raw} 已经是最简分数。`, board: [{ kind: "formula" as const, id: "f", text: `${r.expr} = ${result}` }], highlight: ["f"], scene: { reveal: 4 } },
+        { say: `分数乘分数，用分子相乘的积作分子，分母相乘的积作分母。乘一个真分数，积比原来的数小：${result} 比 ${r.a} 小。`, board: [T("分子 × 分子，分母 × 分母，能约分的先约分", "note")], scene: { reveal: 4 } },
+      ]);
+    }
     case "plant": {
       const r = plant(p);
       const water = DEMOS.plant.params[0].options![p.water];
@@ -996,6 +1110,8 @@ export function lifeExample(id: DemoId, grade: Grade): string {
     "make-ten": "盘子里有 9 个饺子，又端来 4 个：先拿 1 个凑满 10，再加 3 个，一共 13 个。",
     "bar-chart": low ? "班里投票选春游地点，画成条形图，一眼就能看出去哪里的人最多。" : "体检后把全班身高分段统计，画成条形统计图，就能看出哪一段的人最多。",
     "poly-area": "一块梯形的菜地，上底 6 米、下底 10 米、高 5 米，面积是 (6+10)×5÷2 = 40 平方米。",
+    "decimal-div": "妈妈买 2.5 千克苹果花了 20 元，每千克多少元？20 ÷ 2.5 = 200 ÷ 25 = 8（元）。",
+    "fraction-mul": "一块地的 3/4 种蔬菜，蔬菜地的 2/3 种白菜，白菜地占这块地的 3/4 × 2/3 = 1/2。",
     scale: "地图上两地相距 5 厘米，比例尺 1∶1000000，实际相距 50 千米。",
     water: "冬天湖面结冰，烧开水时冒出“白气”。",
     circle: "自行车轮子转一圈走的路，就是轮子的周长。",

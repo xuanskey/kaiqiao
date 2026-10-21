@@ -1,6 +1,7 @@
 import { Learning } from "./learning";
 import { Classroom } from "@/components/lesson/classroom";
 import { unitById } from "@/lib/math/units";
+import { lessonFromSearch, requestLesson } from "@/lib/lesson/today";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, Lightbulb, Star, Timer, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,16 @@ export function Game() {
   const screen = useMath((s) => s.screen);
   const hydrate = useMath((s) => s.hydrate);
   const persist = useMath((s) => s.persist);
-  useEffect(() => { hydrate(); }, [hydrate]);
+  useEffect(() => {
+    hydrate();
+    // 主站或分享链接可以直达某节课：?lesson=fraction-mul&grade=6
+    const link = lessonFromSearch(window.location.search);
+    if (link) {
+      requestLesson(link.demo, link.grade, "推荐课");
+      useMath.getState().go("class");
+      window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+    }
+  }, [hydrate]);
   useEffect(() => {
     const onHide = () => { if (document.visibilityState === "hidden") persist(); };
     document.addEventListener("visibilitychange", onHide);

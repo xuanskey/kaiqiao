@@ -1,5 +1,5 @@
 import type { Grade } from "../math/types.ts";
-import { DEMO_LIST, type DemoDef, type DemoId } from "./demos.ts";
+import { DEMOS, DEMO_LIST, isDemoId, type DemoDef, type DemoId } from "./demos.ts";
 import type { ClassLog } from "./class-log.ts";
 
 /** 首页“今日”板块用到的纯函数：问候语、日期、按天轮换的推荐课，都可以单独测试。 */
@@ -61,3 +61,13 @@ let pending: { demo: DemoId; grade: Grade; unit: string } | null = null;
 export function requestLesson(demo: DemoId, grade: Grade, unit = "今日推荐"): void { pending = { demo, grade, unit }; }
 export function peekLesson() { return pending; }
 export function clearLesson(): void { pending = null; }
+
+/** 外部链接直达某节课：?lesson=decimal-div&grade=5。年级不适用时取这节课的第一个年级；无效参数返回 null。 */
+export function lessonFromSearch(search: string): { demo: DemoId; grade: Grade } | null {
+  const q = new URLSearchParams(search);
+  const demo = q.get("lesson");
+  if (!isDemoId(demo)) return null;
+  const g = Number(q.get("grade"));
+  const grades = DEMOS[demo].grades;
+  return { demo, grade: (grades.includes(g as Grade) ? g : grades[0]) as Grade };
+}

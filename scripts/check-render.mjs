@@ -78,6 +78,7 @@ try {
   const more = await server.ssrLoadModule('/src/components/lesson/stages-more.tsx');
   const lab = await server.ssrLoadModule('/src/components/lesson/stages-lab.tsx');
   const v10 = await server.ssrLoadModule('/src/components/lesson/stages-v10.tsx');
+  const v12 = await server.ssrLoadModule('/src/components/lesson/stages-v12.tsx');
   let lessonCount = 0;
   for (const demo of DEMO_LIST) for (const grade of demo.grades) {
     const html = renderToString(createElement(LessonView, { demo: demo.id, grade, unitTitle: '测试单元', onBack() {} }));
@@ -86,7 +87,7 @@ try {
     if (demo.subject === 'science') for (const text of ['实验目的', '所需器材', '实验步骤', '观察结果', '结果解释', '想一想']) assert.ok(html.includes(text), `${demo.id}: ${text}`);
     lessonCount++;
   }
-  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage, water: more.WaterStage, shapes: more.ShapesStage, rmb: more.RmbStage, ruler: more.RulerStage, clock: more.ClockStage, parallel: more.ParallelStage, chance: more.ChanceStage, 'number-line': more.NumberLineStage, percent: more.PercentStage, pigeonhole: more.PigeonholeStage, scale: more.ScaleStage, 'make-ten': v10.MakeTenStage, 'bar-chart': v10.BarChartStage, 'poly-area': v10.PolyAreaStage, lever: lab.LeverStage, slope: lab.SlopeStage, sound: lab.SoundStage, earth: lab.EarthStage, friction: lab.FrictionStage, plant: lab.PlantStage };
+  const stageOf = { 'add-sub': stages.AddSubStage, 'group-share': stages.GroupShareStage, fraction: stages.FractionStage, 'perimeter-area': stages.PerimeterAreaStage, angle: stages.AngleStage, law: stages.LawStage, 'decimal-mul': stages.DecimalMulStage, balance: stages.BalanceStage, circle: stages.CircleStage, cylinder: stages.CylinderStage, magnet: sci.MagnetStage, shadow: sci.ShadowStage, circuit: sci.CircuitStage, pendulum: sci.PendulumStage, water: more.WaterStage, shapes: more.ShapesStage, rmb: more.RmbStage, ruler: more.RulerStage, clock: more.ClockStage, parallel: more.ParallelStage, chance: more.ChanceStage, 'number-line': more.NumberLineStage, percent: more.PercentStage, pigeonhole: more.PigeonholeStage, scale: more.ScaleStage, 'make-ten': v10.MakeTenStage, 'bar-chart': v10.BarChartStage, 'poly-area': v10.PolyAreaStage, 'decimal-div': v12.DecimalDivStage, 'fraction-mul': v12.FractionMulStage, lever: lab.LeverStage, slope: lab.SlopeStage, sound: lab.SoundStage, earth: lab.EarthStage, friction: lab.FrictionStage, plant: lab.PlantStage };
   for (const demo of DEMO_LIST) assert.ok(stageOf[demo.id], `缺少演示画面：${demo.id}`);
   for (const demo of DEMO_LIST) {
     const html = renderToString(createElement(stageOf[demo.id], { params: defaultParams(demo.id), scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
@@ -101,6 +102,14 @@ try {
   assert.ok(bc.includes('相差 7 票') && bc.includes('共 26 人'), '条形统计图画面');
   const pa = renderToString(createElement(v10.PolyAreaStage, { params: { shape: 2, a: 8, b: 4, h: 5 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
   assert.ok(pa.includes('(4 + 8) × 5 ÷ 2 = 30'), '梯形面积画面');
+  const dd = renderToString(createElement(v12.DecimalDivStage, { params: { a: 72, b: 4 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+  assert.ok(dd.includes('同时 ×10') && dd.includes('32 ÷ 4') && dd.includes('被除数加 0.1'), '小数除法画面');
+  const dd2 = renderToString(createElement(v12.DecimalDivStage, { params: { a: 100, b: 30 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+  assert.ok(dd2.includes('循环小数') && dd2.includes('3.33'), '小数除法循环小数');
+  const fm = renderToString(createElement(v12.FractionMulStage, { params: { mode: 1, n1: 3, d1: 4, k: 3, n2: 2, d2: 3 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+  assert.ok(fm.includes('3/4 × 2/3 = 1/2') && fm.includes('第一个分数取 2/4'), '分数乘法面积模型');
+  const fm0 = renderToString(createElement(v12.FractionMulStage, { params: { mode: 0, n1: 2, d1: 9, k: 3, n2: 1, d2: 2 }, scene: {}, interactive: true, setParam() {}, reduceMotion: true }));
+  assert.ok(fm0.includes('= 2/3') && fm0.includes('3 个 2/9'), '分数乘整数画面');
   console.log(`Classroom: ${lessonCount} lesson pages and ${DEMO_LIST.length} interactive stages rendered`);
   console.log('Existing screens, 18 unit lessons, 3 lab types, unit completion/report and 5 input-state render checks passed (not browser interaction tests)');
 } finally {
