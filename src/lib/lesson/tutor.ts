@@ -23,6 +23,7 @@ export const TUTOR_ACTIONS: { intent: TutorIntent; label: string }[] = [
 
 export type TutorState = {
   variant: number;
+  /** 下一题准备使用的难度；当前题实际难度保存在 PracticeQ.level。 */
   level: number;
   speed: number;
   confusedCount: number;
