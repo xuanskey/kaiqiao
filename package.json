@@ -1,7 +1,7 @@
 {
   "name": "kaiqiao",
   "private": true,
-  "version": "0.13.1",
+  "version": "0.13.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
@@ -12,7 +12,8 @@
     "check": "npm run typecheck && npm test && npm run test:render && npm run build",
     "release": "npm run build && node scripts/release.mjs",
     "test:render": "node scripts/check-render.mjs",
-    "test:smoke": "node scripts/smoke.mjs"
+    "test:smoke": "node scripts/smoke.mjs",
+    "test:state": "node scripts/state-regression.mjs"
   },
   "engines": {
     "node": ">=24"
