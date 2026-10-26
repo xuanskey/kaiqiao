@@ -44,3 +44,4 @@ await writeFile('dist/offline.html', offline);
 await rm('docs', { recursive: true, force: true });
 await cp('dist', 'docs', { recursive: true });
 console.log(`Release ready: docs/ and docs/offline.html (${version})`);
+await import('./sync-app-to-site.mjs');

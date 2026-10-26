@@ -1,0 +1,132 @@
+import assert from 'node:assert/strict';
+import { beforeEach, it } from 'node:test';
+import { useMath } from './math.ts';
+import { emptyPersist, SAVE_KEY, exportBackup, readBackup } from '../lib/math/save.ts';
+import { REVIEW_CONTENT_KEY, REVIEW_SCHEDULE_KEY, emptyReview, exposeReview, enqueueReview, dueReviews, finishReview, reviewDay, reviewId, parseReview } from '../lib/math/review.ts';
+import type { WrongItem } from '../lib/math/types.ts';
+const now = Date.parse('2026-10-26T23:59:59+08:00');
+const q: WrongItem = { chapterId: 'warmup', prompt: '12 + 3 = ?', answer: '15', given: '0', explain: '相加', at: now, mode: 'keypad' };
+let storage: Map<string, string>;
+beforeEach(() => {
+  storage = new Map();
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k: string) => storage.get(k) ?? null, setItem: (k: string, v: string) => storage.set(k, v), removeItem: (k: string) => storage.delete(k) } });
+  useMath.setState({ ...useMath.getInitialState(), ...emptyPersist(), reviewData: emptyReview() }, true);
+});
+it('北京时间跨日、逾期、年级过滤及 1/3/7 天试验间隔', () => {
+  let data = enqueueReview(emptyReview(), q, now);
+  const id = reviewId(q), tomorrow = now + 1000;
+  assert.equal(data.schedule[id].dueAt, tomorrow);
+  assert.deepEqual(dueReviews(data, 3, now), []);
+  assert.deepEqual(dueReviews(data, 3, tomorrow), [id]);
+  assert.deepEqual(dueReviews(data, 1, tomorrow), []);
+  data = finishReview(data, id, true, tomorrow);
+  assert.equal(data.schedule[id].dueAt, reviewDay(tomorrow, 3));
+  assert.equal(finishReview(data, id, true, tomorrow), data);
+  data = finishReview(data, id, true, data.schedule[id].dueAt);
+  assert.equal(data.schedule[id].stage, 2);
+  const due = data.schedule[id].dueAt;
+  data = finishReview(data, id, false, due + 86400000);
+  assert.equal(data.schedule[id].stage, 0);
+  assert.equal(data.schedule[id].dueAt, reviewDay(due, 2));
+});
+it('关联反向题延后，其他数字同知识点不延后', () => {
+  let data = enqueueReview(emptyReview(), q, now);
+  const sibling = { ...q, prompt: '3 + 12 = ?' }, other = { ...q, prompt: '14 + 3 = ?', answer: '17' };
+  data = enqueueReview(enqueueReview(data, sibling, now), other, now);
+  data = finishReview(data, reviewId(q), true, now + 1000);
+  assert.deepEqual(dueReviews(data, 3, now + 1000), [reviewId(other)]);
+  assert.equal(data.schedule[reviewId(sibling)].lastReviewedAt, null);
+});
+it('旧存档迁移不改原存档，刷新恢复，主动再练不推进，今日提交只推进一次', () => {
+  storage.set(SAVE_KEY, JSON.stringify({ ...emptyPersist(), wrong: [q] }));
+  const raw = storage.get(SAVE_KEY);
+  useMath.getState().hydrate();
+  const id = reviewId(q);
+  assert.ok(useMath.getState().reviewData.schedule[id]);
+  assert.equal(storage.get(SAVE_KEY), raw);
+  useMath.getState().persist();
+  assert.ok(storage.has(REVIEW_CONTENT_KEY) && storage.has(REVIEW_SCHEDULE_KEY));
+  const scheduled = structuredClone(useMath.getState().reviewData.schedule);
+  useMath.getState().startReview();
+  useMath.getState().submit('15');
+  assert.equal(useMath.getState().reviewData.schedule[id].dueAt, scheduled[id].dueAt);
+  assert.equal(useMath.getState().reviewData.schedule[id].stage, scheduled[id].stage);
+  assert.equal(useMath.getState().wrong.length, 0);
+  useMath.getState().hydrate();
+  assert.equal(useMath.getState().reviewData.schedule[id].dueAt, scheduled[id].dueAt);
+  assert.equal(useMath.getState().reviewData.schedule[id].stage, scheduled[id].stage);
+  const data = structuredClone(useMath.getState().reviewData);
+  data.schedule[id].dueAt = Date.now() - 1;
+  delete data.schedule[id].lastExposedAt;
+  useMath.setState({ reviewData: data });
+  useMath.getState().startDueReview();
+  useMath.getState().submit('15');
+  useMath.getState().submit('15');
+  assert.equal(useMath.getState().reviewData.schedule[id].stage, 1);
+  useMath.getState().advance();
+  assert.equal(useMath.getState().screen, 'result');
+});
+it('复习答错无即时追加；关联题从本轮移除但保留待复习', () => {
+  let data = enqueueReview(emptyReview(), q, now - 86400000);
+  data = enqueueReview(data, { ...q, prompt: '3 + 12 = ?' }, now - 86400000);
+  for (const s of Object.values(data.schedule)) s.dueAt = 1;
+  useMath.setState({ reviewData: data });
+  useMath.getState().startDueReview();
+  useMath.getState().submit('0');
+  useMath.getState().advance();
+  assert.equal(useMath.getState().screen, 'result');
+  assert.equal(Object.keys(useMath.getState().reviewData.schedule).length, 2);
+  assert.equal(useMath.getState().session!.logs.length, 1);
+});
+it('新备份携带独立复习数据，旧备份从错题重建；无效调度拒绝覆盖', () => {
+  const review = enqueueReview(emptyReview(), q, now);
+  const backup = readBackup(exportBackup(emptyPersist(), { classLog: {}, activity: {}, review }));
+  assert.deepEqual(backup.extras!.review, review);
+  assert.equal(useMath.getState().restore(backup.data, backup.extras), true);
+  assert.deepEqual(useMath.getState().reviewData, review);
+  assert.equal(useMath.getState().restore({ ...emptyPersist(), wrong: [q] }), true);
+  assert.equal(Object.keys(useMath.getState().reviewData.schedule).length, 1);
+  assert.throws(() => parseReview({ content: review.content, schedule: { [reviewId(q)]: { dueAt: -1 } } }));
+});
+it('损坏调度只读保护；保存失败仍可导出内存中的题目和调度', () => {
+  storage.set(SAVE_KEY, JSON.stringify(emptyPersist()));
+  storage.set(REVIEW_SCHEDULE_KEY, 'broken');
+  useMath.getState().hydrate();
+  assert.equal(useMath.getState().storageBlocked, true);
+  useMath.getState().persist();
+  assert.equal(storage.get(REVIEW_SCHEDULE_KEY), 'broken');
+  useMath.setState({ storageBlocked: false, reviewData: enqueueReview(emptyReview(), q, now) });
+  localStorage.setItem = () => { throw new Error('quota'); };
+  useMath.getState().persist();
+  assert.ok(useMath.getState().storageError);
+  assert.ok(useMath.getState().reviewData.content[reviewId(q)]);
+});
+it('调度写入失败回滚全部存储键，内存进度可备份', () => {
+  const s = useMath.getState();
+  s.persist();
+  const previous = new Map(storage);
+  useMath.setState({ reviewData: enqueueReview(emptyReview(), q, now) });
+  let failed = false;
+  localStorage.setItem = (key, value) => {
+    if (key === REVIEW_SCHEDULE_KEY && !failed) { failed = true; throw new Error('quota'); }
+    storage.set(key, value);
+  };
+  useMath.getState().persist();
+  assert.deepEqual(storage, previous);
+  assert.ok(useMath.getState().storageError);
+  const review = useMath.getState().reviewData;
+  assert.deepEqual(readBackup(exportBackup(useMath.getState(), { classLog: {}, activity: {}, review })).extras!.review, review);
+});
+
+it('当天主动再练或查看答案后不升级阶段，次日独立答对才推进', () => {
+  let data = enqueueReview(emptyReview(), q, now);
+  const id = reviewId(q), tomorrow = now + 1000;
+  const due = data.schedule[id].dueAt;
+  data = exposeReview(data, id, tomorrow);
+  assert.equal(data.schedule[id].dueAt, due);
+  data = finishReview(data, id, true, tomorrow);
+  assert.equal(data.schedule[id].stage, 0);
+  assert.equal(data.schedule[id].dueAt, reviewDay(tomorrow, 1));
+  data = finishReview(data, id, true, data.schedule[id].dueAt);
+  assert.equal(data.schedule[id].stage, 1);
+});

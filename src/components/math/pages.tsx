@@ -1,3 +1,4 @@
+import { dueReviews, reviewId } from "@/lib/math/review";
 import { useEffect, useState } from "react";
 import { classSummary, dateLabel, greeting, requestLesson, todayPicks } from "@/lib/lesson/today";
 import { loadClassLog, type ClassLog } from "@/lib/lesson/class-log";
@@ -26,6 +27,7 @@ export function Home() {
   const next = nextCampaign(s.stars, s.selectedGrade);
   const chapter = chapterById(next.chapterId);
   const count = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade).length;
+  const dueCount = dueReviews(s.reviewData, s.selectedGrade, +now).length;
   const dailyDone = s.dailyByGrade[s.selectedGrade] === todayStamp();
   const done = chaptersOfGrade(s.selectedGrade).reduce((n, c) => n + clearedLevels(s.stars, c.id), 0);
   const all = chaptersOfGrade(s.selectedGrade).length * LEVELS_PER_CHAPTER;
@@ -36,7 +38,7 @@ export function Home() {
   const plan = [
     { key: "class", done: cls.today, title: "上一节互动课", detail: picks.math ? `推荐：${picks.math.title}` : "去课堂选一节课", action: () => (picks.math ? openLesson(picks.math.id) : tap(() => s.go("class"))), icon: Presentation },
     { key: "daily", done: dailyDone, title: "完成每日练习", detail: `${GRADE_LABEL[s.selectedGrade]} · 10 道基础题`, action: () => tap(s.startDaily), icon: Target },
-    { key: "review", done: count === 0, title: count ? "把错题再想一遍" : "错题本已清空", detail: count ? `${count} 道待巩固` : "保持住，继续加油", action: () => tap(() => s.go("review")), icon: NotebookPen },
+    { key: "review", done: dueCount === 0, title: "今日到期复习", detail: dueCount ? `${dueCount} 道到期 · 含逾期题` : "今日暂无到期题，可主动再练", action: () => tap(() => s.go("review")), icon: NotebookPen },
   ];
   const doneCount = plan.filter((x) => x.done).length;
   const nextStep = plan.find((x) => !x.done);
@@ -91,7 +93,7 @@ export function Home() {
 
     <div className="section-heading"><h2>换个方式练一练</h2><span>按自己的节奏来</span></div>
     <div className="mode-grid">
-      <ModeCard icon={BookOpen} tone="peach" title="错题再想想" description={count ? `${count} 道待巩固 · 把难点变熟悉` : "暂时没有错题，继续保持"} onClick={() => tap(() => s.go("review"))} />
+      <ModeCard icon={BookOpen} tone="peach" title="今日复习与错题本" description={`${dueCount} 道今日到期 · ${count} 道错题可主动再练`} onClick={() => tap(() => s.go("review"))} />
       <ModeCard icon={Timer} tone="blue" title="90 秒小挑战" description="先求答对，再试试快一点" onClick={() => tap(s.startSprint)} />
       <ModeCard icon={Zap} tone="lavender" title="和窍窍比一比" description="60 秒 · 与电脑伙伴一起练" onClick={() => tap(s.startDuel)} />
     </div>
@@ -189,16 +191,27 @@ export function Map() {
 }
 
 export function Review() {
+  const [, refresh] = useState(0);
+  useEffect(() => { const timer = window.setInterval(() => refresh(n => n + 1), 30000); return () => window.clearInterval(timer); }, []);
   const s = useMath();
   const wrong = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade);
+  const due = dueReviews(s.reviewData, s.selectedGrade);
+  const pending = Object.entries(s.reviewData.schedule).filter(([id]) => s.reviewData.content[id] && chapterById(s.reviewData.content[id].chapterId).grade === s.selectedGrade);
+  const nextDue = pending.length ? Math.min(...pending.map(([, state]) => state.dueAt)) : null;
   return <div className="page-enter">
-    <PageHeading eyebrow={`${GRADE_LABEL[s.selectedGrade]} · 把难点变熟悉`} title="错题本" description="先重做原题，再练同考点。原题答对后，就会移出这里。" action={wrong.length ? <Button onClick={s.startReview}><RotateCcw />重做错题<ArrowRight /></Button> : undefined} />
+    <section className="surface-card mb-5" aria-label="今日复习">
+      <h2>今日到期复习 · {due.length} 题</h2>
+      <p>{due.length ? "包含逾期题。独立作答后更新下次日期，同组关联题延后到明天。" : pending.length ? `今天暂无到期题。下次：${new Date(nextDue!).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })}（北京时间）` : "还没有复习队列。普通练习中的错题与巩固题，会安排在次日复习。"}</p>
+      <Button onClick={due.length ? s.startDueReview : s.startDaily}>{due.length ? "开始今日复习" : "去普通练习"}<ArrowRight /></Button>
+      <p className="footnote">按北京时间安排；试验间隔为次日 / 3 天 / 7 天。主动再练不推进已有到期日；当天看过答案或再练后，复习不升级阶段，次日再来。</p>
+    </section>
+    <PageHeading eyebrow={`${GRADE_LABEL[s.selectedGrade]} · 把难点变熟悉`} title="错题本" description="先重做原题，再练同考点。原题答对后移出错题本，仍保留在跨天复习队列。" action={wrong.length ? <Button onClick={s.startReview}><RotateCcw />主动再练<ArrowRight /></Button> : undefined} />
     {!wrong.length ? <section className="empty-state"><span className="empty-illustration"><BookOpen size={40} /><Check size={23} /></span><h2>还没有错题，轻装出发。</h2><p>练习里暂时没答对的题，会收进这里。<br />每次弄懂一道，就是一次进步。</p><Button size="lg" onClick={s.startDaily}>去练一组<ArrowRight /></Button></section> : <>
       <div className="review-summary"><BookOpen size={18} /><span>本年级还有 <strong>{wrong.length}</strong> 道题可以再想想</span></div>
       <ul className="wrong-list">{wrong.map((w, index) => <li key={w.at + w.prompt} className="wrong-card">
-        <div className="flex items-start gap-3"><span className="question-number">{String(index + 1).padStart(2, '0')}</span><div className="min-w-0 flex-1"><div className="wrong-tags"><span>{chapterById(w.chapterId).name}</span>{isSkillId(w.skill) ? <span>{SKILL_LABEL[w.skill]}</span> : null}</div><h2>{w.prompt}</h2><div className="answer-comparison"><span>上次回答 <b>{w.given}</b></span><span>正确答案 <strong>{w.answer}</strong></span></div><details className="explanation"><summary>看看解题思路<ChevronRight size={16} /></summary><p>{w.explain}</p>{w.trap ? <p className="explanation-tip"><Lightbulb size={15} />{w.trap}</p> : null}</details></div></div>
+        <div className="flex items-start gap-3"><span className="question-number">{String(index + 1).padStart(2, '0')}</span><div className="min-w-0 flex-1"><div className="wrong-tags"><span>{chapterById(w.chapterId).name}</span>{isSkillId(w.skill) ? <span>{SKILL_LABEL[w.skill]}</span> : null}</div><h2>{w.prompt}</h2><details className="explanation" onToggle={(event) => { if (event.currentTarget.open) s.revealReview(reviewId(w)); }}><summary>查看答案与解题思路<ChevronRight size={16} /></summary><div className="answer-comparison"><span>上次回答 <b>{w.given}</b></span><span>正确答案 <strong>{w.answer}</strong></span></div><p>{w.explain}</p>{w.trap ? <p className="explanation-tip"><Lightbulb size={15} />{w.trap}</p> : null}</details></div></div>
       </li>)}</ul>
-      <div className="review-footer"><p>记录只保存在当前浏览器，换设备前记得备份。</p><Button variant="ghost" onClick={() => { if (window.confirm("清空本年级错题？清空前可在学情页导出备份。")) s.clearWrong(); }}>清空本年级错题</Button></div>
+      <div className="review-footer"><p>记录只保存在当前浏览器，换设备前记得备份。</p><Button variant="ghost" onClick={() => { if (window.confirm("清空本年级错题（跨天复习队列仍保留）？清空前可在学情页导出备份。")) s.clearWrong(); }}>清空本年级错题</Button></div>
     </>}
   </div>;
 }

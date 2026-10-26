@@ -178,7 +178,7 @@ function Play() {
   return (
     <AskShell
       mood={mood}
-      title={`${session.retried ? "巩固加练 · " : ""}${session.kind === "unit" ? `${unitById(session.unitId ?? "")?.title ?? "单元练习"} · ${session.assessment ? "自测" : "练习"}` : playTitle(session.kind, session.chapterId, session.level, session.skill)}`}
+      title={`${session.dueReview ? "今日到期复习 · " : ""}${session.retried ? "巩固加练 · " : ""}${session.kind === "unit" ? `${unitById(session.unitId ?? "")?.title ?? "单元练习"} · ${session.assessment ? "自测" : "练习"}` : playTitle(session.kind, session.chapterId, session.level, session.skill)}`}
       onBack={() => {
         if (window.confirm("结束本轮？已提交的答案会保留，未完成的练习不计通关或打卡。")) go("home");
       }}
@@ -337,8 +337,11 @@ function Result() {
   }, [muted]);
 
   const selectedGrade = useMath((s) => s.selectedGrade);
+  const reviewData = useMath((s) => s.reviewData);
 
   if (!session) return null;
+  const nextDates = Object.entries(reviewData.schedule).filter(([id]) => reviewData.content[id] && chapterById(reviewData.content[id].chapterId).grade === selectedGrade).map(([, state]) => state.dueAt);
+  const nextDate = nextDates.length ? new Date(Math.min(...nextDates)).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '';
   const correct = session.logs.filter((l) => l.ok).length;
   const total = session.logs.length;
   const you = correct;
@@ -372,6 +375,7 @@ function Result() {
       {session.kind === "campaign" ? <div className="result-stars" aria-label={`本轮获得 ${lastStars} 颗星`} >{[1, 2, 3].map((n) => <Star key={n} size={34} className={cn(n <= lastStars && "is-earned")} />)}</div> : null}
       <div className="result-metrics"><Metric label="答对 / 已答" value={`${correct} / ${total}`} /><Metric label="本轮正确率" value={accuracy === null ? '—' : `${accuracy}%`} /><Metric label="最高连对" value={`${session.maxCombo} 题`} /></div>
       {session.kind === "unit" ? <p className="unit-result-note">这次记录已写入学情。看看家长建议，再挑一个需要巩固的知识点。</p> : null}
+      {session.dueReview ? <p>本轮复习已完成。下次复习：{nextDate}（北京时间）。独立答对延后 3 天 / 7 天；答错、当天看过答案或关联题次日再来。</p> : null}
       <div className="result-actions"><Button size="lg" onClick={retry}>{session.kind === "campaign" ? lastStars > 0 ? "继续闯关" : "再练本关" : session.kind === "review" ? "回到错题本" : "再练一组"}<ArrowRight /></Button><Button variant="outline" size="lg" onClick={() => go("report")}>看看学习小结</Button></div>
       <button type="button" className="back-button mx-auto mt-4" onClick={() => go("home")}><ArrowLeft size={15} />今天先练到这里</button>
     </section>

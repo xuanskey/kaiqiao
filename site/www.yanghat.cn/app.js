@@ -1,5 +1,7 @@
 'use strict';
 
+// practice=1 时首页只内嵌练习，不跑门面动效。
+if (new URLSearchParams(location.search).get('practice') !== '1') {
 // The main site stays useful without JavaScript. Enhancements are enabled here.
 const menuToggle = document.querySelector('.menu-toggle');
 const mobileMenu = document.querySelector('#mobile-menu');
@@ -71,4 +73,5 @@ if (next) {
   }
   next.hidden = false;
   next.addEventListener('click', () => { step = (step + 1) % steps.length; render(); });
+}
 }

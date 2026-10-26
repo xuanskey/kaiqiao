@@ -1,3 +1,4 @@
+import { parseReview, type ReviewData } from "./review.ts";
 import { activityForBackup, type Activity } from "../activity.ts";
 import { classLogForBackup, type ClassLogEntry } from "../lesson/class-log.ts";
 import { unitById } from "./units.ts";
@@ -178,11 +179,11 @@ export function salvageSave(value: unknown): { data: PersistShape; dropped: numb
 }
 
 /** 与主存档分开保存的课堂记录、最近 60 天每日题数。旧备份没有这一段时为 null。 */
-export type BackupExtras = { classLog: Record<string, ClassLogEntry>; activity: Activity };
+export type BackupExtras = { classLog: Record<string, ClassLogEntry>; activity: Activity; review?: ReviewData };
 
 export function exportBackup(data: PersistShape, extras?: BackupExtras | null): string {
   const payload: Record<string, unknown> = { app: "kaiqiao", format: 1, exportedAt: new Date().toISOString(), data: parseSave(data) };
-  if (extras) payload.extras = { classLog: classLogForBackup(extras.classLog), activity: activityForBackup(extras.activity) };
+  if (extras) payload.extras = { classLog: classLogForBackup(extras.classLog), activity: activityForBackup(extras.activity), ...(extras.review ? { review: parseReview(extras.review) } : {}) };
   return JSON.stringify(payload, null, 2);
 }
 
@@ -194,7 +195,7 @@ export function readBackup(raw: string): { data: PersistShape; extras: BackupExt
   const data = parseSave(backup.data);
   if (backup.extras === undefined || backup.extras === null) return { data, extras: null };
   if (!record(backup.extras) || !("classLog" in backup.extras) || !("activity" in backup.extras)) throw new Error("这份备份的课堂记录或每日题数不完整，没有恢复任何内容。");
-  return { data, extras: { classLog: classLogForBackup(backup.extras.classLog), activity: activityForBackup(backup.extras.activity) } };
+  return { data, extras: { classLog: classLogForBackup(backup.extras.classLog), activity: activityForBackup(backup.extras.activity), ...(backup.extras.review !== undefined ? { review: parseReview(backup.extras.review) } : {}) } };
 }
 
 export function importBackup(raw: string): PersistShape {

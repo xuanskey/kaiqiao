@@ -14,6 +14,7 @@ export type Question = {
   trap?: string;
   skill?: string;
   fromWrong?: boolean;
+  linkGroupId?: string;
 };
 
 export type Chapter = {
