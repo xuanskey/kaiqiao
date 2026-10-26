@@ -12,7 +12,14 @@
         if (window.top !== window.self || location.protocol === "file:") return;
         var path = location.pathname.replace(/\/index\.html$/, "").replace(/\/+$/, "") || "/";
         if (path !== "/app") return;
-        location.replace("/练习/" + location.search + location.hash);
+        var incoming = new URLSearchParams(location.search);
+        var next = new URLSearchParams();
+        next.set("practice", "1");
+        ["lesson", "grade"].forEach(function (key) {
+          var value = incoming.get(key);
+          if (value) next.set(key, value);
+        });
+        location.replace("/?" + next.toString() + location.hash);
       })();
     </script>
   </head>

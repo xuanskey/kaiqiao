@@ -5,4 +5,4 @@ if (!html.includes('assets/')) throw new Error('缺少应用入口资源');
 await access('dist/assets');
 await rm(target, { recursive: true, force: true });
 await cp('dist', target, { recursive: true });
-console.log(`App synced: ${target}/ (internal; public entry is https://www.yanghat.cn/练习/)`);
+console.log(`App synced: ${target}/ (internal; public entry is https://www.yanghat.cn/?practice=1)`);

@@ -11,9 +11,5 @@
   Cache-Control: no-cache
 /app/index.html
   Cache-Control: no-cache
-/练习/sw.js
-  Cache-Control: no-cache
-/练习/
-  Cache-Control: no-cache
-/练习/index.html
+/sw-practice.js
   Cache-Control: no-cache

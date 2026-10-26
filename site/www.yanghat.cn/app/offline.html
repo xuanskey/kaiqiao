@@ -12,7 +12,14 @@
         if (window.top !== window.self || location.protocol === "file:") return;
         var path = location.pathname.replace(/\/index\.html$/, "").replace(/\/+$/, "") || "/";
         if (path !== "/app") return;
-        location.replace("/练习/" + location.search + location.hash);
+        var incoming = new URLSearchParams(location.search);
+        var next = new URLSearchParams();
+        next.set("practice", "1");
+        ["lesson", "grade"].forEach(function (key) {
+          var value = incoming.get(key);
+          if (value) next.set(key, value);
+        });
+        location.replace("/?" + next.toString() + location.hash);
       })();
     </script>
     <script type="module">const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./index-e1ibrYMk.js","./jszip.min-9YSLh0Yq.js","./_commonjs-dynamic-modules-TDtrdbi3.js","./jszip.min-ePiL0r_a.js","./index-FMRAqmSj.js"])))=>i.map(i=>d[i]);
