@@ -9,7 +9,12 @@
     <title>开窍 · 每天练一组</title>
     <script>
       (function () {
-        if (window.top !== window.self || location.protocol === "file:") return;
+        var native = location.protocol === "file:" || location.protocol === "capacitor:";
+        try {
+          var cap = window.Capacitor;
+          if (cap && typeof cap.isNativePlatform === "function" && cap.isNativePlatform()) native = true;
+        } catch (e) {}
+        if (window.top !== window.self || native) return;
         var path = location.pathname.replace(/\/index\.html$/, "").replace(/\/+$/, "") || "/";
         if (path !== "/app") return;
         var incoming = new URLSearchParams(location.search);
