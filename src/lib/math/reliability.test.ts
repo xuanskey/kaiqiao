@@ -5,7 +5,10 @@ import { makeDailySet, makeQuestion, makeReviewSet } from "./generate.ts";
 import { isCorrect } from "./grade.ts";
 import { currentStreak, isLevelUnlocked, nextCampaign, unlockedChapterIds } from "./progress.ts";
 import { mulberry32 } from "./rng.ts";
-import { emptyPersist, exportBackup, importBackup, parseSave } from "./save.ts";
+import { activityForBackup } from "../activity.ts";
+import { classLogForBackup } from "../lesson/class-log.ts";
+import { todayStamp } from "./progress.ts";
+import { emptyPersist, exportBackup, importBackup, parseSave, readBackup } from "./save.ts";
 import type { Grade } from "./types.ts";
 
 describe("出题回归", () => {
@@ -85,5 +88,24 @@ describe("存档迁移与备份", () => {
     assert.throws(() => importBackup("{"));
     assert.throws(() => importBackup('{"app":"other","format":1}'));
     assert.throws(() => importBackup("x".repeat(1_000_001)));
+  });
+  it("新备份带上课堂记录和每日题数，旧备份不包含这两项", () => {
+    const data = { ...emptyPersist(), selectedGrade: 2 as const, xp: 12 };
+    const today = todayStamp();
+    const extras = {
+      classLog: classLogForBackup({ "make-ten": { attempts: 4, correct: 3, lastAt: 5 }, "future-demo": { attempts: 2, correct: 2, lastAt: 6 }, "坏键": { attempts: 1, correct: 1, lastAt: 1 } }),
+      activity: activityForBackup({ [today]: { n: 3, ok: 2 }, "2000-01-01": { n: 9, ok: 9 }, "2999-01-01": { n: 1, ok: 1 } }, today),
+    };
+    const bundle = readBackup(exportBackup(data, extras));
+    assert.equal(bundle.data.xp, 12);
+    assert.deepEqual(bundle.extras?.classLog["make-ten"], { attempts: 4, correct: 3, lastAt: 5 });
+    assert.deepEqual(bundle.extras?.classLog["future-demo"], { attempts: 2, correct: 2, lastAt: 6 });
+    assert.equal(bundle.extras?.classLog["坏键"], undefined);
+    assert.deepEqual(bundle.extras?.activity, { [today]: { n: 3, ok: 2 } });
+    const legacy = readBackup(JSON.stringify({ app: "kaiqiao", format: 1, data }));
+    assert.equal(legacy.extras, null);
+    assert.equal(legacy.data.xp, 12);
+    assert.throws(() => readBackup(JSON.stringify({ app: "kaiqiao", format: 1, data, extras: { classLog: {} } })));
+    assert.throws(() => readBackup(JSON.stringify({ app: "kaiqiao", format: 1, data, extras: { classLog: {}, activity: [] } })));
   });
 });

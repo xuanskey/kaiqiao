@@ -20,8 +20,9 @@ import { Meter, Metric, PageHeading } from "./shell";
 export function Home() {
   const s = useMath();
   const now = useNow();
+  const epoch = useMath((state) => state.archiveEpoch);
   const [log, setLog] = useState<ClassLog>({});
-  useEffect(() => { setLog(loadClassLog(typeof window === "undefined" ? undefined : window.localStorage)); }, []);
+  useEffect(() => { setLog(loadClassLog(typeof window === "undefined" ? undefined : window.localStorage)); }, [epoch]);
   const next = nextCampaign(s.stars, s.selectedGrade);
   const chapter = chapterById(next.chapterId);
   const count = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade).length;
@@ -104,8 +105,9 @@ export function Home() {
 
 export function WeekCard() {
   const now = useNow();
+  const epoch = useMath((state) => state.archiveEpoch);
   const [act, setAct] = useState<Activity>({});
-  useEffect(() => { setAct(loadActivity(typeof window === "undefined" ? undefined : window.localStorage)); }, []);
+  useEffect(() => { setAct(loadActivity(typeof window === "undefined" ? undefined : window.localStorage)); }, [epoch]);
   const w = weekSummary(act, now);
   const top = Math.max(10, ...w.days.map((d) => d.n));
   return <section className="week-card" aria-label="最近 7 天学习记录">
@@ -114,7 +116,7 @@ export function WeekCard() {
       <span>{w.n ? `最近 7 天学了 ${w.activeDays} 天${w.rate === null ? "" : ` · 答对 ${w.rate}%`}` : "最近 7 天的答题会画在这里"}</span>
     </div>
     <ol className="week-bars">{w.days.map((d) => <li key={d.stamp} className={cn(d.today && "is-today", d.n > 0 && "has-data")}>
-      <span className="week-bar" title={`${d.label}：${d.n} 题，答对 ${d.ok} 题`}><i style={{ height: `${Math.max(d.n ? 8 : 0, Math.round((d.n / top) * 100))}%` }} /></span>
+      <span className="week-bar" role="img" aria-label={`${d.label}，${d.n} 题，答对 ${d.ok} 题`} title={`${d.label}：${d.n} 题，答对 ${d.ok} 题`}><i style={{ height: `${Math.max(d.n ? 8 : 0, Math.round((d.n / top) * 100))}%` }} /></span>
       <small>{d.label}</small><b>{d.n || ""}</b>
     </li>)}</ol>
   </section>;
@@ -209,14 +211,23 @@ export function Report() {
   const wrong = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade);
   const streak = currentStreak(s.streak, s.lastPlayDate);
   const recommendation = wrong.length ? `先把${GRADE_LABEL[s.selectedGrade]}的 ${wrong.length} 道错题想明白，再接着向前。` : `练一组${GRADE_LABEL[s.selectedGrade]}的题目，慢慢积累自己的学习记录。`;
-  const exportReport = () => downloadText(`开窍-学情-${todayStamp()}.txt`, [
-    `开窍学情 · ${todayStamp()}`,
-    "范围：本浏览器所有年级，包含复习和未完成练习中的已答题。",
-    `累计 ${s.stats.answered} 题，正确率 ${acc === null ? '暂无' : `${acc}%`}`,
-    `连续练习 ${streak} 天`, recommendation,
-    ...weak.slice(0, 4).map((row) => `${row.label} ${Math.round(row.acc * 100)}% · ${row.seen} 题`),
-    "只跟自己比，不排名。",
-  ].join('\n'));
+  const exportReport = () => {
+    const store = typeof window === "undefined" ? undefined : window.localStorage;
+    const now = new Date();
+    const week = weekSummary(loadActivity(store), now);
+    const cls = classSummary(loadClassLog(store), now);
+    downloadText(`开窍-学情-${todayStamp()}.txt`, [
+      `开窍学情 · ${todayStamp()}`,
+      "范围：本浏览器所有年级，包含复习和未完成练习中的已答题。",
+      `累计 ${s.stats.answered} 题，正确率 ${acc === null ? '暂无' : `${acc}%`}`,
+      `连续练习 ${streak} 天`,
+      `最近 7 天：${week.n} 题，学习 ${week.activeDays} 天，正确率 ${week.rate === null ? "暂无" : `${week.rate}%`}`,
+      `课堂练习：${cls.attempts} 题，答对 ${cls.correct} 题`,
+      recommendation,
+      ...weak.slice(0, 4).map((row) => `${row.label} ${Math.round(row.acc * 100)}% · ${row.seen} 题`),
+      "只跟自己比，不排名。课堂练习不计入上面的累计答题。",
+    ].join('\n'));
+  };
   return <div className="page-enter">
     <PageHeading eyebrow="看见自己的每一步" title="学习小结" description="汇总当前浏览器内所有年级的练习记录，只和自己比。" action={<Button variant="outline" onClick={exportReport}><Download />导出学情</Button>} />
     <div className="report-overview">

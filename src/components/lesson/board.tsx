@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import { ChevronLeft, ChevronRight, ListChecks, Pause, Play, RotateCcw } from "lucide-react";
 import { SPEEDS, boardAt, type LessonStep, type PlayerAction, type PlayerState, type Speed } from "@/lib/lesson/timeline";
 import { splitForGrade } from "@/lib/lesson/grade-style";
@@ -25,9 +26,9 @@ function SubtitleLine({ text, grade }: { text: string; grade: Grade }) {
 }
 
 /** 课堂控制：播放、暂停、上一步、下一步、重新开始、倍速、跳到某一步、查看完整过程。 */
-export function PlayerControls({ steps, player, dispatch }: { steps: LessonStep[]; player: PlayerState; dispatch: (a: PlayerAction) => void }) {
+export function PlayerControls({ steps, player, dispatch, progressRef }: { steps: LessonStep[]; player: PlayerState; dispatch: (a: PlayerAction) => void; progressRef?: RefObject<HTMLElement | null> }) {
   return <div className="player" role="group" aria-label="课堂控制">
-    <div className="player-progress" aria-hidden="true"><i style={{ width: `${((player.index + player.progress) / Math.max(1, steps.length)) * 100}%` }} /></div>
+    <div className="player-progress" aria-hidden="true"><i ref={progressRef} style={{ width: `${((player.index + player.progress) / Math.max(1, steps.length)) * 100}%` }} /></div>
     <div className="player-row">
       <button type="button" className="player-main" onClick={() => dispatch({ type: "toggle" })} aria-label={player.playing ? "暂停" : player.ended ? "重新播放" : "播放"}>
         {player.playing ? <Pause size={20} /> : <Play size={20} />}<span>{player.playing ? "暂停" : player.ended ? "重新播放" : player.index > 0 || player.progress > 0 ? "继续" : "播放"}</span>

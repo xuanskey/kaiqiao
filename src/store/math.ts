@@ -21,7 +21,9 @@ import { randomRng } from "../lib/math/rng.ts";
 import { SKILL_DRILL, inferSkill, isSkillId, touchSkill, type SkillId } from "../lib/math/skills.ts";
 import type { AnswerLog, Grade, PlayKind, Question, Screen, WrongItem } from "../lib/math/types.ts";
 
-import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, parseSave, salvageSave, type PersistShape } from "../lib/math/save.ts";
+import { ACTIVITY_KEY, activityForBackup } from "../lib/activity.ts";
+import { CLASS_LOG_KEY, classLogForBackup } from "../lib/lesson/class-log.ts";
+import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, parseSave, salvageSave, type BackupExtras, type PersistShape } from "../lib/math/save.ts";
 
 type Session = {
   kind: PlayKind;
@@ -59,8 +61,10 @@ type MathState = PersistShape & {
   storageBlocked: boolean;
   /** 存档容错读取后的说明（不是错误，不阻止保存） */
   storageNotice: string | null;
+  /** 恢复备份后加一，让仍挂在页面上的一周记录、课堂汇总重新读取。 */
+  archiveEpoch: number;
   setGrade: (grade: Grade) => void;
-  restore: (data: PersistShape) => boolean;
+  restore: (data: PersistShape, extras?: BackupExtras | null) => boolean;
   hydrate: () => void;
   persist: () => void;
   setMuted: (muted: boolean) => void;
@@ -189,6 +193,7 @@ export const useMath = create<MathState>((set, get) => ({
   storageError: null,
   storageBlocked: false,
   storageNotice: null,
+  archiveEpoch: 0,
   hydrate: () => {
     let raw: string | null;
     try { raw = localStorage.getItem(SAVE_KEY); } catch {
@@ -226,11 +231,30 @@ export const useMath = create<MathState>((set, get) => ({
     set({ selectedGrade: grade, session: null, duel: null, sprintRemain: 0, screen: "home" });
     get().persist();
   },
-  restore: (data) => {
+  restore: (data, extras = null) => {
+    const revert = (prev: Record<string, string | null>) => {
+      for (const [key, value] of Object.entries(prev)) {
+        try {
+          if (value == null) localStorage.removeItem(key);
+          else localStorage.setItem(key, value);
+        } catch { /* 回滚失败时只保留错误提示 */ }
+      }
+    };
     try {
       const checked = parseSave(data);
-      localStorage.setItem(SAVE_KEY, JSON.stringify(checked));
-      set({ ...checked, session: null, duel: null, sprintRemain: 0, screen: "report", storageError: null, storageBlocked: false, storageNotice: null });
+      const extrasChecked = extras ? { classLog: classLogForBackup(extras.classLog), activity: activityForBackup(extras.activity) } : null;
+      const writes: [string, string][] = [[SAVE_KEY, JSON.stringify(checked)]];
+      if (extrasChecked) writes.push([CLASS_LOG_KEY, JSON.stringify(extrasChecked.classLog)], [ACTIVITY_KEY, JSON.stringify(extrasChecked.activity)]);
+      const prev: Record<string, string | null> = {};
+      for (const [key] of writes) prev[key] = localStorage.getItem(key);
+      try {
+        for (const [key, value] of writes) localStorage.setItem(key, value);
+        for (const [key, value] of writes) if (localStorage.getItem(key) !== value) throw new Error("readback");
+      } catch (error) {
+        revert(prev);
+        throw error;
+      }
+      set({ ...checked, session: null, duel: null, sprintRemain: 0, screen: "report", storageError: null, storageBlocked: false, storageNotice: null, archiveEpoch: get().archiveEpoch + 1 });
       return true;
     } catch {
       set({ storageError: "恢复失败，原有记录未被替换。请检查文件或浏览器存储空间。" });

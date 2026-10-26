@@ -8,23 +8,51 @@ import { isDemoId } from "./demos.ts";
  */
 export const CLASS_LOG_KEY = "kaiqiao-class-log";
 
-export type ClassLog = Partial<Record<DemoId, { attempts: number; correct: number; lastAt: number }>>;
+export type ClassLogEntry = { attempts: number; correct: number; lastAt: number };
+export type ClassLog = Partial<Record<DemoId, ClassLogEntry>>;
 
 type KV = { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void };
+
+export function classLogEntry(v: unknown): ClassLogEntry | null {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+  const r = v as { attempts?: unknown; correct?: unknown; lastAt?: unknown };
+  const attempts = r.attempts;
+  const correct = r.correct;
+  if (typeof attempts !== "number" || typeof correct !== "number" || !Number.isSafeInteger(attempts) || !Number.isSafeInteger(correct)) return null;
+  if (attempts < correct || correct < 0 || attempts > 1_000_000) return null;
+  const lastAt = typeof r.lastAt === "number" && Number.isFinite(r.lastAt) && r.lastAt >= 0 ? r.lastAt : 0;
+  return { attempts, correct, lastAt };
+}
+
+/** 备份用：保留不认识但格式合法的课，避免把更新版本的记录删掉。条目过多则拒绝整份。 */
+export function classLogForBackup(data: unknown): Record<string, ClassLogEntry> {
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("课堂记录格式不正确。");
+  const entries = Object.entries(data as Record<string, unknown>);
+  if (entries.length > 200) throw new Error("课堂记录条目过多。");
+  const out: Record<string, ClassLogEntry> = {};
+  for (const [k, v] of entries) {
+    if (!/^[a-z0-9-]{1,40}$/.test(k)) continue;
+    const entry = classLogEntry(v);
+    if (entry) out[k] = entry;
+  }
+  return out;
+}
 
 export function loadClassLog(store: KV | undefined): ClassLog {
   try {
     const raw = store?.getItem(CLASS_LOG_KEY);
     if (!raw) return {};
-    const data = JSON.parse(raw);
     const out: ClassLog = {};
-    if (data && typeof data === "object") for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
-      const r = v as { attempts?: unknown; correct?: unknown; lastAt?: unknown };
-      if (isDemoId(k) && Number.isInteger(r?.attempts) && Number.isInteger(r?.correct) && (r.attempts as number) >= (r.correct as number) && (r.correct as number) >= 0)
-        out[k] = { attempts: r.attempts as number, correct: r.correct as number, lastAt: Number(r.lastAt) || 0 };
-    }
+    for (const [k, v] of Object.entries(classLogForBackup(JSON.parse(raw)))) if (isDemoId(k)) out[k] = v;
     return out;
   } catch { return {}; }
+}
+
+/** 导出备份时读取。原始内容读不懂时 ok 为 false，避免用空记录覆盖。 */
+export function readStoredClassLog(store: KV | undefined): { ok: true; log: Record<string, ClassLogEntry> } | { ok: false } {
+  const raw = store?.getItem(CLASS_LOG_KEY);
+  if (!raw) return { ok: true, log: {} };
+  try { return { ok: true, log: classLogForBackup(JSON.parse(raw)) }; } catch { return { ok: false }; }
 }
 
 /**

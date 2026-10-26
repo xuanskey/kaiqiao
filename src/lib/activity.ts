@@ -14,16 +14,33 @@ type KV = { getItem(k: string): string | null; setItem(k: string, v: string): vo
 
 const STAMP = /^\d{4}-\d{2}-\d{2}$/;
 
+export function parseActivityRecord(data: unknown): Activity {
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("每日记录格式不正确。");
+  const out: Activity = {};
+  for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+    const r = v as { n?: unknown; ok?: unknown };
+    if (STAMP.test(k) && Number.isSafeInteger(r?.n) && Number.isSafeInteger(r?.ok) && (r.n as number) >= (r.ok as number) && (r.ok as number) >= 0 && (r.n as number) <= 100_000) out[k] = { n: r.n as number, ok: r.ok as number };
+  }
+  return out;
+}
+
+/** 备份只保留最近 60 天、且不晚于今天的记录。条目过多则拒绝整份。 */
+export function activityForBackup(data: unknown, today = todayStamp()): Activity {
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("每日记录格式不正确。");
+  if (Object.keys(data).length > 400) throw new Error("每日记录条目过多。");
+  const pruned = prune(parseActivityRecord(data), today);
+  return Object.fromEntries(Object.entries(pruned).filter(([k]) => k <= today));
+}
+
 export function loadActivity(store: KV | undefined): Activity {
-  try {
-    const data = JSON.parse(store?.getItem(ACTIVITY_KEY) ?? "{}") as Record<string, unknown>;
-    const out: Activity = {};
-    if (data && typeof data === "object") for (const [k, v] of Object.entries(data)) {
-      const r = v as { n?: unknown; ok?: unknown };
-      if (STAMP.test(k) && Number.isInteger(r?.n) && Number.isInteger(r?.ok) && (r.n as number) >= (r.ok as number) && (r.ok as number) >= 0) out[k] = { n: r.n as number, ok: r.ok as number };
-    }
-    return out;
-  } catch { return {}; }
+  try { return parseActivityRecord(JSON.parse(store?.getItem(ACTIVITY_KEY) ?? "{}")); } catch { return {}; }
+}
+
+/** 导出备份时读取。原始内容读不懂时 ok 为 false，避免用空记录覆盖。 */
+export function readStoredActivity(store: KV | undefined): { ok: true; activity: Activity } | { ok: false } {
+  const raw = store?.getItem(ACTIVITY_KEY);
+  if (!raw) return { ok: true, activity: {} };
+  try { return { ok: true, activity: activityForBackup(JSON.parse(raw)) }; } catch { return { ok: false }; }
 }
 
 export function prune(a: Activity, today: string): Activity {

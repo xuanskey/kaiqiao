@@ -1,4 +1,4 @@
-import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Delete } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KeypadKind } from "@/lib/math/types";
@@ -31,23 +31,26 @@ export function Keypad({
     onChange(!value && token === "." ? "0." : value + token);
   };
 
+  const keyApi = useRef({ press, onSubmit, valid, disabled, kind });
+  keyApi.current = { press, onSubmit, valid, disabled, kind };
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
-      if (disabled || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+      const api = keyApi.current;
+      if (api.disabled || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
       const target = event.target;
       if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
-      if (/^\d$/.test(event.key)) { event.preventDefault(); press(event.key); }
-      else if (event.key === "Backspace") { event.preventDefault(); press("del"); }
-      else if (event.key === "." && kind === "dec") { event.preventDefault(); press("."); }
-      else if (event.key.toLowerCase() === "r" && kind === "remainder") { event.preventDefault(); press("余"); }
+      if (/^\d$/.test(event.key)) { event.preventDefault(); api.press(event.key); }
+      else if (event.key === "Backspace") { event.preventDefault(); api.press("del"); }
+      else if (event.key === "." && api.kind === "dec") { event.preventDefault(); api.press("."); }
+      else if (event.key.toLowerCase() === "r" && api.kind === "remainder") { event.preventDefault(); api.press("余"); }
       else if (event.key === "Enter") {
         if (target instanceof HTMLElement && target.closest("button") && !target.closest(".keypad")) return;
-        event.preventDefault(); if (valid) onSubmit();
+        event.preventDefault(); if (api.valid) api.onSubmit();
       }
     };
     document.addEventListener("keydown", keydown);
     return () => document.removeEventListener("keydown", keydown);
-  });
+  }, []);
 
   return (
     <div className="keypad" role="group" aria-label="数字键盘">
