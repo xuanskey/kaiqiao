@@ -72,7 +72,12 @@ function validWrong(w: unknown, known: Set<string>): WrongItem | null {
 }
 function validSkill(id: string, s: unknown): SkillStat | null {
   if (!isSkillId(id) || !record(s) || !count(s.seen) || !count(s.correct, s.seen) || typeof s.sumMs !== "number" || !Number.isFinite(s.sumMs) || s.sumMs < 0) return null;
-  return { seen: s.seen, correct: s.correct, sumMs: s.sumMs };
+  const firstSeen = s.firstSeen ?? 0, firstCorrect = s.firstCorrect ?? 0;
+  const retrySeen = s.retrySeen ?? 0, retryCorrect = s.retryCorrect ?? 0;
+  if (!count(firstSeen, s.seen) || !count(firstCorrect, firstSeen) || !count(retrySeen, s.seen) || !count(retryCorrect, retrySeen)
+    || firstSeen + retrySeen > s.seen || firstCorrect + retryCorrect > s.correct
+    || firstSeen - firstCorrect + retrySeen - retryCorrect > s.seen - s.correct) return null;
+  return { seen: s.seen, correct: s.correct, sumMs: s.sumMs, firstSeen, firstCorrect, retrySeen, retryCorrect };
 }
 function validUnit(id: string, result: unknown): UnitResult | null {
   if (!unitById(id) || !record(result) || !count(result.completed) || result.completed < 1 || !count(result.total, 100) || result.total < 1 || !count(result.correct, result.total) || !count(result.at) || !["practice", "check"].includes(String(result.mode))) return null;

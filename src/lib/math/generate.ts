@@ -601,11 +601,23 @@ export function tagQuestion(q: Question): Question {
   return { ...q, skill: q.skill ?? inferSkill(q) };
 }
 
+export const PROMPT_COOLDOWN = 12;
+// 同一 RNG 表示一次组卷上下文；按章节保存最近 12 题，不写入存档。
+const recentByRng = new WeakMap<Rng, Map<string, string[]>>();
+
 export function makeQuestion(chapterId: string, level: number, rng: Rng = randomRng()): Question {
   const clamped = Math.min(8, Math.max(1, Math.round(level)));
   const factory = FACTORY[chapterId] ?? warmup;
-  const q = factory(clamped, rng);
-  return tagQuestion({ ...q, chapterId });
+  let history = recentByRng.get(rng);
+  if (!history) { history = new Map(); recentByRng.set(rng, history); }
+  const recent = history.get(chapterId) ?? [];
+  let q: Question;
+  // 小题池或固定 RNG 最多尝试 80 次，然后允许重复，保证出题终止。
+  let attempts = 0;
+  do { q = tagQuestion({ ...factory(clamped, rng), chapterId }); }
+  while (recent.includes(q.prompt) && ++attempts < 80);
+  history.set(chapterId, [...recent, q.prompt].slice(-PROMPT_COOLDOWN));
+  return q;
 }
 
 export function makeLevelSet(
@@ -625,7 +637,11 @@ export function makeMixedSet(chapterIds: string[], n: number, rng: Rng = randomR
   });
 }
 
-export function makeSimilar(item: Pick<WrongItem, "chapterId" | "skill">, rng: Rng = randomRng()): Question {
+export function makeSimilar(item: Pick<WrongItem, "chapterId" | "skill"> & { prompt?: string }, rng: Rng = randomRng(), recent: Question[] = []): Question {
+  let history = recentByRng.get(rng);
+  if (!history) { history = new Map(); recentByRng.set(rng, history); }
+  const prompts = recent.filter(q => q.chapterId === item.chapterId).map(q => q.prompt);
+  history.set(item.chapterId, [...(history.get(item.chapterId) ?? []), ...prompts, ...(item.prompt ? [item.prompt] : [])].slice(-PROMPT_COOLDOWN));
   let q = makeQuestion(item.chapterId, rng.int(3, 6), rng);
   for (let attempt = 0; item.skill && q.skill !== item.skill && attempt < 40; attempt++) {
     q = makeQuestion(item.chapterId, rng.int(1, 8), rng);

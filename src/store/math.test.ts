@@ -172,3 +172,28 @@ describe("自由知识点练习",()=>{
     state().hydrate();assert.equal(state().wrong[0].chapterId,'g1money');
   });
 });
+
+describe("首答与巩固分列", () => {
+  it("错后追加仅计巩固，重复提交不多计，读档保留分列", () => {
+    state().startLevel("warmup", 1);
+    answer(false); state().advance();
+    while (!state().session!.retried) { answer(); state().advance(); }
+    const sum = (key: "firstSeen" | "firstCorrect" | "retrySeen" | "retryCorrect") =>
+      Object.values(state().skillStats).reduce((n, s) => n + (s[key] ?? 0), 0);
+    assert.equal(sum("firstSeen"), 8);
+    assert.equal(sum("firstCorrect"), 7);
+    assert.equal(sum("retrySeen"), 0);
+    answer(); answer(); state().advance();
+    assert.equal(sum("retrySeen"), 1);
+    assert.equal(sum("retryCorrect"), 1);
+    state().hydrate();
+    assert.equal(sum("firstSeen"), 8);
+    assert.equal(sum("retrySeen"), 1);
+  });
+  it("对症练计入巩固", () => {
+    state().startDrill(); answer();
+    const stats = Object.values(state().skillStats);
+    assert.equal(stats.reduce((n, s) => n + (s.firstSeen ?? 0), 0), 0);
+    assert.equal(stats.reduce((n, s) => n + (s.retrySeen ?? 0), 0), 1);
+  });
+});

@@ -1,4 +1,4 @@
-# 开窍 v0.13.3 使用指南
+# 开窍 v0.13.4 使用指南
 
 正式练习入口：https://kaiqiao.yanghat.cn
 养习主站：https://www.yanghat.cn（学习入口，不是另一个存档）

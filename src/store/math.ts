@@ -350,7 +350,8 @@ export const useMath = create<MathState>((set, get) => ({
       : suggested && CHAPTERS.some((c) => c.id === suggested.chapterId && c.grade === s.selectedGrade) ? suggested
       : { chapterId: unlockedChapterIds(s.stars, s.selectedGrade)[0]!, level: 3 };
     const canTarget = !!picked && (recent || suggested?.chapterId === target.chapterId);
-    const questions = Array.from({ length: DRILL_COUNT }, () => makeSimilar({ chapterId: target.chapterId, skill: canTarget ? picked : undefined }, randomRng()));
+    const rng = randomRng();
+    const questions = Array.from({ length: DRILL_COUNT }, () => makeSimilar({ chapterId: target.chapterId, skill: canTarget ? picked : undefined }, rng));
     set({
       screen: "play",
       lastStars: 0,
@@ -388,7 +389,7 @@ export const useMath = create<MathState>((set, get) => ({
     } else {
       wrong = wrong.filter((w) => w.prompt !== q.prompt || w.chapterId !== q.chapterId);
     }
-    const skillStats = touchSkill(get().skillStats, skill, ok, ms);
+    const skillStats = touchSkill(get().skillStats, skill, ok, ms, session.retried || session.kind === "review" || session.kind === "drill");
     set({
       wrong,
       skillStats,
@@ -444,10 +445,12 @@ export const useMath = create<MathState>((set, get) => ({
     if (nextIndex >= session.questions.length) {
       if (!session.retried && !(session.kind === "unit" && session.assessment)) {
         const missed = session.logs.filter((l) => !l.ok);
-        const extras = missed.map((m) => {
+        const rng = randomRng();
+        const extras: Question[] = [];
+        for (const m of missed) {
           const src = session.questions.find((q) => q.prompt === m.prompt);
-          return makeSimilar({ chapterId: src?.chapterId ?? session.questions[0]!.chapterId, skill: src?.skill }, randomRng());
-        });
+          extras.push(makeSimilar({ chapterId: src?.chapterId ?? session.questions[0]!.chapterId, skill: src?.skill, prompt: m.prompt }, rng, [...session.questions, ...extras]));
+        }
         if (extras.length > 0) {
           set({
             session: {

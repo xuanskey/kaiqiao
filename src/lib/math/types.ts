@@ -47,6 +47,10 @@ export type AnswerLog = {
 };
 
 export type SkillStat = {
+  firstSeen?: number;
+  firstCorrect?: number;
+  retrySeen?: number;
+  retryCorrect?: number;
   seen: number;
   correct: number;
   sumMs: number;
