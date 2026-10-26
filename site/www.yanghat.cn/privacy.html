@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>开窍隐私政策</title>
+  <meta name="description" content="开窍不强制登录。练习记录只留在本机，开窍没有学习数据服务器。">
+  <link rel="canonical" href="https://www.yanghat.cn/privacy.html">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="legal.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">养习<small>YANGHAT</small></a>
+      <nav class="top-links" aria-label="页面">
+        <a href="/support.html">支持与联系</a>
+        <a href="/?practice=1">开始练习</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <p class="draft">草稿，写于 2026-10-26。公开地址是 <a href="https://www.yanghat.cn/privacy.html">https://www.yanghat.cn/privacy.html</a>。本页随站点目录提供，这一轮不上传、不改 DNS。法定运营主体和 ICP 备案号确定后补进本页，再随站点一起公开。下面写的是现在这版产品实际怎么处理数据，不是空模板。</p>
+    <h1>开窍隐私政策</h1>
+    <p class="updated">适用产品：开窍 iOS App，以及养习网站上的开窍练习。销售范围只计划为中国大陆 App Store，不在其他国家或地区的 App Store 上架。</p>
+
+    <h2>谁在提供</h2>
+    <p>产品名称是开窍，网站名称是养习（yanghat.cn）。练习入口是 <a href="https://www.yanghat.cn/?practice=1">https://www.yanghat.cn/?practice=1</a>。本政策由这个产品的运营者发布。</p>
+    <p>法定名称、统一社会信用代码、注册地址和 ICP 备案号，要等运营者办完备案再写进来，并与 App Store Connect 里的简体中文名称、备案主体保持一致。确定之前，本页不填写虚构公司名，也不填写虚构备案号。</p>
+
+    <h2>不需要登录</h2>
+    <p>开窍不设账号，不强制登录，没有密码，也没有手机号注册。打开网页或 App，选择年级就可以练习。一个设备上的记录适合一个孩子使用，目前没有多个孩子的账号隔离。</p>
+
+    <h2>记录留在本机</h2>
+    <p>答题、错题、星星、复习安排和课堂练习次数，都写在这台设备的本地存储里（浏览器的 localStorage，或 iOS App 里 WebView 自己的本地存储）。开窍没有服务器来接收或同步这些学习记录。我们看不到孩子做了哪些题。</p>
+    <p>网页版和 iOS App 的本地存储互不相通。换浏览器、换设备、从网站换到 App，需要在原来的「学情」里导出备份，再到新的地方恢复。不导出就换，旧记录不会跟着走。</p>
+    <p>目前会用到的本机键名：</p>
+    <table>
+      <thead><tr><th>键名</th><th>里面有什么</th></tr></thead>
+      <tbody>
+        <tr><td><code>kaiqiao.save.v1</code></td><td>年级、答题统计、错题、星星、经验和打卡</td></tr>
+        <tr><td><code>kaiqiao.save.v1.unreadable</code></td><td>读不懂的旧存档原文，避免直接丢掉</td></tr>
+        <tr><td><code>kaiqiao.review.content.v1</code></td><td>复习题的内容</td></tr>
+        <tr><td><code>kaiqiao.review.schedule.v1</code></td><td>复习到期日和间隔</td></tr>
+        <tr><td><code>kaiqiao-activity</code></td><td>最近约 60 天每天做了几题、对了几题，不含题目正文</td></tr>
+        <tr><td><code>kaiqiao-class-log</code></td><td>每节互动课做了几题、对了几题、最近一次时间</td></tr>
+        <tr><td><code>kaiqiao-ai</code></td><td>只有家长打开「AI 老师」并填写之后才有：接口地址、模型名和密钥</td></tr>
+        <tr><td><code>kaiqiao-narrate</code>、<code>kaiqiao-reduce-motion</code></td><td>朗读开关、减弱动画开关</td></tr>
+      </tbody>
+    </table>
+
+    <h2>我们不主动收集的内容</h2>
+    <ul>
+      <li>不收集姓名、学校、班级、电话、证件号码、通讯录或精确位置。</li>
+      <li>不接入广告，不接入第三方统计或追踪 SDK。</li>
+      <li>练习、判分、错题和互动课都在本机完成，不把题目和答案上传到开窍的服务器。</li>
+      <li>拍照或从相册选图，只在用户自己选择导入时发生。文字识别在本机运行，图片不会上传到开窍。</li>
+      <li>朗读使用系统语音。开窍不把讲解文字上传到自己的服务器。</li>
+    </ul>
+
+    <h2>家长可选的 AI 老师</h2>
+    <p>默认关闭，不填写密钥就不会联网。家长如果在课堂里打开 AI 老师，并填写自己的接口地址、模型名和密钥，孩子当时的提问、课题和程序算出的课堂事实会发送到家长填写的那个地址。密钥只保存在本机，只发给该地址。开窍的运营者不经手、也不保存这些内容和密钥。</p>
+    <p>这不是练习所必需的功能。不想联网，就不要打开它。</p>
+
+    <h2>儿童</h2>
+    <p>开窍给小学生做数学练习，建议家长陪同。我们不建立儿童账号，也不向服务器收集不满十四周岁未成年人的姓名、学校或照片。记录留在家长和孩子正在使用的这台设备上。监护人可以随时导出备份，也可以按下一节的办法删掉本机记录。</p>
+
+    <h2>如何删除</h2>
+    <p>没有账号可以注销。删掉本机记录可以：在错题本清空本年级错题，在课堂里清除课堂记录，或者直接删除 App。网页版可以清除该网站的站点数据。删除 App 或清除站点数据后，未导出的练习记录就没有了，我们无法帮你找回。已经导出的备份文件在你自己手里。</p>
+
+    <h2>iOS App 的权限</h2>
+    <p>这版壳不申请定位、通讯录、跟踪或广告标识。导入资料使用系统的文件选择。主流程（选年级、做练习、看解析、错题本、课堂、学情）不需要网络。</p>
+
+    <h2>政策怎么更新</h2>
+    <p>数据处理方式变了，就更新本页和页首日期。App Store 上的隐私政策网址使用本页的公开地址。网址能打开之前，不要提交审核。</p>
+  </main>
+  <footer class="page-footer">
+    <nav aria-label="相关页面">
+      <a href="/support.html">支持与联系</a>
+      <a href="/">返回养习</a>
+      <a href="/?practice=1">开始练习</a>
+    </nav>
+    <p>开窍 · 仅计划上架中国大陆 App Store</p>
+  </footer>
+</body>
+</html>
