@@ -3,7 +3,7 @@ import { ArrowLeft, BarChart3, BookOpen, Lightbulb, FlaskConical, Hand, MessageC
 import { DEMOS, defaultParams, displayParam, lessonScript, normalizeParams, type DemoId, type Params, type Subject } from "@/lib/lesson/demos";
 import { EDITIONS, SUBJECT_LABEL, editionsFor, resolveUnits, type Term } from "@/lib/lesson/curriculum";
 import { gradeStyle } from "@/lib/lesson/grade-style";
-import { initialPlayer, reducePlayer, sceneAt, type PlayerAction } from "@/lib/lesson/timeline";
+import { initialPlayer, reducePlayer, sceneAt, type PlayerAction, type PlayerState } from "@/lib/lesson/timeline";
 import { TUTOR_ACTIONS, initialTutor, tutorRespond, type TutorIntent } from "@/lib/lesson/tutor";
 import { GRADE_LABEL } from "@/lib/math/chapters";
 import type { Grade } from "@/lib/math/types";
@@ -135,21 +135,67 @@ function LessonSession({ demo, grade, unitTitle, onBack, preset }: LessonProps) 
   const [lastWrong, setLastWrong] = useState<QuizRecord | undefined>();
   const steps = useMemo(() => lessonScript(demo, params, grade, tutor.variant), [demo, params, grade, tutor.variant]);
   const [player, rawDispatch] = useReducer((s: ReturnType<typeof initialPlayer>, a: PlayerAction) => reducePlayer(steps, s, a), undefined, initialPlayer);
-  const dispatch = (a: PlayerAction) => { if (a.type === "play" || a.type === "toggle" || a.type === "restart") setInteractive(false); rawDispatch(a); };
   const quizRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
+  const live = useRef(player);
+  const epoch = useRef(0);
+  const barRef = useRef<HTMLElement>(null);
+  const paint = (p: PlayerState) => {
+    const el = barRef.current;
+    if (!el) return;
+    el.style.width = `${((p.index + p.progress) / Math.max(1, stepsRef.current.length)) * 100}%`;
+  };
+  const publish = (next: PlayerState) => {
+    live.current = next;
+    paint(next);
+    rawDispatch({ type: "commit", index: next.index, progress: next.progress, playing: next.playing, ended: next.ended, speed: next.speed });
+  };
+  // 播放时进度条直接改 DOM。只有换步、暂停或结束才提交 React，避免每帧重绘整节课。
+  const dispatch = (a: PlayerAction) => {
+    epoch.current += 1;
+    if (a.type === "play" || a.type === "toggle" || a.type === "restart") setInteractive(false);
+    publish(reducePlayer(stepsRef.current, live.current, a));
+  };
+  const dispatchRef = useRef(dispatch);
+  dispatchRef.current = dispatch;
   const [aiCfg, setAiCfg] = useAiConfig();
 
   // 步骤数变化（换讲法、改参数）时，保证当前步骤仍然有效
-  useEffect(() => { if (player.index > steps.length - 1) rawDispatch({ type: "seek", index: steps.length - 1 }); }, [steps.length, player.index]);
+  useEffect(() => { if (player.index > steps.length - 1) dispatchRef.current({ type: "seek", index: steps.length - 1 }); }, [steps.length, player.index]);
+  useEffect(() => { if (!player.playing) live.current = player; }, [player]);
 
-  // 播放循环：只在播放时运行，暂停或离开页面时清理
+  // 播放循环：只在播放时运行。切到后台会暂停，回来不会把离开的时间一次扣完。
   useEffect(() => {
     if (!player.playing) return;
-    let raf = 0, last = performance.now();
-    const loop = (t: number) => { rawDispatch({ type: "tick", dtMs: Math.min(250, t - last) }); last = t; raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    const onHide = () => { if (document.visibilityState === "hidden") rawDispatch({ type: "pause" }); };
+    let raf = 0;
+    let last = performance.now();
+    const loop = (t: number) => {
+      if (!live.current.playing || document.visibilityState === "hidden") return;
+      const seen = epoch.current;
+      const dt = Math.min(250, t - last);
+      last = t;
+      const prev = live.current;
+      const next = reducePlayer(stepsRef.current, prev, { type: "tick", dtMs: dt });
+      if (seen !== epoch.current) {
+        if (live.current.playing) raf = requestAnimationFrame(loop);
+        return;
+      }
+      live.current = next;
+      paint(next);
+      if (next.index !== prev.index || next.playing !== prev.playing || next.ended !== prev.ended) {
+        rawDispatch({ type: "commit", index: next.index, progress: next.progress, playing: next.playing, ended: next.ended, speed: next.speed });
+      }
+      if (next.playing) raf = requestAnimationFrame(loop);
+    };
+    const onHide = () => {
+      if (document.visibilityState !== "hidden" || !live.current.playing) return;
+      epoch.current += 1;
+      cancelAnimationFrame(raf);
+      publish(reducePlayer(stepsRef.current, live.current, { type: "pause" }));
+    };
     document.addEventListener("visibilitychange", onHide);
+    if (document.visibilityState !== "hidden") raf = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(raf); document.removeEventListener("visibilitychange", onHide); };
   }, [player.playing]);
 
@@ -199,7 +245,7 @@ function LessonSession({ demo, grade, unitTitle, onBack, preset }: LessonProps) 
             <button type="button" onClick={() => { if (interactive) setInteractive(false); else { rawDispatch({ type: "pause" }); setInteractive(true); } }}>{interactive ? "回到演示" : "让我自己试试"}</button></div>
           <Stage params={params} scene={scene} interactive={interactive} setParam={setParam} reduceMotion={reduceMotion} />
         </div>
-        <PlayerControls steps={steps} player={player} dispatch={dispatch} />
+        <PlayerControls steps={steps} player={player} dispatch={dispatch} progressRef={barRef} />
         <Board steps={steps} player={player} grade={grade} />
       </div>
       <aside className="lesson-side">

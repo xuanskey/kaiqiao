@@ -1,3 +1,5 @@
+import { activityForBackup, type Activity } from "../activity.ts";
+import { classLogForBackup, type ClassLogEntry } from "../lesson/class-log.ts";
 import { unitById } from "./units.ts";
 import { CHAPTERS } from "./chapters.ts";
 import { isSkillId } from "./skills.ts";
@@ -170,13 +172,26 @@ export function salvageSave(value: unknown): { data: PersistShape; dropped: numb
   return { data: out, dropped };
 }
 
-export function exportBackup(data: PersistShape): string {
-  return JSON.stringify({ app: "kaiqiao", format: 1, exportedAt: new Date().toISOString(), data: parseSave(data) }, null, 2);
+/** 与主存档分开保存的课堂记录、最近 60 天每日题数。旧备份没有这一段时为 null。 */
+export type BackupExtras = { classLog: Record<string, ClassLogEntry>; activity: Activity };
+
+export function exportBackup(data: PersistShape, extras?: BackupExtras | null): string {
+  const payload: Record<string, unknown> = { app: "kaiqiao", format: 1, exportedAt: new Date().toISOString(), data: parseSave(data) };
+  if (extras) payload.extras = { classLog: classLogForBackup(extras.classLog), activity: activityForBackup(extras.activity) };
+  return JSON.stringify(payload, null, 2);
 }
-export function importBackup(raw: string): PersistShape {
+
+export function readBackup(raw: string): { data: PersistShape; extras: BackupExtras | null } {
   if (new TextEncoder().encode(raw).length > MAX_BACKUP_BYTES) throw new Error("备份超过 1 MB，请选择开窍导出的 JSON 文件。");
   let backup: unknown;
   try { backup = JSON.parse(raw); } catch { throw new Error("文件不是有效的 JSON 备份。"); }
   if (!record(backup) || backup.app !== "kaiqiao" || backup.format !== 1) throw new Error("请选择开窍导出的备份文件。");
-  return parseSave(backup.data);
+  const data = parseSave(backup.data);
+  if (backup.extras === undefined || backup.extras === null) return { data, extras: null };
+  if (!record(backup.extras) || !("classLog" in backup.extras) || !("activity" in backup.extras)) throw new Error("这份备份的课堂记录或每日题数不完整，没有恢复任何内容。");
+  return { data, extras: { classLog: classLogForBackup(backup.extras.classLog), activity: activityForBackup(backup.extras.activity) } };
+}
+
+export function importBackup(raw: string): PersistShape {
+  return readBackup(raw).data;
 }

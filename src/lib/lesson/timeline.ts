@@ -46,7 +46,8 @@ export type PlayerAction =
   | { type: "restart" }
   | { type: "speed"; speed: Speed }
   | { type: "showAll" }
-  | { type: "tick"; dtMs: number };
+  | { type: "tick"; dtMs: number }
+  | { type: "commit"; index: number; progress: number; playing: boolean; ended: boolean; speed: number };
 
 export function initialPlayer(): PlayerState {
   return { index: 0, progress: 0, playing: false, speed: 1, ended: false };
@@ -79,6 +80,13 @@ export function reducePlayer(steps: readonly LessonStep[], state: PlayerState, a
       return SPEEDS.includes(action.speed) ? { ...state, speed: action.speed } : state;
     case "showAll":
       return { ...state, index: last, progress: 1, playing: false, ended: true };
+    case "commit": {
+      const index = clampIndex(action.index, n);
+      const progress = typeof action.progress === "number" && Number.isFinite(action.progress) ? Math.min(1, Math.max(0, action.progress)) : 0;
+      const speed = SPEEDS.includes(action.speed as Speed) ? action.speed as Speed : state.speed;
+      const ended = action.ended === true;
+      return { index, progress, playing: action.playing === true && !ended, speed, ended };
+    }
     case "tick": {
       if (!state.playing || !(action.dtMs > 0) || !Number.isFinite(action.dtMs)) return state;
       let { index, progress } = state;

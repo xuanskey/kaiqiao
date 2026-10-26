@@ -2,7 +2,8 @@ import { Learning } from "./learning";
 import { Classroom } from "@/components/lesson/classroom";
 import { unitById } from "@/lib/math/units";
 import { lessonFromSearch, requestLesson } from "@/lib/lesson/today";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { shouldPublishTimer } from "@/lib/math/timer";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, Lightbulb, Star, Timer, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColumnMath } from "./column";
@@ -53,6 +54,40 @@ export function Game() {
   </AppShell>;
 }
 
+/** 限时只在秒数变化时写入状态。页面隐藏时暂停，避免切回来把离开的时间一次扣完。 */
+function useCoarseClock(active: boolean, tick: (dt: number) => void, remain: () => number) {
+  const remainRef = useRef(remain);
+  remainRef.current = remain;
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    let last = performance.now();
+    let carry = 0;
+    let stopped = false;
+    const frame = (t: number) => {
+      if (stopped || document.visibilityState === "hidden") return;
+      const dt = Math.min(1, Math.max(0, (t - last) / 1000));
+      last = t;
+      carry += dt;
+      if (shouldPublishTimer(remainRef.current(), carry)) {
+        const step = carry;
+        carry = 0;
+        tick(step);
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    const onVis = () => {
+      cancelAnimationFrame(raf);
+      carry = 0;
+      last = performance.now();
+      if (!stopped && document.visibilityState !== "hidden") raf = requestAnimationFrame(frame);
+    };
+    document.addEventListener("visibilitychange", onVis);
+    if (document.visibilityState !== "hidden") raf = requestAnimationFrame(frame);
+    return () => { stopped = true; cancelAnimationFrame(raf); document.removeEventListener("visibilitychange", onVis); };
+  }, [active, tick]);
+}
+
 function Back({ onClick, label }: { onClick: () => void; label: string }) {
   return <button type="button" onClick={onClick} className="back-button"><ChevronLeft size={18} />{label}</button>;
 }
@@ -80,6 +115,7 @@ function Play() {
   const q = session?.questions[session.index];
   const feedback = session?.feedback ?? null;
   const isSprint = session?.kind === "sprint";
+  useCoarseClock(isSprint && countIn === 0, tickSprint, () => useMath.getState().sprintRemain);
 
   useEffect(() => {
     setCountIn(isSprint ? 0 : 3);
@@ -110,20 +146,6 @@ function Play() {
     const t = window.setTimeout(() => advance(), wait);
     return () => window.clearTimeout(t);
   }, [feedback, advance, isSprint]);
-
-  useEffect(() => {
-    if (!isSprint) return;
-    let raf = 0;
-    let last = performance.now();
-    const loop = (t: number) => {
-      const dt = Math.max(0, (t - last) / 1000);
-      last = t;
-      tickSprint(dt);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [isSprint, tickSprint]);
 
   if (!session || !q) return null;
 
@@ -176,7 +198,7 @@ function Play() {
         isSprint ? (
           <div className="mb-3 h-1 overflow-hidden rounded-full bg-secondary" aria-hidden>
             <div
-              className="h-full bg-accent transition-[width] duration-100"
+              className="h-full bg-accent"
               style={{ width: `${(sprintRemain / SPRINT_SECONDS) * 100}%` }}
             />
           </div>
@@ -197,19 +219,7 @@ function Duel() {
   const go = useMath((s) => s.go);
   const muted = useMath((s) => s.muted);
   const [draft, setDraft] = useState("");
-
-  useEffect(() => {
-    let raf = 0;
-    let last = performance.now();
-    const loop = (t: number) => {
-      const dt = Math.max(0, (t - last) / 1000);
-      last = t;
-      tickDuel(dt);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [tickDuel]);
+  useCoarseClock(!!duel, tickDuel, () => useMath.getState().duel?.remain ?? 0);
 
   const q = session?.questions[session.index];
   const feedback = session?.feedback ?? null;

@@ -5,9 +5,10 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import { useMath } from "./math.ts";
-import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, exportBackup, importBackup, parseSave, salvageSave } from "../lib/math/save.ts";
+import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, exportBackup, importBackup, parseSave, readBackup, salvageSave } from "../lib/math/save.ts";
 import { CLASS_LOG_KEY, loadClassLog, recordAnswer } from "../lib/lesson/class-log.ts";
 import { ACTIVITY_KEY, loadActivity, recordActivity } from "../lib/activity.ts";
+import { todayStamp } from "../lib/math/progress.ts";
 import { AI_STORAGE_KEY, loadAiConfig } from "../lib/lesson/ai.ts";
 
 type Store = Map<string, string>;
@@ -157,6 +158,29 @@ describe("课堂记录、一周记录、AI 设置的容错", () => {
     recordActivity(store, true, new Date(2026, 9, 21));
     assert.equal(storage.get(`${ACTIVITY_KEY}.unreadable`), "{坏");
     assert.deepEqual(loadActivity(store), { "2026-10-21": { n: 1, ok: 1 } });
+  });
+  it("恢复新备份会替换课堂记录和每日题数；写入失败时全部回滚", () => {
+    storage.set(SAVE_KEY, JSON.stringify({ ...emptyPersist(), xp: 40 }));
+    storage.set(CLASS_LOG_KEY, JSON.stringify({ "make-ten": { attempts: 2, correct: 1, lastAt: 1 } }));
+    storage.set(ACTIVITY_KEY, JSON.stringify({ "2026-10-20": { n: 4, ok: 3 } }));
+    const today = todayStamp();
+    const file = exportBackup({ ...emptyPersist(), xp: 80, selectedGrade: 5 }, { classLog: { "fraction-mul": { attempts: 3, correct: 3, lastAt: 9 } }, activity: { [today]: { n: 1, ok: 1 }, "2000-01-01": { n: 8, ok: 8 } } });
+    const bundle = readBackup(file);
+    assert.equal(state().restore(bundle.data, bundle.extras), true);
+    assert.equal(state().xp, 80);
+    assert.equal(JSON.parse(storage.get(CLASS_LOG_KEY)!)["fraction-mul"].attempts, 3);
+    assert.equal(JSON.parse(storage.get(CLASS_LOG_KEY)!)["make-ten"], undefined);
+    assert.deepEqual(JSON.parse(storage.get(ACTIVITY_KEY)!), { [today]: { n: 1, ok: 1 } });
+    assert.equal(state().restore(importBackup(JSON.stringify({ app: "kaiqiao", format: 1, data: { ...emptyPersist(), xp: 15 } }))), true);
+    assert.equal(JSON.parse(storage.get(CLASS_LOG_KEY)! )["fraction-mul"].attempts, 3, "旧备份不清除课堂记录");
+    const before = storage.get(SAVE_KEY);
+    const beforeLog = storage.get(CLASS_LOG_KEY);
+    failWrites = (k) => k === CLASS_LOG_KEY;
+    const again = readBackup(file);
+    assert.equal(state().restore(again.data, again.extras), false);
+    assert.equal(storage.get(SAVE_KEY), before);
+    assert.equal(storage.get(CLASS_LOG_KEY), beforeLog);
+    assert.equal(state().xp, 15);
   });
   it("AI 设置：坏数据回到默认值", () => {
     const store = kv(storage);

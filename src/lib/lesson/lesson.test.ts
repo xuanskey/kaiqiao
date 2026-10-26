@@ -56,6 +56,19 @@ describe("课堂时间轴", () => {
     assert.equal(sceneAt(steps, 2).cut, 1);
     assert.equal(sceneAt(steps, 0).cut, 0);
   });
+  it("commit 写入播放位置，结束时不能保持播放，非法倍速沿用原来的", () => {
+    const s = reducePlayer(steps, initialPlayer(), { type: "commit", index: 2, progress: 0.25, playing: true, ended: false, speed: 1.5 });
+    assert.equal(s.index, 2);
+    assert.equal(s.progress, 0.25);
+    assert.equal(s.playing, true);
+    assert.equal(s.speed, 1.5);
+    const bad = reducePlayer(steps, s, { type: "commit", index: -3, progress: 5, playing: true, ended: true, speed: 9 });
+    assert.equal(bad.index, 0);
+    assert.equal(bad.progress, 1);
+    assert.equal(bad.playing, false);
+    assert.equal(bad.ended, true);
+    assert.equal(bad.speed, 1.5);
+  });
   it("非法 tick 不改变状态", () => {
     const s = reducePlayer(steps, { ...initialPlayer(), playing: true }, { type: "tick", dtMs: Number.NaN });
     assert.equal(s.index, 0); assert.equal(s.progress, 0);
