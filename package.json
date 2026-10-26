@@ -1,11 +1,11 @@
 {
   "name": "kaiqiao",
   "private": true,
-  "version": "0.13.4",
+  "version": "0.14.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
-    "build": "vite build",
+    "build": "vite build && node scripts/sync-app-to-site.mjs",
     "preview": "vite preview --host 0.0.0.0 --port 5173",
     "test": "node --test src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts",
     "typecheck": "tsc --noEmit",
@@ -13,7 +13,8 @@
     "release": "npm run build && node scripts/release.mjs",
     "test:render": "node scripts/check-render.mjs",
     "test:smoke": "node scripts/smoke.mjs",
-    "test:state": "node scripts/state-regression.mjs"
+    "test:state": "node scripts/state-regression.mjs",
+    "test:site": "node scripts/check-site-app.mjs"
   },
   "engines": {
     "node": ">=24"

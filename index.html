@@ -7,6 +7,14 @@
     <meta name="theme-color" content="#285847" />
     <meta name="description" content="先选年级，再练一组。小学数学练习、错题巩固和本机学情。" />
     <title>开窍 · 每天练一组</title>
+    <script>
+      (function () {
+        if (window.top !== window.self || location.protocol === "file:") return;
+        var path = location.pathname.replace(/\/index\.html$/, "").replace(/\/+$/, "") || "/";
+        if (path !== "/app") return;
+        location.replace("/练习/" + location.search + location.hash);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,3 +1,4 @@
+import { REVIEW_CONTENT_KEY, REVIEW_SCHEDULE_KEY, emptyReview, exposeReview, enqueueReview, dueReviews, finishReview, parseReview, reviewId, linkGroup, type ReviewData } from "../lib/math/review.ts";
 import { unitById } from "../lib/math/units.ts";
 import { recordActivity } from "../lib/activity.ts";
 import { create } from "zustand";
@@ -27,6 +28,7 @@ import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, parseSave, salvag
 
 type Session = {
   kind: PlayKind;
+  dueReview?: boolean;
   chapterId?: string;
   unitId?: string;
   assessment?: boolean;
@@ -52,6 +54,9 @@ type Duel = {
 };
 
 type MathState = PersistShape & {
+  reviewData: ReviewData;
+  startDueReview: () => void;
+  revealReview: (id: string) => void;
   screen: Screen;
   session: Session | null;
   duel: Duel | null;
@@ -185,6 +190,7 @@ function keepUnreadableCopy(raw: string): string | null {
 
 export const useMath = create<MathState>((set, get) => ({
   ...emptyPersist(),
+  reviewData: emptyReview(),
   screen: "home",
   session: null,
   duel: null,
@@ -195,22 +201,30 @@ export const useMath = create<MathState>((set, get) => ({
   storageNotice: null,
   archiveEpoch: 0,
   hydrate: () => {
+    const apply = (data: PersistShape) => {
+      const content = localStorage.getItem(REVIEW_CONTENT_KEY);
+      const schedule = localStorage.getItem(REVIEW_SCHEDULE_KEY);
+      let reviewData = parseReview({ content: JSON.parse(content ?? '{}'), schedule: JSON.parse(schedule ?? '{}') });
+      for (const q of data.wrong) reviewData = enqueueReview(reviewData, q, Date.now());
+      set({ ...data, reviewData, storageError: null, storageBlocked: false, storageNotice: null });
+    };
     let raw: string | null;
     try { raw = localStorage.getItem(SAVE_KEY); } catch {
       set({ storageError: "浏览器不允许读取本机存储（可能是隐私模式或禁用了网站数据）。当前练习不会保存。", storageBlocked: true, storageNotice: null });
       return;
     }
-    if (!raw) { set({ ...emptyPersist(), storageError: null, storageBlocked: false, storageNotice: null }); return; }
+    if (!raw) { try { apply(emptyPersist()); } catch { set({ storageError: "复习存档无法读取，已保护原数据。请先导出原始存档。", storageBlocked: true }); } return; }
     let json: unknown = undefined;
     try { json = JSON.parse(raw); } catch { /* 不是合法 JSON，下面按损坏处理 */ }
     try {
-      set({ ...parseSave(json), storageError: null, storageBlocked: false, storageNotice: null });
+      apply(parseSave(json));
       return;
     } catch { /* 严格校验没通过，尝试容错读取 */ }
     // 容错读取：先把原始存档另存一份（写入并读回确认），成功后才使用能识别的部分；另存失败就保持只读保护。
     const salvaged = json === undefined ? null : salvageSave(json);
     const copied = salvaged ? keepUnreadableCopy(raw) : null;
     if (salvaged && copied) {
+      try { apply(salvaged.data); } catch { set({ storageError: "复习存档无法读取，已保护原数据。", storageBlocked: true }); return; }
       set({ ...salvaged.data, storageError: null, storageBlocked: false,
         storageNotice: `存档里有 ${salvaged.dropped} 条记录无法识别，已跳过，其余记录照常使用。原始存档已在本浏览器另存一份，没有删除。` });
       return;
@@ -220,7 +234,21 @@ export const useMath = create<MathState>((set, get) => ({
   persist: () => {
     if (get().storageBlocked) return;
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(slicePersist(get())));
+      const writes: [string, string][] = [
+        [SAVE_KEY, JSON.stringify(slicePersist(get()))],
+        [REVIEW_CONTENT_KEY, JSON.stringify(get().reviewData.content)],
+        [REVIEW_SCHEDULE_KEY, JSON.stringify(get().reviewData.schedule)],
+      ];
+      const previous = writes.map(([key]) => [key, localStorage.getItem(key)] as const);
+      try {
+        for (const [key, value] of writes) localStorage.setItem(key, value);
+        for (const [key, value] of writes) if (localStorage.getItem(key) !== value) throw new Error("readback");
+      } catch (error) {
+        for (const [key, value] of previous) {
+          try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch { /* 保留内存数据与错误提示以便导出 */ }
+        }
+        throw error;
+      }
       if (get().storageError) set({ storageError: null });
     } catch {
       set({ storageError: "浏览器未能保存进度。请在学情页导出备份，避免关闭后丢失。" });
@@ -243,7 +271,9 @@ export const useMath = create<MathState>((set, get) => ({
     try {
       const checked = parseSave(data);
       const extrasChecked = extras ? { classLog: classLogForBackup(extras.classLog), activity: activityForBackup(extras.activity) } : null;
-      const writes: [string, string][] = [[SAVE_KEY, JSON.stringify(checked)]];
+      let reviewData = extras?.review ? parseReview(extras.review) : emptyReview();
+      for (const q of checked.wrong) reviewData = enqueueReview(reviewData, q, Date.now());
+      const writes: [string, string][] = [[SAVE_KEY, JSON.stringify(checked)], [REVIEW_CONTENT_KEY, JSON.stringify(reviewData.content)], [REVIEW_SCHEDULE_KEY, JSON.stringify(reviewData.schedule)]];
       if (extrasChecked) writes.push([CLASS_LOG_KEY, JSON.stringify(extrasChecked.classLog)], [ACTIVITY_KEY, JSON.stringify(extrasChecked.activity)]);
       const prev: Record<string, string | null> = {};
       for (const [key] of writes) prev[key] = localStorage.getItem(key);
@@ -254,7 +284,7 @@ export const useMath = create<MathState>((set, get) => ({
         revert(prev);
         throw error;
       }
-      set({ ...checked, session: null, duel: null, sprintRemain: 0, screen: "report", storageError: null, storageBlocked: false, storageNotice: null, archiveEpoch: get().archiveEpoch + 1 });
+      set({ ...checked, reviewData, session: null, duel: null, sprintRemain: 0, screen: "report", storageError: null, storageBlocked: false, storageNotice: null, archiveEpoch: get().archiveEpoch + 1 });
       return true;
     } catch {
       set({ storageError: "恢复失败，原有记录未被替换。请检查文件或浏览器存储空间。" });
@@ -305,6 +335,14 @@ export const useMath = create<MathState>((set, get) => ({
       duel: null,
       sprintRemain: 0,
     });
+  },
+  revealReview: (id) => { set({ reviewData: exposeReview(get().reviewData, id, Date.now()) }); get().persist(); },
+  startDueReview: () => {
+    const s = get();
+    const ids = dueReviews(s.reviewData, s.selectedGrade);
+    if (!ids.length) { set({ screen: "review", session: null }); return; }
+    const questions = ids.map(id => { const w = s.reviewData.content[id]; return { ...w, id, mode: w.mode ?? (w.choices ? "choice" : "keypad"), fromWrong: true } as Question; });
+    set({ screen: "play", lastStars: 0, session: newSession("review", questions, { dueReview: true }), duel: null, sprintRemain: 0 });
   },
   startReview: () => {
     const wrong = gradeWrong(get());
@@ -389,9 +427,16 @@ export const useMath = create<MathState>((set, get) => ({
     } else {
       wrong = wrong.filter((w) => w.prompt !== q.prompt || w.chapterId !== q.chapterId);
     }
+    let reviewData = get().reviewData;
+    if (session.dueReview) reviewData = finishReview(reviewData, reviewId(q), ok, Date.now());
+    else if (!ok || session.retried || session.kind === "review" || session.kind === "drill") {
+      reviewData = enqueueReview(reviewData, { ...q, skill, given, at: Date.now() }, Date.now(), q.linkGroupId ?? linkGroup({ ...q, skill }));
+    }
+    if (!session.dueReview) reviewData = exposeReview(reviewData, reviewId(q), Date.now());
     const skillStats = touchSkill(get().skillStats, skill, ok, ms, session.retried || session.kind === "review" || session.kind === "drill");
     set({
       wrong,
+      reviewData,
       skillStats,
       stats: { answered: get().stats.answered + 1, correct: get().stats.correct + (ok ? 1 : 0) },
       session: {
@@ -399,6 +444,7 @@ export const useMath = create<MathState>((set, get) => ({
         combo,
         maxCombo: Math.max(session.maxCombo, combo),
         logs,
+        questions: session.dueReview ? session.questions.filter((item, i) => i <= session.index || reviewData.schedule[reviewId(item)]?.dueAt <= Date.now()) : session.questions,
         feedback: { ok, given },
       },
     });
@@ -443,13 +489,13 @@ export const useMath = create<MathState>((set, get) => ({
       return;
     }
     if (nextIndex >= session.questions.length) {
-      if (!session.retried && !(session.kind === "unit" && session.assessment)) {
+      if (!session.dueReview && !session.retried && !(session.kind === "unit" && session.assessment)) {
         const missed = session.logs.filter((l) => !l.ok);
         const rng = randomRng();
         const extras: Question[] = [];
         for (const m of missed) {
           const src = session.questions.find((q) => q.prompt === m.prompt);
-          extras.push(makeSimilar({ chapterId: src?.chapterId ?? session.questions[0]!.chapterId, skill: src?.skill, prompt: m.prompt }, rng, [...session.questions, ...extras]));
+          extras.push({ ...makeSimilar({ chapterId: src?.chapterId ?? session.questions[0]!.chapterId, skill: src?.skill, prompt: m.prompt }, rng, [...session.questions, ...extras]), linkGroupId: src ? linkGroup({ ...src, skill: src.skill ?? inferSkill(src) }) : undefined });
         }
         if (extras.length > 0) {
           set({
