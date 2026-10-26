@@ -187,7 +187,7 @@ export function inferSkill(q: Pick<Question, "chapterId" | "prompt" | "answer" |
 }
 
 export function emptySkillStat(): SkillStat {
-  return { seen: 0, correct: 0, sumMs: 0 };
+  return { seen: 0, correct: 0, sumMs: 0, firstSeen: 0, firstCorrect: 0, retrySeen: 0, retryCorrect: 0 };
 }
 
 export function touchSkill(
@@ -195,12 +195,17 @@ export function touchSkill(
   skill: string | undefined,
   ok: boolean,
   ms: number,
+  retry = false,
 ): Record<string, SkillStat> {
   if (!skill) return map;
   const prev = map[skill] ?? emptySkillStat();
   return {
     ...map,
     [skill]: {
+      firstSeen: (prev.firstSeen ?? 0) + (retry ? 0 : 1),
+      firstCorrect: (prev.firstCorrect ?? 0) + (!retry && ok ? 1 : 0),
+      retrySeen: (prev.retrySeen ?? 0) + (retry ? 1 : 0),
+      retryCorrect: (prev.retryCorrect ?? 0) + (retry && ok ? 1 : 0),
       seen: prev.seen + 1,
       correct: prev.correct + (ok ? 1 : 0),
       sumMs: prev.sumMs + ms,
@@ -272,4 +277,10 @@ export function oralPace(map: Record<string, SkillStat>): { avgMs: number; line:
   if (avgMs <= 5000) return { avgMs, line: `口算约 ${sec} 秒一题，已经很快。` };
   if (avgMs <= 9000) return { avgMs, line: `口算约 ${sec} 秒一题，再练冲刺会更稳。` };
   return { avgMs, line: `口算约 ${sec} 秒一题。先求对，再求快。` };
+}
+
+/** 旧存档不倒推归类；无该类作答时显示暂无。 */
+export function attemptSummary(s: SkillStat): string {
+  const rate = (correct: number, seen: number) => seen ? `${Math.round(correct / seen * 100)}%（${correct}/${seen} 题）` : "暂无（0 题）";
+  return `首答正确率 ${rate(s.firstCorrect ?? 0, s.firstSeen ?? 0)} · 巩固正确率 ${rate(s.retryCorrect ?? 0, s.retrySeen ?? 0)}`;
 }

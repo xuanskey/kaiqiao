@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CHAPTERS, GRADE_LABEL, LEVELS_PER_CHAPTER, chapterById, chaptersOfGrade } from "@/lib/math/chapters";
 import { unlockAudio, playTap } from "@/lib/math/audio";
 import { chapterStarSum, clearedLevels, currentStreak, isChapterUnlocked, isLevelUnlocked, nextCampaign, starKey, todayStamp, totalStars } from "@/lib/math/progress";
-import { SKILL_LABEL, isSkillId, oralPace, weakSkills } from "@/lib/math/skills";
+import { SKILL_LABEL, attemptSummary, skillRows, isSkillId, oralPace, weakSkills } from "@/lib/math/skills";
 import { downloadText } from "@/lib/download";
 import { cn } from "@/lib/utils";
 import { useMath } from "@/store/math";
@@ -206,6 +206,7 @@ export function Review() {
 export function Report() {
   const s = useMath();
   const acc = s.stats.answered ? Math.round(s.stats.correct / s.stats.answered * 100) : null;
+  const rows = skillRows(s.skillStats);
   const weak = weakSkills(s.skillStats);
   const pace = oralPace(s.skillStats);
   const wrong = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade);
@@ -224,6 +225,8 @@ export function Report() {
       `最近 7 天：${week.n} 题，学习 ${week.activeDays} 天，正确率 ${week.rate === null ? "暂无" : `${week.rate}%`}`,
       `课堂练习：${cls.attempts} 题，答对 ${cls.correct} 题`,
       recommendation,
+      "分列统计从 v0.13.4 开始；首答为普通练习初始题，巩固为错后追加、错题回炉和对症练。旧记录仅保留在累计中。",
+      ...rows.map(row => `${row.label}：${attemptSummary(s.skillStats[row.id])}`),
       ...weak.slice(0, 4).map((row) => `${row.label} ${Math.round(row.acc * 100)}% · ${row.seen} 题`),
       "只跟自己比，不排名。课堂练习不计入上面的累计答题。",
     ].join('\n'));
@@ -234,6 +237,7 @@ export function Report() {
       <section className="accuracy-card"><div className="accuracy-ring" style={{ '--accuracy': `${acc ?? 0}%` } as import('react').CSSProperties}><div><strong>{acc === null ? '—' : acc}<small>{acc === null ? '' : '%'}</small></strong><span>{acc === null ? '等待第一次练习' : '累计正确率'}</span></div></div><p>{s.stats.answered ? `答对 ${s.stats.correct} / ${s.stats.answered} 题` : '还没有练习记录，开始一组就好。'}</p></section>
       <div className="report-metrics"><Metric icon={Target} label="累计答题" value={String(s.stats.answered)} /><Metric icon={Flame} tone="peach" label="连续练习 · 天" value={String(streak)} /><Metric icon={Star} tone="gold" label="闯关星星" value={String(totalStars(s.stars))} /><Metric icon={Lightbulb} tone="lavender" label="成长积分" value={String(s.xp)} /></div>
     </div>
+    <section className="surface-card mt-5"><h2>首答与巩固</h2><p className="footnote">分列统计从 v0.13.4 开始；首答为普通练习初始题，巩固为错后追加、错题回炉和对症练。旧记录仅保留在累计中。</p>{rows.length ? <ul className="skill-list">{rows.map(row => <li key={row.id}><strong>{row.label}</strong><p>{attemptSummary(s.skillStats[row.id])}</p></li>)}</ul> : <p className="muted-copy">完成练习后显示首答与巩固记录。</p>}</section>
     <div className="section-heading"><h2>最近 7 天</h2><span>每天做了多少题</span></div>
     <WeekCard />
     <div className="report-columns mt-5"><div>

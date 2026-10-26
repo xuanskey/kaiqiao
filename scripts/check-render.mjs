@@ -19,7 +19,11 @@ try {
   render('练习年级');
   useMath.getState().go('map'); render('题库与闯关');
   useMath.getState().go('review'); render('还没有错题');
-  useMath.getState().go('report'); render('备份与恢复');
+  useMath.setState({ skillStats: { add: { seen: 4, correct: 3, sumMs: 1000, firstSeen: 3, firstCorrect: 2, retrySeen: 1, retryCorrect: 1 } } });
+  useMath.getState().go('report');
+  const splitReport = render('备份与恢复');
+  assert.ok(splitReport.includes('首答正确率 67%（2/3 题）'));
+  assert.ok(splitReport.includes('巩固正确率 100%（1/1 题）'));
   useMath.getState().startDaily(); render('准备');
   useMath.getState().startDuel(); render('和电脑练一练');
   useMath.getState().tickDuel(60); render('平手');
