@@ -21,7 +21,7 @@ export async function askPlatform(accountId: string, ctx: AiContext, signal: Abo
       signal: AbortSignal.any([signal, AbortSignal.timeout(20000)]),
     });
     const data = await res.json();
-    if (res.status === 402) return { ok: false, error: '余额不足，请联系管理员充值', balanceFen: data.balanceFen };
+    if (res.status === 402) return { ok: false, error: '余额不足，暂时不能提问', balanceFen: data.balanceFen };
     if (!res.ok) return { ok: false, error: res.status === 429 ? '提问太快，请稍后再试' : '平台 AI 暂时不可用' };
     const text = sanitizeReply(data.text);
     return text ? { ok: true, text, balanceFen: data.balanceFen } : { ok: false, error: '没有收到有效回答' };
