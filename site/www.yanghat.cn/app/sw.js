@@ -1,5 +1,5 @@
-const CACHE = 'kaiqiao-def12ad91e34';
-const ASSETS = ["./","./index.html","./manifest.webmanifest","./assets/index-CTYDlnSZ.css","./assets/index-auzgEt_W.js"];
+const CACHE = 'kaiqiao-d371d8f81ba5';
+const ASSETS = ["./","./index.html","./manifest.webmanifest","./assets/index-CTYDlnSZ.css","./assets/index-_GuCptTJ.js"];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

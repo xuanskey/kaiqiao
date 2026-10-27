@@ -5,6 +5,8 @@ import { DEFAULT_AI, askAi, loadAiConfig, saveAiConfig, validBaseUrl, type AiCon
 import { askPlatform, platformAccount, platformBalance } from "@/lib/lesson/platform-ai";
 
 const store = () => (typeof window === "undefined" ? undefined : window.localStorage);
+/** 简短提问先取整后至少 1 分成本，再乘 4，发送门槛与此最低账单一致。 */
+const MIN_PLATFORM_FEN = 4;
 
 /** 可选 AI 老师：家长自备密钥。未开启时课堂使用离线规则老师。 */
 export function useAiConfig(): [AiConfig, (c: AiConfig) => void] {
@@ -43,7 +45,7 @@ export function AiPanel({ cfg, setCfg, context, onReply, requests }: { requests:
   }, [requests, cfg.enabled, cfg.apiKey, cfg.baseUrl, cfg.model, mode]);
   const changeConfig = (value: AiConfig) => { requests.cancel(); setCfg(value); };
   const send = async () => {
-    if (!ask.trim() || (active.current && !active.current.signal.aborted) || (mode === 'own' ? !cfg.enabled || !cfg.apiKey : !account || balance === null || balance < 1)) return;
+    if (!ask.trim() || (active.current && !active.current.signal.aborted) || (mode === 'own' ? !cfg.enabled || !cfg.apiKey : !account || balance === null || balance < MIN_PLATFORM_FEN)) return;
     const request = requests.begin();
     active.current = request;
     setBusy(true);
@@ -66,9 +68,14 @@ export function AiPanel({ cfg, setCfg, context, onReply, requests }: { requests:
       <option value="own">家长自备密钥</option><option value="platform">平台 AI（预付费）</option>
     </select></label>
     {mode === 'platform' ? <div>
+      <p>演示模式，未真实调用 AI，不扣真钱。点数购买尚未开放。</p>
       <p>平台 AI（预付费）：{balanceError || (balance === null ? '读取余额中…' : `余额 ${balance} 点（1 点 = 0.01 元）`)}</p>
-      {balance === 0 ? <p className="ai-warn">暂无余额，请联系管理员人工充值。</p> : null}
-      {account ? <small>本机账户：{account}。充值时请提供此编号；清除浏览器数据后需联系管理员恢复。</small> : null}
+      <p>扣点按 DeepSeek 官方价先向上取整到分（最低 1 分），再乘 4。一次简短提问通常扣 4 点。</p>
+      <p>正式购买开放后，金额只限正整数元，最低 1 元，不设固定档位；1 元 = 100 点。1:4 只用于扣点，不用于充值。</p>
+      <p>未用完的点数可申请退款，已使用的不退；退款额是未用点数对应的实付金额，不按余额除以 4。演示点数不涉及退款。</p>
+      <p>管理员入账仅用于演示，按原点数增加，不乘 4，不是购买。</p>
+      {balance !== null && balance < MIN_PLATFORM_FEN ? <p className="ai-warn">点数不足 4 点，暂时不能提问。</p> : null}
+      {account ? <small>本机编号：{account}。这不是登录账户，只保存在这台浏览器里；清除数据后编号和演示余额都会消失。</small> : null}
       <button type="button" onClick={() => { if (account) void platformBalance(account).then((n) => { setBalance(n); setBalanceError(''); }).catch(() => setBalanceError('余额暂时无法读取')); }}>刷新余额</button>
     </div> : null}
     {mode === 'own' ? <div className="ai-head"><Bot size={16} /><span>{cfg.enabled && cfg.apiKey ? "AI 老师已开启" : "AI 老师（可选，需自备密钥）"}</span><button type="button" onClick={() => { setDraft(cfg); setOpen((o) => !o); }} aria-expanded={open}><Settings size={14} />设置</button></div> : null}
@@ -78,12 +85,12 @@ export function AiPanel({ cfg, setCfg, context, onReply, requests }: { requests:
       {draft.enabled && !validBaseUrl(draft.baseUrl) ? <small className="ai-warn">地址必须以 https:// 开头</small> : null}
       <label>模型<input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value })} placeholder="deepseek-chat" /></label>
       <label>API 密钥<input type="password" autoComplete="off" value={draft.apiKey} onChange={(e) => setDraft({ ...draft, apiKey: e.target.value })} placeholder="sk-..." /></label>
-      <small>密钥只保存在这台设备的浏览器里，只发送到上面的地址。AI 的回答只显示为文字；课堂里的数字以程序计算为准。自备密钥费用由家长自己的服务账户承担。请由家长设置。</small>
+      <small>密钥只保存在这台设备的浏览器里，只发送到上面的地址。AI 的回答只显示为文字；课堂里的数字以程序计算为准。自备密钥不经平台账本，费用由家长自己的 DeepSeek 账户承担。请由家长设置。</small>
       <div className="ai-actions"><button type="submit">保存</button><button type="button" onClick={() => { const c = { ...DEFAULT_AI }; setDraft(c); changeConfig(c); }}>清除密钥</button></div>
     </form> : null}
     {(mode === 'platform' || (cfg.enabled && cfg.apiKey)) ? <form className="ai-ask" onSubmit={(e) => { e.preventDefault(); void send(); }}>
       <input value={ask} disabled={busy} onChange={(e) => setAsk(e.target.value)} placeholder="问老师一个问题" aria-label="问老师" maxLength={200} />
-      <button type="submit" disabled={busy || !ask.trim() || (mode === 'platform' && (!account || balance === null || balance < 1))} aria-label="发送"><Send size={15} />{busy ? "思考中" : "问"}</button>
+      <button type="submit" disabled={busy || !ask.trim() || (mode === 'platform' && (!account || balance === null || balance < MIN_PLATFORM_FEN))} aria-label="发送"><Send size={15} />{busy ? "思考中" : "问"}</button>
       {busy ? <button type="button" onClick={() => requests.cancel()}>取消请求</button> : null}
     </form> : null}
   </div>;

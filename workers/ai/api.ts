@@ -1,9 +1,14 @@
-import { costFen, debit, isPeak } from './billing.ts';
+import { billFen, costFen, debit, isPeak, type Usage } from './billing.ts';
 import { isCnHoliday } from './holidays.ts';
 import { sanitizeText } from './sanitize.ts';
 import { MOCK_USAGE, upstream } from './upstream.ts';
 
-type Entry = { accountId: string; deltaFen: number; kind: 'topup' | 'ask'; at: string };
+type TopupEntry = { accountId: string; deltaFen: number; kind: 'topup'; at: string };
+type AskEntry = {
+  accountId: string; deltaFen: number; kind: 'ask'; at: string;
+  costFen: number; billFen: number; usage: Usage; peak: boolean;
+};
+type Entry = TopupEntry | AskEntry;
 export function createApi(options: { adminToken?: string; mock?: string; now?: () => Date; upstream?: typeof upstream } = {}) {
   const balances = new Map<string, number>();
   const entries: Entry[] = [];
@@ -45,20 +50,25 @@ export function createApi(options: { adminToken?: string; mock?: string; now?: (
     const date = now();
     const recent = (rates.get(accountId) ?? []).filter(t => t > date.getTime() - 60000);
     if (recent.length >= 10) return json(429, { ok: false, error: 'rate_limited' });
-    // mock usage 固定，可在调用前精确验余额；真实上游需另做最大费用预留。
-    const cost = costFen(MOCK_USAGE, isPeak(date, isCnHoliday(date)));
-    if (balance() < cost) return json(402, { ok: false, error: 'insufficient_balance', balanceFen: balance() });
+    // mock usage 固定，可在调用前按 billFen 验余额；真实上游需另做最大费用预留。
+    const peak = isPeak(date, isCnHoliday(date));
+    const preview = billFen(MOCK_USAGE, peak);
+    if (balance() < preview) return json(402, { ok: false, error: 'insufficient_balance', balanceFen: balance() });
     rates.set(accountId, [...recent, date.getTime()]);
     pending.add(accountId);
     try {
       const result = await (options.upstream ?? upstream)(options.mock);
-      const charged = costFen(result.usage, isPeak(date, isCnHoliday(date)));
+      const chargedCost = costFen(result.usage, peak);
+      const charged = billFen(result.usage, peak);
       if (balance() < charged) return json(402, { ok: false, error: 'insufficient_balance', balanceFen: balance() });
       const text = sanitizeText(result.text);
       if (!text) return json(503, { ok: false, error: 'invalid_upstream_response' });
       balances.set(accountId, debit(balance(), charged));
-      entries.push({ accountId, deltaFen: -charged, kind: 'ask', at: date.toISOString() });
-      return json(200, { ok: true, ...result, text, costFen: charged, balanceFen: balance() });
+      entries.push({
+        accountId, deltaFen: -charged, kind: 'ask', at: date.toISOString(),
+        costFen: chargedCost, billFen: charged, usage: { ...result.usage }, peak,
+      });
+      return json(200, { ok: true, ...result, text, costFen: chargedCost, billFen: charged, balanceFen: balance() });
     } catch { return json(503, { ok: false, error: 'upstream_disabled' }); }
     finally { pending.delete(accountId); }
   } };
