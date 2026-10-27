@@ -59,15 +59,16 @@ export function buildMessages(ctx: AiContext): { role: "system" | "user"; conten
   return [{ role: "system", content: system }, { role: "user", content: user }];
 }
 
-/** 把模型输出变成安全的纯文本。 */
+/** 与 Worker sanitizeText 保持一致；结果仍须以文本渲染，不当作 HTML。 */
 export function sanitizeReply(text: unknown, maxLen = 400): string {
   if (typeof text !== "string") return "";
   return text
     .replace(/```[\s\S]*?```/g, "")
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
     .replace(/<[^>]*>/g, "")
-    .replace(/\bhttps?:\/\/\S+/g, "")
-    .replace(/[*#>`]/g, "")
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(/\bhttps?:\/\/\S+/gi, "")
+    .replace(/[*#<>`]/g, "")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLen);
 }

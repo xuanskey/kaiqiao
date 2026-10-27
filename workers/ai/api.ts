@@ -55,6 +55,7 @@ export function createApi(options: { adminToken?: string; mock?: string; now?: (
       const charged = costFen(result.usage, isPeak(date, isCnHoliday(date)));
       if (balance() < charged) return json(402, { ok: false, error: 'insufficient_balance', balanceFen: balance() });
       const text = sanitizeText(result.text);
+      if (!text) return json(503, { ok: false, error: 'invalid_upstream_response' });
       balances.set(accountId, debit(balance(), charged));
       entries.push({ accountId, deltaFen: -charged, kind: 'ask', at: date.toISOString() });
       return json(200, { ok: true, ...result, text, costFen: charged, balanceFen: balance() });
