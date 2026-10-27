@@ -1,8 +1,10 @@
 import { costFen, debit, isPeak } from './billing.ts';
+import { isCnHoliday } from './holidays.ts';
+import { sanitizeText } from './sanitize.ts';
 import { MOCK_USAGE, upstream } from './upstream.ts';
 
 type Entry = { accountId: string; deltaFen: number; kind: 'topup' | 'ask'; at: string };
-export function createApi(options: { adminToken?: string; mock?: string; now?: () => Date } = {}) {
+export function createApi(options: { adminToken?: string; mock?: string; now?: () => Date; upstream?: typeof upstream } = {}) {
   const balances = new Map<string, number>();
   const entries: Entry[] = [];
   const rates = new Map<string, number[]>();
@@ -29,9 +31,14 @@ export function createApi(options: { adminToken?: string; mock?: string; now?: (
       if (!options.adminToken || request.headers.get('authorization') !== `Bearer ${options.adminToken}`) return json(403, { ok: false, error: 'admin_required' });
       const amount = body.amountFen;
       if (typeof amount !== 'number' || !Number.isSafeInteger(amount) || amount <= 0 || amount > 1000000 || !Number.isSafeInteger(balance() + amount)) return json(400, { ok: false, error: 'invalid_amount' });
-      balances.set(accountId, balance() + amount);
-      entries.push({ accountId, deltaFen: amount, kind: 'topup', at: now().toISOString() });
-      return json(200, { ok: true, balanceFen: balance() });
+      if (pending.has(accountId)) return json(409, { ok: false, error: 'request_pending' });
+      pending.add(accountId);
+      try {
+        const at = now().toISOString();
+        balances.set(accountId, balance() + amount);
+        entries.push({ accountId, deltaFen: amount, kind: 'topup', at });
+        return json(200, { ok: true, balanceFen: balance() });
+      } finally { pending.delete(accountId); }
     }
     if (typeof body.ask !== 'string' || !body.ask.trim() || body.ask.length > 200) return json(400, { ok: false, error: 'invalid_ask' });
     if (pending.has(accountId)) return json(409, { ok: false, error: 'request_pending' });
@@ -39,16 +46,18 @@ export function createApi(options: { adminToken?: string; mock?: string; now?: (
     const recent = (rates.get(accountId) ?? []).filter(t => t > date.getTime() - 60000);
     if (recent.length >= 10) return json(429, { ok: false, error: 'rate_limited' });
     // mock usage 固定，可在调用前精确验余额；真实上游需另做最大费用预留。
-    const cost = costFen(MOCK_USAGE, isPeak(date));
+    const cost = costFen(MOCK_USAGE, isPeak(date, isCnHoliday(date)));
     if (balance() < cost) return json(402, { ok: false, error: 'insufficient_balance', balanceFen: balance() });
     rates.set(accountId, [...recent, date.getTime()]);
     pending.add(accountId);
     try {
-      const result = await upstream(options.mock);
-      const charged = costFen(result.usage, isPeak(date));
+      const result = await (options.upstream ?? upstream)(options.mock);
+      const charged = costFen(result.usage, isPeak(date, isCnHoliday(date)));
+      if (balance() < charged) return json(402, { ok: false, error: 'insufficient_balance', balanceFen: balance() });
+      const text = sanitizeText(result.text);
       balances.set(accountId, debit(balance(), charged));
       entries.push({ accountId, deltaFen: -charged, kind: 'ask', at: date.toISOString() });
-      return json(200, { ok: true, ...result, costFen: charged, balanceFen: balance() });
+      return json(200, { ok: true, ...result, text, costFen: charged, balanceFen: balance() });
     } catch { return json(503, { ok: false, error: 'upstream_disabled' }); }
     finally { pending.delete(accountId); }
   } };

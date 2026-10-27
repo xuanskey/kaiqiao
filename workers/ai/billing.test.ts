@@ -22,3 +22,11 @@ test('北京时间工作日高峰边界及节假日', () => {
   assert.equal(isPeak(new Date('2026-10-25T01:00:00Z')), false);
   assert.equal(isPeak(new Date('2026-10-27T01:00:00Z'), true), false);
 });
+
+test('整数进位大数及安全整数保护', () => {
+  assert.equal(costFen({ prompt: 10_000_000_000, completion: 0 }, false), 1_000_000);
+  assert.equal(costFen({ prompt: 10_000_000_001, completion: 0 }, false), 1_000_001);
+  assert.equal(costFen({ prompt: 10_000_000_001, completion: 0 }, true), 2_000_001);
+  assert.throws(() => costFen({ prompt: Number.MAX_SAFE_INTEGER, completion: 0 }, true), /invalid_usage/);
+  assert.throws(() => costFen({ prompt: 90_071_992_547_409, completion: 0 }, false), /invalid_usage/);
+});

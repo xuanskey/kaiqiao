@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { upstream } from './upstream.ts';
+import { upstream, MODEL, MAX_TOKENS, THINKING } from './upstream.ts';
 test('mock 默认返回纯文本和 usage，任何模式均不联网', async () => {
   const original = globalThis.fetch;
   let calls = 0;
@@ -8,6 +8,9 @@ test('mock 默认返回纯文本和 usage，任何模式均不联网', async () 
   try {
     const result = await upstream();
     assert.equal(typeof result.text, 'string');
+    assert.equal(result.model, MODEL);
+    assert.equal(result.maxTokens, MAX_TOKENS);
+    assert.equal(result.thinking, THINKING);
     assert.deepEqual(result.usage, { prompt: 120, completion: 60, cached: 20 });
     await assert.rejects(upstream('0'), /real_upstream_disabled/);
     assert.equal(calls, 0);

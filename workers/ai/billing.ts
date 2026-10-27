@@ -4,8 +4,9 @@ export function costFen(usage: Usage, peak: boolean): number {
   if (![prompt, completion, cached].every(Number.isSafeInteger) || prompt < 0 || completion < 0 || cached < 0 || cached > prompt) throw new Error('invalid_usage');
   // 单位：百万 token 的百分之一分，整数计算避免浮点进位误差。
   const units = (prompt - cached) * 100 + cached * 2 + completion * 400;
-  if (!Number.isSafeInteger(units * (peak ? 2 : 1))) throw new Error('invalid_usage');
-  return Math.max(1, Math.ceil(units * (peak ? 2 : 1) / 1000000));
+  const scaled = units * (peak ? 2 : 1);
+  if (!Number.isSafeInteger(scaled) || !Number.isSafeInteger(scaled + 999_999)) throw new Error('invalid_usage');
+  return Math.max(1, Math.floor((scaled + 999_999) / 1_000_000));
 }
 export function debit(balance: number, cost: number): number {
   if (!Number.isSafeInteger(balance) || !Number.isSafeInteger(cost) || cost < 1 || balance < cost) throw new Error('insufficient_balance');
