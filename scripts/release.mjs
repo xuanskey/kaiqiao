@@ -76,3 +76,6 @@ await rm('docs', { recursive: true, force: true });
 await cp('dist', 'docs', { recursive: true });
 console.log(`Release ready: docs/ and docs/offline.html (${version})`);
 await import('./sync-app-to-site.mjs');
+const { writeManifest } = await import('./build-manifest.mjs');
+const manifest = writeManifest(process.cwd());
+console.log(`Build manifest: site/build-manifest.json (source ${manifest.files.source} files, output ${manifest.files.output} files, switches ${JSON.stringify(manifest.switches)})`);
