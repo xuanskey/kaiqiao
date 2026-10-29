@@ -1,0 +1,9 @@
+{
+  "note": "练习应用首屏 JS/CSS（入口 + modulepreload）体积基线；gzip 用 zlib level 9。超出上限即测试失败；有意变大时改这里并在 PR 说明原因。",
+  "recordedAt": "2026-10-30",
+  "baseline": {
+    "main@b51aaae": { "js": { "raw": 663590, "gzip": 221176 }, "css": { "raw": 106887, "gzip": 21387 } },
+    "feat/selfcheck-batch1": { "js": { "raw": 661965, "gzip": 220654 }, "css": { "raw": 107375, "gzip": 21476 } }
+  },
+  "limit": { "js": { "raw": 682000, "gzip": 227300 }, "css": { "raw": 110600, "gzip": 22200 } }
+}
