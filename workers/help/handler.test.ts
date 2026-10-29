@@ -89,9 +89,10 @@ test('daily refusal still consumes minute slot',async()=>{
 });
 
 test('预留额使用固定输入输出价格',async()=>{
- const db=new D1(), q='怎么开始练习？';
+ const db=new D1(), q='怎么开始练习？';let reserved:number|undefined;
  await call(req({v:1,q}),{DEEPSEEK_API_KEY:'fake',HELP_DB:db},async()=>{
-  assert.equal(db.amount()[0].micro,(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO);
+  reserved=db.amount()[0].micro;
   throw Error('mock network failure');
  });
+ assert.equal(reserved,(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO);
 });
