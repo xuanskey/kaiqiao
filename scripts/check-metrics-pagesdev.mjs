@@ -46,8 +46,15 @@ try {
     const seen=[];
     page.on('request',r=>{if(new URL(r.url()).pathname==='/e')seen.push(r);});
     await page.goto(base+'/',{waitUntil:'networkidle'});
-    assert.equal(seen.length,0,'default-off homepage must not call /e');
-    console.log('PASS default homepage sends 0 /e requests');
+    assert.ok(seen.length>0,'homepage should call same-origin /e');
+    for(const sent of seen){
+      const url=new URL(sent.url());
+      assert.equal(url.origin,base);assert.equal(url.pathname,'/e');assert.equal(url.search,'');assert.equal(sent.method(),'POST');
+      assert.deepEqual(Object.keys(JSON.parse(sent.postData())),['v','event','grade','count']);
+      const headers=await sent.allHeaders();
+      assert.equal(headers.cookie,undefined);assert.equal(headers.referer,undefined);
+    }
+    console.log('PASS homepage /e is same-origin, payload only {v,event,grade,count}, no cookie/referer');
     const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/e');
     await page.evaluate(async()=>{const {createTracker}=await import('/metrics.js');createTracker('/e')('grade_select',3);});
     const r=await response;
