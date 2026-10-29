@@ -22,3 +22,10 @@ test('充值页首屏状态在构建时写入，避免脚本切换造成版面�
   assert.equal(bakeTopupHtml(source, false), source, '仓库里的充值页默认是关闭状态');
   assert.throws(() => bakeTopupHtml('<p>x</p>', true), /markers/);
 });
+test('协议文档与默认关闭、暂未开放口径一致', () => {
+  const doc = readFileSync('site/topup-code.md', 'utf8');
+  assert.match(doc, /`TOPUP_OPEN` 默认关闭/);
+  assert.match(doc, /充值暂未开放/);
+  assert.match(doc, /不包含 `wechat-pay-qr\.png`/);
+  assert.doesNotMatch(doc, /默认开放|即将开放/);
+});
