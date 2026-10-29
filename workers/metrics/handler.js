@@ -10,8 +10,10 @@ export async function handleEvent(request, env) {
   const prod = host === 'www.yanghat.cn' || host === 'yanghat.cn';
   const preview = host === 'yanghat-cn.pages.dev' || host.endsWith('.yanghat-cn.pages.dev');
   const dev = host === 'localhost' || host === '127.0.0.1';
-  // Spec-following browsers send `Origin: null` for POSTs made with referrerPolicy 'no-referrer'
-  // (our client does), so an opaque origin is accepted only when Fetch Metadata proves same-origin.
+  // fetch() defaults to mode "cors". Current Fetch still sends the real Origin for that
+  // mode, even with referrerPolicy "no-referrer" (this client, confirmed in Chromium).
+  // The literal Origin value "null" applies to non-cors non-GET requests such as form posts.
+  // Accept that opaque value only when Sec-Fetch-Site is same-origin.
   const origin = request.headers.get('Origin');
   const site = request.headers.get('Sec-Fetch-Site');
   const opaque = origin === null || origin === 'null';

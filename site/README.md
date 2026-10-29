@@ -32,7 +32,7 @@ wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
 
 回滚：在仓库根去掉该变量（若曾 export，先 `unset VITE_EVENT_ENDPOINT`），重新运行 `npm run release`，再从仓库根执行 `wrangler pages deploy site/www.yanghat.cn --project-name yanghat-cn`。根目录没有 `functions/`，因此普通静态部署撤去函数，客户端也恢复关闭。未绑定时合法 `/e` 返回 503，不影响练习。
 
-同源判断：`Origin` 存在且不是 `null` 时必须等于请求源；按规范，浏览器对 `referrerPolicy:'no-referrer'` 的 POST 可能发 `Origin: null`（客户端正是如此），此时只在 `Sec-Fetch-Site: same-origin` 时放行；任何非 `same-origin` 的 `Sec-Fetch-Site` 一律 403。部署命令需带 `CLOUDFLARE_ACCOUNT_ID` 环境变量（与现有静态部署相同）。
+同源判断：`Origin` 存在且不是字面量 `null` 时必须等于请求源。现行 Fetch 里 `fetch()` 默认 mode 为 `cors`，即使 `referrerPolicy` 为 `no-referrer` 也发送真实 Origin（`public/metrics.js` 就是这种调用；Chromium 实测 Origin 为页面源，且不带 Referer）。字面量 `Origin: null` 只用于非 cors 的非 GET/HEAD，例如表单提交。服务端仍接受它，但必须同时有 `Sec-Fetch-Site: same-origin`；任何其他 `Sec-Fetch-Site` 一律 403。部署命令需带 `CLOUDFLARE_ACCOUNT_ID` 环境变量（与现有静态部署相同）。
 
 本地验证：`node scripts/check-metrics-backend.mjs` 检查打包与路由；`node scripts/check-metrics-pagesdev.mjs` 单独启动端口 8788 并在结束时清理进程，无 AE 本地绑定时验证 503、405、静态头、404 页和旧入口重定向，并用 Chromium 验证默认首页零 `/e` 请求、真实客户端请求通过全部校验（503）且不带 Cookie/Referer。全局 wrangler 缺失时，前者仅跳过打包子项。
 
