@@ -1,0 +1,10 @@
+
+> kaiqiao@0.14.0 test:site
+> node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs && node scripts/check-home-simplify.mjs
+
+SEO/share head verified
+FAQPage verified: 3 questions, exact question/answer text and structure
+Cache verified: HTML/SW revalidate, versioned assets immutable, no merged Cache-Control
+PASS: 主站入口 /?practice=1、地址栏无 /app/、iframe 内嵌、手机复习与刷新、课程直达、顶层 /app/ 回到 /?practice=1、练习 SW 不改写门面、离线刷新
+PASS 375×812: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、视频零预载、FAQ一致、站内资源、无外发/错误/dialog/溢出；备份入口真实可达
+PASS 1280×800: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、视频零预载、FAQ一致、站内资源、无外发/错误/dialog/溢出；备份入口真实可达

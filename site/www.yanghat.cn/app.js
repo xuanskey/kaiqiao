@@ -32,7 +32,7 @@ if (menuToggle && mobileMenu) {
 }
 
 const next = document.querySelector('#demo-next');
-if (next) {
+if (next && ["#demo-answer", ".equation", "#demo-explanation", "#demo-button-label", "#left-count-label", "#right-count-label", "#counting-description", "#demo-progress"].every(selector => document.querySelector(selector)) && document.querySelectorAll("[data-token]").length === 5) {
   const answer = document.querySelector('#demo-answer');
   const equation = document.querySelector('.equation');
   const explanation = document.querySelector('#demo-explanation');

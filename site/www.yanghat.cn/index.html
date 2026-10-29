@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <script type="module" src="/domain-transition.js"></script>
+  <script type="module" src="/landing-track.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f6ef">
   <meta name="color-scheme" content="light">
@@ -36,12 +38,13 @@
   </script>
   <style>
     html.is-practice, html.is-practice body { margin: 0; background: #f7f6ef; }
-    html.is-practice body > :not(#practice-frame) { display: none !important; }
+    html.is-practice body > :not(#practice-frame):not(.domain-notice) { display: none !important; }
     html.is-practice #practice-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #f7f6ef; }
+    html.is-practice #practice-frame { top: var(--domain-notice-height, 0px); height: calc(100% - var(--domain-notice-height, 0px)); }
   </style>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261021">
-  <script src="app.js?v=20261021" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261029">
+  <script src="app.js?v=20261029" defer></script>
   <script type="application/ld+json" id="faq-schema">
 {
   "@context": "https://schema.org",
@@ -49,42 +52,26 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "开窍适合谁使用？",
+      "name": "要注册吗？",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "适合需要进行小学数学基础练习的孩子，也适合家长陪伴使用。进入开窍后，可以根据当前学习进度选择年级和题型。"
+        "text": "不需要注册。点击「进入开窍」，选择合适的年级和题型，就可以免费开始练习。"
       }
     },
     {
       "@type": "Question",
-      "name": "开始练习需要注册吗？",
+      "name": "记录会丢吗？",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "无需注册。点击「进入开窍」，选择合适的年级和题型，就可以开始练习。\u003ca href=\"https://www.yanghat.cn/?practice=1\">现在去开窍\u003c/a>"
+        "text": "记录保存在当前浏览器，不提供云端同步。更换设备、清理浏览器或使用无痕模式，可能影响记录保留。请提前到「学情」页 →「导出备份」，妥善保存备份文件。\u003ca href=\"https://www.yanghat.cn/?practice=1\">进入开窍后，点「学情」→「导出备份」\u003c/a>"
       }
     },
     {
       "@type": "Question",
-      "name": "遇到不会的题，怎么办？",
+      "name": "适合谁？",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "先认真想一想，完成作答后查看解析。也可以回到错题页复习，把没弄明白的地方再过一遍。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "互动课和练习有什么不同？",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "互动课先看老师一步步演示，再自己动手调一调、做几道随堂小练习，适合刚学新内容的时候；练习和错题本适合巩固。两者都在开窍里，选好年级就能用。"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "换设备后，练习记录还在吗？",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "记录保存在当前浏览器，不提供云端同步。更换设备、清理浏览器或使用无痕模式，可能影响记录保留。请提前在开窍「学情」页面导出备份，并妥善保存备份文件。"
+        "text": "适合需要进行小学数学基础练习的一至六年级孩子，也适合家长陪伴使用。进入开窍后，可以根据当前学习进度选择年级和题型。"
       }
     }
   ]
@@ -111,22 +98,22 @@
 
   <header class="site-header" id="top">
     <nav class="container navigation" aria-label="主导航">
-      <a class="brand" href="#top" aria-label="养习，回到首页顶部">
+      <a class="brand" href="#top" aria-label="养习 YANGHAT，回到首页顶部">
         <img src="assets/brand.svg" width="39" height="39" alt="">
         <span class="brand-name">养习<span class="brand-english">YANGHAT</span></span>
       </a>
       <div class="nav-desktop">
-        <a href="#approach">学习的方式</a>
-        <a href="#lessons">互动课</a>
+        <a href="#video">宣传片</a>
+        <a href="#lessons">看一眼</a>
         <a href="#kaiqiao">认识开窍</a>
         <a href="#questions">常见问题</a>
       </div>
-      <a class="nav-cta" href="/?practice=1">开始练习 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <a class="nav-practice" href="/?practice=1">开始练习</a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="打开导航菜单" hidden><span></span><span></span></button>
     </nav>
     <div class="mobile-menu container" id="mobile-menu" hidden>
-      <a href="#approach">学习的方式 <span aria-hidden="true">01</span></a>
-      <a href="#lessons">互动课 <span aria-hidden="true">02</span></a>
+      <a href="#video">宣传片 <span aria-hidden="true">01</span></a>
+      <a href="#lessons">看一眼 <span aria-hidden="true">02</span></a>
       <a href="#kaiqiao">认识开窍 <span aria-hidden="true">03</span></a>
       <a href="#questions">常见问题 <span aria-hidden="true">04</span></a>
     </div>
@@ -135,25 +122,31 @@
   <main id="main">
     <section class="hero container" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow"><span class="seed-dot" aria-hidden="true"></span> 一个安静的学习入口</p>
+
         <h1 id="hero-title">不急着学会，<br>先让<span class="underlined">理解发生。</span></h1>
-        <p class="hero-description">把一道题想明白，把一个小习惯留下来。<br class="desktop-break">学习的进步，就藏在每天的练习里。</p>
+        <p class="hero-description">小学数学 1–6 年级，选题练习、互动讲解、错题复习。</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="/?practice=1">进入开窍 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a class="button button-primary" data-primary-cta href="/?practice=1">进入开窍 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
           <a class="text-link" href="#video">看 45 秒宣传片 <span aria-hidden="true">↓</span></a>
         </div>
-        <p class="hero-note"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg> 小学数学 · 一到六年级 <span aria-hidden="true">·</span> 无需注册</p>
-        <a class="news-pill" href="#lessons"><span class="news-tag">新课</span><span>五年级小数除法 · 六年级分数乘法</span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <p class="hero-note">免费使用 · 无需注册 · 支持离线练习</p>
+        <nav class="grade-links" aria-label="选择练习年级"><a data-grade="1" href="/?practice=1&amp;grade=1">一年级</a><a data-grade="2" href="/?practice=1&amp;grade=2">二年级</a><a data-grade="3" href="/?practice=1&amp;grade=3">三年级</a><a data-grade="4" href="/?practice=1&amp;grade=4">四年级</a><a data-grade="5" href="/?practice=1&amp;grade=5">五年级</a><a data-grade="6" href="/?practice=1&amp;grade=6">六年级</a></nav>
+        <nav class="grade-directory-links" aria-label="浏览年级目录">浏览目录：<a href="/grade/1/">一年级目录</a><a href="/grade/2/">二年级目录</a><a href="/grade/3/">三年级目录</a><a href="/grade/4/">四年级目录</a><a href="/grade/5/">五年级目录</a><a href="/grade/6/">六年级目录</a></nav>
       </div>
+    </section>
 
+    <section class="lessons container" id="lessons" aria-labelledby="lessons-title">
+      <div class="lessons-head">
+        <p class="section-kicker">开窍 · 互动课堂 <span class="kicker-line" aria-hidden="true"></span></p>
+        <h2 id="lessons-title">看一眼</h2>
+        <p class="section-description">每节课都有分步讲解、能动手的演示和几道随堂小练习，参考人教版、教科版目录编排，请以孩子手中的课本为准。互动课先理解，再动手、做随堂练习；练习和错题本用来巩固。</p>
+      </div>
       <div class="hero-visual">
-        <div class="paper-back" aria-hidden="true"></div>
-        <svg class="sprout-drawing" viewBox="0 0 92 102" aria-hidden="true"><path d="M45 93c2-37 3-55 25-75M50 68C20 68 8 49 9 29c23 0 39 12 41 39ZM58 44c-2-24 9-35 29-38 2 21-7 35-29 38Z"/><path d="M27 47c9 7 14 13 22 24M72 24c-6 6-9 11-14 20"/></svg>
         <div class="math-paper" role="group" aria-labelledby="demo-title">
           <div class="paper-heading"><span><span class="paper-dot" aria-hidden="true"></span> 今日的一点开窍</span><span class="demo-label">理解示例</span></div>
           <div class="math-body">
             <p class="math-prompt" id="demo-title">把数字，变成看得见的理解。</p>
-            <div class="equation" aria-label="8 加 5 等于多少"><span>8</span><span class="math-symbol">+</span><span>5</span><span class="math-symbol">=</span><span class="answer" id="demo-answer">?</span></div>
+            <div class="equation" role="img" aria-label="8 加 5 等于多少"><span>8</span><span class="math-symbol">+</span><span>5</span><span class="math-symbol">=</span><span class="answer" id="demo-answer">?</span></div>
             <div class="counting-illustration">
               <svg id="counting-demo" viewBox="0 0 384 156" role="img" aria-labelledby="counting-title counting-description">
                 <title id="counting-title">8 加 5 的凑十示例</title>
@@ -171,23 +164,8 @@
             <noscript><p class="no-script-note">把 5 拆成 2 和 3，8 + 2 = 10，10 + 3 = 13。</p></noscript>
             <button class="demo-next" id="demo-next" type="button" hidden><span id="demo-button-label">看一看，怎么想</span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
           </div>
-          <div class="paper-footer"><span>答案之外，还有理解的过程。</span><span class="demo-progress" id="demo-progress" aria-label="示例第 1 步，共 3 步"><i class="is-active"></i><i></i><i></i></span></div>
+          <div class="paper-footer"><span>答案之外，还有理解的过程。</span><span class="demo-progress" id="demo-progress" role="img" aria-label="示例第 1 步，共 3 步"><i class="is-active"></i><i></i><i></i></span></div>
         </div>
-        <div class="handwritten-note" aria-hidden="true"><svg viewBox="0 0 72 48"><path d="M3 4c6 34 35 42 60 18M50 21l15-1-2 15"/></svg><span>原来，是这样。</span></div>
-      </div>
-    </section>
-
-    <section class="approach container" id="approach" aria-labelledby="approach-title">
-      <p class="section-kicker">关于养习 <span class="kicker-line" aria-hidden="true"></span></p>
-      <div class="approach-copy"><h2 id="approach-title">让每一次「原来如此」，<br class="mobile-break">成为向前的一小步。</h2><p>给思考一点时间，给练习一点耐心。<br>从看见，到想明白，再到下一次做得到。</p></div>
-      <svg class="growth-drawing" viewBox="0 0 152 90" aria-hidden="true"><path d="M7 76h139M28 75V53m0 7C17 61 12 55 12 47c10 0 16 4 16 13Zm37 15V36m0 11c-15 0-21-7-21-18 13 0 21 6 21 18Zm1-11c0-12 7-19 19-20 0 12-7 20-19 20Zm44 39V23m0 26c-17 0-27-10-27-23 17 0 27 8 27 23Zm0-16c0-17 10-25 26-25 0 15-11 25-26 25Z"/></svg>
-    </section>
-
-    <section class="lessons container" id="lessons" aria-labelledby="lessons-title">
-      <div class="lessons-head">
-        <p class="section-kicker">开窍 · 互动课堂 <span class="kicker-line" aria-hidden="true"></span></p>
-        <h2 id="lessons-title">看着它一步步<span class="serif-accent">变明白。</span></h2>
-        <p class="section-description">每节课都有分步讲解、能动手的演示和几道随堂小练习，按人教版目录排好，跟着课本走。</p>
       </div>
       <ul class="lesson-grid" role="list">
         <li class="lesson-card">
@@ -220,28 +198,12 @@
       </ul>
     </section>
 
-    <section class="promo container" id="video" aria-labelledby="promo-title">
-      <div class="promo-copy">
-        <p class="section-kicker">45 秒认识开窍 <span class="kicker-line" aria-hidden="true"></span></p>
-        <h2 id="promo-title">让数学知识<br><span class="serif-accent">看得见、动得起来。</span></h2>
-        <p class="section-description">凑十法、分数乘法的面积模型、小数除法……片中每一个演示，都是开窍里真实的互动课录屏。从理解，到练习，再到巩固。</p>
-        <a class="button button-primary" href="/?practice=1">亲自试一节课 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-      </div>
-      <div class="promo-frame">
-        <video controls playsinline preload="none" poster="assets/kaiqiao-promo-poster.jpg" width="1080" height="1920" aria-describedby="promo-title">
-          <source src="assets/kaiqiao-promo.mp4" type="video/mp4">
-          你的浏览器暂不支持视频播放，可以<a href="assets/kaiqiao-promo.mp4">下载宣传片</a>观看。
-        </video>
-      </div>
-    </section>
 
     <section class="product-section container" id="kaiqiao" aria-labelledby="product-title">
       <div class="product-intro">
-        <p class="section-kicker">为每天的练习而做 <span class="kicker-line" aria-hidden="true"></span></p>
-        <h2 id="product-title">少一点干扰，<br>多一点<span class="serif-accent">想明白。</span></h2>
-        <p class="section-description">开窍，是养习的数学练习空间。<br>从一道适合的题开始，认真思考，<br class="desktop-break">慢慢积累自己的理解。</p>
-        <a class="button button-primary" href="/?practice=1">去开窍练一练 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        <p class="quiet-caption">不必一口气学很多。今天，想明白一点就好。</p>
+        <p class="section-kicker">选题 · 看讲解 · 复习错题</p>
+        <h2 id="product-title">认识开窍</h2>
+        <p class="section-description">开窍，是养习的数学练习空间。选择适合的题，理解解题过程，再回顾错题。</p>
       </div>
       <div class="product-panel">
         <div class="product-panel-top">
@@ -256,6 +218,21 @@
       </div>
     </section>
 
+    <section class="promo container" id="video" aria-labelledby="promo-title">
+      <div class="promo-copy">
+        <p class="section-kicker">45 秒认识开窍 <span class="kicker-line" aria-hidden="true"></span></p>
+        <h2 id="promo-title">宣传片</h2>
+        <p class="section-description">凑十法、分数乘法的面积模型、小数除法……片中每一个演示，都是开窍里真实的互动课录屏。从理解，到练习，再到巩固。</p>
+        <a class="text-link" href="assets/kaiqiao-promo.mp4" download>下载宣传片 MP4</a>
+      </div>
+      <div class="promo-frame">
+        <video controls playsinline preload="none" poster="assets/kaiqiao-promo-poster.jpg" width="1080" height="1920" aria-describedby="promo-title">
+          <source src="assets/kaiqiao-promo.mp4" type="video/mp4">
+          你的浏览器暂不支持视频播放，可以<a href="assets/kaiqiao-promo.mp4">下载宣传片</a>观看。
+        </video>
+      </div>
+    </section>
+
     <section class="questions-section" id="questions" aria-labelledby="questions-title">
       <div class="container questions-grid">
         <div class="questions-intro">
@@ -264,26 +241,18 @@
           <div class="local-note" id="records"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><div><h3>练习记录，留在你的设备。</h3><p>重要学情，记得在开窍「学情」页面<br class="desktop-break">定期导出备份。</p></div></div>
         </div>
         <div class="faq-list">
-          <details name="faq" open><summary><span><span class="faq-number">01</span>开窍适合谁使用？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>适合需要进行小学数学基础练习的孩子，也适合家长陪伴使用。进入开窍后，可以根据当前学习进度选择年级和题型。</p></div></details>
-          <details name="faq"><summary><span><span class="faq-number">02</span>开始练习需要注册吗？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>无需注册。点击「进入开窍」，选择合适的年级和题型，就可以开始练习。</p><a href="/?practice=1">现在去开窍</a></div></details>
-          <details name="faq"><summary><span><span class="faq-number">03</span>遇到不会的题，怎么办？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>先认真想一想，完成作答后查看解析。也可以回到错题页复习，把没弄明白的地方再过一遍。</p></div></details>
-          <details name="faq"><summary><span><span class="faq-number">04</span>互动课和练习有什么不同？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>互动课先看老师一步步演示，再自己动手调一调、做几道随堂小练习，适合刚学新内容的时候；练习和错题本适合巩固。两者都在开窍里，选好年级就能用。</p></div></details>
-          <details name="faq"><summary><span><span class="faq-number">05</span>换设备后，练习记录还在吗？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>记录保存在当前浏览器，不提供云端同步。更换设备、清理浏览器或使用无痕模式，可能影响记录保留。请提前在开窍「学情」页面导出备份，并妥善保存备份文件。</p></div></details>
+<details name="faq"><summary><span><span class="faq-number">01</span>要注册吗？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>不需要注册。点击「进入开窍」，选择合适的年级和题型，就可以免费开始练习。</p></div></details>
+<details name="faq" open><summary><span><span class="faq-number">02</span>记录会丢吗？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>记录保存在当前浏览器，不提供云端同步。更换设备、清理浏览器或使用无痕模式，可能影响记录保留。<strong>请提前到「学情」页 →「导出备份」，妥善保存备份文件。</strong><a href="/?practice=1">进入开窍后，点「学情」→「导出备份」</a></p></div></details>
+<details name="faq"><summary><span><span class="faq-number">03</span>适合谁？</span><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><div class="faq-answer"><p>适合需要进行小学数学基础练习的一至六年级孩子，也适合家长陪伴使用。进入开窍后，可以根据当前学习进度选择年级和题型。</p></div></details>
         </div>
       </div>
-    </section>
-
-    <section class="closing container" aria-labelledby="closing-title">
-      <div class="closing-mark" aria-hidden="true"><svg viewBox="0 0 60 68"><path d="M30 61V25m0 22C12 47 6 35 6 21c17 0 24 10 24 26Zm0-16C30 14 39 6 55 6c0 17-10 25-25 25Z"/></svg></div>
-      <p class="tiny-label">A LITTLE UNDERSTANDING, EVERY DAY.</p>
-      <h2 id="closing-title">每天理解<span>多一点。</span></h2>
-      <p>下一次「原来如此」，就从今天开始。</p>
-      <a class="button button-primary" href="/?practice=1">开始今天的练习 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <div class="container bottom-cta"><a class="button button-primary" data-primary-cta href="/?practice=1">开始今天的练习 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="container footer-main"><a class="brand" href="#top"><img src="assets/brand.svg" width="34" height="34" alt=""><span class="brand-name">养习<span class="brand-english">YANGHAT</span></span></a><p>学习的进步，藏在每天的练习里。</p><a class="back-to-top" href="#top">回到顶部 <span aria-hidden="true">↑</span></a></div>
+    <div class="container trust-footer"><p>不收集个人信息，练习记录只保存在本机。</p><a href="mailto:hello@yanghat.cn?subject=%E5%BC%80%E7%AA%8D%E5%8F%8D%E9%A6%88">意见反馈：hello@yanghat.cn</a></div>
     <div class="container footer-bottom"><span>yanghat.cn</span><span>用一点耐心，养成一点习惯。</span><a href="#records">关于练习记录</a></div>
   </footer>
 </body>
