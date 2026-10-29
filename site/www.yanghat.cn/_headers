@@ -111,7 +111,7 @@ https://yanghat.cn/*
   Cache-Control: no-cache
 
 /assets/wechat-pay-qr.png
-  Cache-Control: public, max-age=3600
+  Cache-Control: no-cache
 
 /assets/wechat-service-qr.png
   Cache-Control: public, max-age=3600

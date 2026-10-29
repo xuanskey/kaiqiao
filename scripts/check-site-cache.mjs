@@ -18,7 +18,8 @@ const cacheValues = path => rules.filter(rule => matchPath(rule.path, path.split
 const expectCache = (path, value) => assert.deepEqual(cacheValues(path), [value], `${path}: missing or merged Cache-Control`);
 for (const path of ['/', '/index.html', '/app/', '/app/index.html', '/app/sw.js', '/sw-practice.js', '/styles.css?v=20261021', '/app.js?v=20261021']) expectCache(path, 'no-cache');
 for (const name of await readdir(`${root}/assets`)) {
-  expectCache(`/assets/${name}`, name === 'og-cover-20261029.jpg' ? 'public, max-age=31536000, immutable' : 'public, max-age=3600');
+  const value = name === 'og-cover-20261029.jpg' ? 'public, max-age=31536000, immutable' : name === 'wechat-pay-qr.png' ? 'no-cache' : 'public, max-age=3600';
+  expectCache(`/assets/${name}`, value);
 }
 const bundles = await readdir(`${root}/app/assets`);
 assert.ok(bundles.length > 0);
