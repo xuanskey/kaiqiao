@@ -26,7 +26,8 @@ try {
   assert.equal(await page.locator('a.button[href*="practice=1"]:not([data-primary-cta])').count(),0);
   assert.equal(await page.locator('.hero [data-primary-cta]').getAttribute('href'),'/?practice=1');
   assert.equal(await page.locator('[data-grade]').count(),6);
-  assert.equal(await page.locator('dialog').count(),0);
+  assert.equal(await page.locator('dialog').count(),1);
+  assert.equal(await page.locator('dialog.help-dialog[aria-labelledby="help-title"]').count(),1);
   assert.equal(await page.locator('video').getAttribute('preload'),'none');
   assert.ok(await page.locator('video').getAttribute('poster'));
   assert.equal(await page.locator('a[download][href$=".mp4"]').count(),1);
@@ -77,7 +78,7 @@ try {
   }
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(dialogs,[]);
   assertSameOriginMetrics(events,server.base);
-  console.log(`PASS ${width}×${height}: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、视频零预载、FAQ一致、站内资源、无外发/错误/dialog/溢出；备份入口真实可达`);
+  console.log(`PASS ${width}×${height}: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、视频零预载、FAQ一致、站内资源、无外发/错误/原生dialog/溢出；仅帮助 dialog；备份入口真实可达`);
   await context.close();
  }
 }finally{await browser.close();await server.close();}
