@@ -20,6 +20,17 @@ export function checkSite(root) {
     let content;try{content=readFileSync(file(`www.yanghat.cn/${name}-config.js`),'utf8');}catch{throw Error(`${name}-config.js 缺失`);}
     if(content!==expected('')&&content!==expected(endpoint))throw Error(`${name}-config.js 格式或端点非法，请重新 release`);
   }
+  let topupOpenText='';
+  try{topupOpenText=readFileSync(file('www.yanghat.cn/topup-open.js'),'utf8');}catch{topupOpenText='';}
+  if(topupOpenText){
+    const topupOpen=topupOpenText.includes('export default true');
+    let payQr=false;try{payQr=statSync(file('www.yanghat.cn/assets/wechat-pay-qr.png')).isFile();}catch{payQr=false;}
+    if(topupOpen!==payQr)throw Error(topupOpen?'收款已打开但发布目录缺少收款码':'收款关闭时发布目录不得包含收款码');
+    if(!topupOpen){
+      let html='';try{html=readFileSync(file('www.yanghat.cn/topup/index.html'),'utf8');}catch{html='';}
+      if(html.includes('wechat-pay-qr')||html.includes('class="pay-qr"'))throw Error('收款关闭时页面不得引用收款码');
+    }
+  }
   return true;
 }
 export function deploy(root,args=[]) {

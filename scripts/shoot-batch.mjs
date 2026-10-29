@@ -1,5 +1,5 @@
 // Local screenshots only. Ephemeral test signing key never leaves memory.
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { homePreview } from './home-preview.mjs';
 import { testSigner } from './batch-fixtures.mjs';
@@ -23,6 +23,7 @@ try{
   await page.goto(server.base+'/404.html',{waitUntil:'networkidle'});await page.screenshot({path:`${output}/404.png`});
   await page.goto(server.base+'/topup/',{waitUntil:'networkidle'});await page.screenshot({path:`${output}/topup-closed.png`,fullPage:true});
   await context.route('**/topup-open.js',route=>route.fulfill({contentType:'application/javascript',body:'export default true;\n'}));
+  await context.route('**/assets/wechat-pay-qr.png',async route=>route.fulfill({contentType:'image/png',body:await readFile('site/topup-pay-qr/wechat-pay-qr.png')}));
   await page.goto(server.base+'/topup/',{waitUntil:'networkidle'});await page.locator('#order-form button').click();
   await page.screenshot({path:`${output}/topup.png`,fullPage:true});
   const order=await page.evaluate(()=>JSON.parse(localStorage.getItem('kaiqiao.topup.v1')).orders[0]);

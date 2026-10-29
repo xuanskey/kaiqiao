@@ -60,3 +60,20 @@ test('serialized locks let only one of two overlapping redeems credit',async()=>
   assert.equal(io.load().balance,1000);
   assert.equal(io.load().orders.filter(item=>item.redeemed).length,1);
 });
+test('without locks commit reloads and replays after a foreign write',async()=>{
+  const kept=createOrder(10,[],byteRng(4),4_000);
+  const added=createOrder(20,[kept],byteRng(5),5_000);
+  const mine=createOrder(30,[kept,added],byteRng(6),6_000);
+  let raw=JSON.stringify({balance:0,orders:[kept]});
+  let notify;let stale=true;
+  const io={
+    load(){if(stale){stale=false;const previous=readState(raw);raw=JSON.stringify({balance:80,orders:[kept,added]});notify?.(STORAGE_KEY);return previous;}return readState(raw);},
+    save(next){raw=JSON.stringify(next);},
+    listen(cb){notify=cb;return()=>{notify=null;};},
+    locks:null,
+  };
+  await transact(io,({commit})=>commit(latest=>projectCreate(latest,mine)));
+  const final=io.load();
+  assert.equal(final.balance,80);
+  assert.deepEqual(final.orders.map(item=>item.id).sort(),[kept.id,added.id,mine.id].sort());
+});

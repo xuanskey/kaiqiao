@@ -10,6 +10,21 @@ try{
  for(const name of ['functions/e.js','functions/api/help.js','www.yanghat.cn/_headers','www.yanghat.cn/_redirects','www.yanghat.cn/index.html','www.yanghat.cn/404.html'])await put(name,'');
  for(const name of ['help-config.js','metrics-config.js','_routes.json'])await put('www.yanghat.cn/'+name,await readFile('site/www.yanghat.cn/'+name,'utf8'));
  assert.equal(checkSite(root),true);
+ await put('www.yanghat.cn/topup-open.js','// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default false;\n');
+ await put('www.yanghat.cn/topup/index.html','<p id="topup-closed">充值功能即将开放</p><div id="pay-qr-slot"></div>');
+ assert.equal(checkSite(root),true);
+ await put('www.yanghat.cn/assets/wechat-pay-qr.png','x');
+ assert.throws(()=>checkSite(root),/不得包含收款码/);
+ await rm(path.join(root,'site/www.yanghat.cn/assets/wechat-pay-qr.png'));
+ await put('www.yanghat.cn/topup/index.html','<img class="pay-qr" src="/assets/wechat-pay-qr.png">');
+ assert.throws(()=>checkSite(root),/不得引用收款码/);
+ await put('www.yanghat.cn/topup-open.js','// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default true;\n');
+ assert.throws(()=>checkSite(root),/缺少收款码/);
+ await put('www.yanghat.cn/assets/wechat-pay-qr.png','x');
+ assert.equal(checkSite(root),true);
+ await rm(path.join(root,'site/www.yanghat.cn/assets/wechat-pay-qr.png'));
+ await rm(path.join(root,'site/www.yanghat.cn/topup-open.js'));
+ await rm(path.join(root,'site/www.yanghat.cn/topup/index.html'));
  for(const [name,content] of [['functions/e.js',null],['functions/api/help.js',null],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e"],"exclude":[]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e","/api/help","/extra"],"exclude":[]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e","/api/help"],"exclude":["/e"]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/api/help","/api/help"],"exclude":[]}'],['www.yanghat.cn/help-config.js','export default "https://evil.example";'],['www.yanghat.cn/help-config.js','export default "/api/help";'],['www.yanghat.cn/metrics-config.js','export default "/bad";'],['www.yanghat.cn/_headers',null]]){
   const file=path.join(root,'site',name),original=await readFile(file);if(content===null)await rm(file);else await writeFile(file,content);
   assert.throws(()=>checkSite(root));await writeFile(file,original);
