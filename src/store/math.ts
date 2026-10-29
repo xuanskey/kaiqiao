@@ -1,3 +1,4 @@
+import { entryGrade } from "../lib/math/entry-grade.ts";
 import { REVIEW_CONTENT_KEY, REVIEW_SCHEDULE_KEY, emptyReview, exposeReview, enqueueReview, dueReviews, finishReview, parseReview, reviewId, linkGroup, type ReviewData } from "../lib/math/review.ts";
 import { unitById } from "../lib/math/units.ts";
 import { recordActivity } from "../lib/activity.ts";
@@ -577,4 +578,10 @@ export const useMath = create<MathState>((set, get) => ({
 export function gradeWrong(s: Pick<PersistShape, "wrong" | "selectedGrade">): WrongItem[] {
   const ids = new Set(CHAPTERS.filter((c) => c.grade === s.selectedGrade).map((c) => c.id));
   return s.wrong.filter((w) => ids.has(w.chapterId));
+}
+
+/** Run once at entry, after hydration; persist just like a manual grade change. */
+export function applyEntryGrade(search: string, hash = ""): void {
+  const grade = entryGrade(search, hash);
+  if (grade !== null) useMath.getState().setGrade(grade);
 }
