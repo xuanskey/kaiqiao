@@ -27,3 +27,14 @@ test('正常答复不受影响，计时器被清理', async () => {
 test('非法端点直接拒绝，不发请求', async () => {
   await assert.rejects(requestHelp('https://evil.example', msgs, new AbortController().signal, {fetch: () => assert.fail('不应请求')}), /disabled/);
 });
+test('发送前在本机隐去用户消息里的个人信息，助手消息与正常问题不变', async () => {
+  let sent = '';
+  const capture: typeof fetch = async (_url, init) => { sent = String(init?.body); return {ok: true, json: async () => ({v: 1, answer: '好', source: 'ai'})} as unknown as Response; };
+  const history = [{role: 'user' as const, content: '我儿子叫王小明，电话13812345678'}, {role: 'assistant' as const, content: '请不要发个人信息'}, {role: 'user' as const, content: '3 + 5 等于几？'}];
+  await requestHelp('/api/help', history, new AbortController().signal, {fetch: capture});
+  assert.ok(!/王小明|13812345678/.test(sent), sent);
+  const body = JSON.parse(sent);
+  assert.equal(body.messages[0].content, '我儿子叫[名字]，电话[电话]');
+  assert.equal(body.messages[1].content, '请不要发个人信息');
+  assert.equal(body.messages[2].content, '3 + 5 等于几？');
+});

@@ -37,6 +37,8 @@ console.log(`Generated six grade pages, robots/sitemap and metrics config ${endp
 const helpEndpoint=loadEnv('production',process.cwd(),'VITE_').VITE_HELP_ENDPOINT??'';
 if(helpEndpoint!==''&&helpEndpoint!=='/api/help')throw Error('Only the same-origin /api/help endpoint can be enabled');
 await writeFile(`${root}/help-config.js`,`// Baked from VITE_HELP_ENDPOINT at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(helpEndpoint)};\n`);
+// 客服网页发送前脱敏与服务端用同一份规则：发布时原样复制，测试校验两者一致。
+await copyFile('workers/help/pii.js',`${root}/help-pii.js`);
 console.log(`Help config ${helpEndpoint||'(off)'}`);
 
 // Top-up payment UI. Unset closes payment. Only the exact string true opens it.

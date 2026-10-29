@@ -53,7 +53,7 @@ export function AiPanel({ cfg, setCfg, context, onReply, requests }: { requests:
       <div className="ai-actions"><button type="submit">保存</button><button type="button" onClick={() => { const c = { ...DEFAULT_AI }; setDraft(c); changeConfig(c); }}>清除密钥</button></div>
     </form> : null}
     {cfg.enabled && cfg.apiKey ? <form className="ai-ask" onSubmit={(e) => { e.preventDefault(); void send(); }}>
-      <input value={ask} disabled={busy} onChange={(e) => setAsk(e.target.value)} placeholder="问老师一个问题" aria-label="问老师" maxLength={200} />
+      <input value={ask} disabled={busy} onChange={(e) => setAsk(e.target.value)} placeholder="问老师一个问题（请勿输入姓名电话等）" aria-label="问老师" maxLength={200} />
       <button type="submit" disabled={busy || !ask.trim()} aria-label="发送"><Send size={15} />{busy ? "思考中" : "问"}</button>
       {busy ? <button type="button" onClick={() => requests.cancel()}>取消请求</button> : null}
     </form> : null}
