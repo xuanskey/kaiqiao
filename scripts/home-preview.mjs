@@ -3,7 +3,7 @@ import http from 'node:http';
 import {readFile, stat} from 'node:fs/promises';
 import path from 'node:path';
 export async function homePreview(root = path.resolve('site/www.yanghat.cn')) {
- const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.mp4':'video/mp4','.json':'application/json','.webmanifest':'application/manifest+json','.wasm':'application/wasm','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8'};
+ const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.mjs':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.mp4':'video/mp4','.json':'application/json','.webmanifest':'application/manifest+json','.wasm':'application/wasm','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8'};
  const redirects=(await readFile(path.join(root,'_redirects'),'utf8')).split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#')).map(l=>l.split(/\s+/));
  const headers=[];
  for(const line of (await readFile(path.join(root,'_headers'),'utf8')).split('\n')) {

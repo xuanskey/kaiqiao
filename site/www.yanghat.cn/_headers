@@ -1,7 +1,14 @@
 # Shared security headers; no catch-all Cache-Control to avoid merged cache policies.
+# CSP：脚本、样式、图片、字体、框架只来自本站；connect-src 放行 https: 是因为课堂 AI 由家长自填 https 接口。
+# 'unsafe-inline' 仅为现有内联脚本/样式（首页练习入口、离线单文件版）；'wasm-unsafe-eval' 与 blob: worker 供图片识字。
+# HSTS 不带 includeSubDomains、不带 preload。
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' blob:; connect-src 'self' https: data: blob:; worker-src 'self' blob:; frame-src 'self'; frame-ancestors 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=()
+  X-Frame-Options: SAMEORIGIN
 
 # Only hashed application bundles and this versioned cover are immutable.
 /app/assets/*
