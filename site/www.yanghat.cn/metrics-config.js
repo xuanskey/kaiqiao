@@ -1,2 +1,2 @@
-// Default off; opt in only in an explicitly authorized build.
-export default "";
+// Baked from VITE_EVENT_ENDPOINT at release (.env.production, shell overrides). Empty disables.
+export default "/e";

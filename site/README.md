@@ -13,14 +13,14 @@
 
 ## 启用统计
 
-当前提交默认关闭，`metrics-config.js` 保持 `export default ""`。`VITE_EVENT_ENDPOINT` 是唯一客户端构建开关，同时用于应用 bundle 和首页配置；运行时不读取环境变量。只统计六种事件的次数，不能推断独立人数。
+当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。只统计六种事件的次数，不能推断独立人数。
 
 上线前由管理员在 Pages 项目 yanghat-cn 的目标环境绑定 Analytics Engine：变量 `METRICS` → 数据集 `kaiqiao_metrics`，并确认配额与 Functions 的 fail_open 设置。不新增 wrangler 配置文件。只有从 `site/` 目录部署才编译 `site/functions/`；显式 `_routes.json` 只包含 `/e`，其余静态资源继续使用原 `_headers` 和 `_redirects`。
 
-获准上线后，在仓库根构建：
+在仓库根构建：
 
 ```sh
-VITE_EVENT_ENDPOINT=/e npm run release
+npm run release
 ```
 
 然后从 `site/` 部署（以下仅为操作文档，本任务未执行）：
@@ -30,11 +30,11 @@ cd site
 wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
 ```
 
-回滚：在仓库根去掉该变量（若曾 export，先 `unset VITE_EVENT_ENDPOINT`），重新运行 `npm run release`，再从仓库根执行 `wrangler pages deploy site/www.yanghat.cn --project-name yanghat-cn`。根目录没有 `functions/`，因此普通静态部署撤去函数，客户端也恢复关闭。未绑定时合法 `/e` 返回 503，不影响练习。
+关闭：把 `.env.production` 里的 `VITE_EVENT_ENDPOINT` 留空后重新 `npm run release`。单次构建也可以用空的 shell 变量覆盖文件：`VITE_EVENT_ENDPOINT= npm run release`。再从仓库根执行 `wrangler pages deploy site/www.yanghat.cn --project-name yanghat-cn`。根目录没有 `functions/`，因此普通静态部署撤去函数，客户端也恢复关闭。未绑定时合法 `/e` 返回 503，不影响练习。只 `unset VITE_EVENT_ENDPOINT` 时，文件里的 `/e` 仍会在下次普通 `npm run release` 生效。
 
 同源判断：`Origin` 存在且不是字面量 `null` 时必须等于请求源。现行 Fetch 里 `fetch()` 默认 mode 为 `cors`，即使 `referrerPolicy` 为 `no-referrer` 也发送真实 Origin（`public/metrics.js` 就是这种调用；Chromium 实测 Origin 为页面源，且不带 Referer）。字面量 `Origin: null` 只用于非 cors 的非 GET/HEAD，例如表单提交。服务端仍接受它，但必须同时有 `Sec-Fetch-Site: same-origin`；任何其他 `Sec-Fetch-Site` 一律 403。部署命令需带 `CLOUDFLARE_ACCOUNT_ID` 环境变量（与现有静态部署相同）。
 
-本地验证：`node scripts/check-metrics-backend.mjs` 检查打包与路由；`node scripts/check-metrics-pagesdev.mjs` 单独启动端口 8788 并在结束时清理进程，无 AE 本地绑定时验证 503、405、静态头、404 页和旧入口重定向，并用 Chromium 验证默认首页零 `/e` 请求、真实客户端请求通过全部校验（503）且不带 Cookie/Referer。全局 wrangler 缺失时，前者仅跳过打包子项。
+本地验证：`node scripts/check-metrics-backend.mjs` 检查打包与路由；`node scripts/check-metrics-pagesdev.mjs` 单独启动端口 8788 并在结束时清理进程，无 AE 本地绑定时验证 503、405、静态头、404 页和旧入口重定向，并用 Chromium 验证首页只向同源 `/e` 发送、载荷只有 `{v,event,grade,count}`、不带 Cookie/Referer，且真实客户端请求通过全部校验（503）。`npm run test:site` 另外断言没有任何非同源请求。全局 wrangler 缺失时，前者仅跳过打包子项。
 
 ### 查询统计
 

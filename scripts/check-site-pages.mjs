@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {homePreview} from './home-preview.mjs';
+import {assertSameOriginMetrics,recordMetrics} from './metrics-request-assert.mjs';
 import {PEP_MATH,JK_SCIENCE,resolveUnits} from '../src/lib/lesson/curriculum.ts';
 const server=await homePreview();
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']});
@@ -9,7 +10,7 @@ const luminance=rgb=>rgb.map(n=>n/255).map(n=>n<=0.04045?n/12.92:((n+0.055)/1.05
 try{
  const context=await browser.newContext({serviceWorkers:'block'});
  const external=[],errors=[],dialogs=[],events=[];
- await context.route('**/*',r=>{const u=new URL(r.request().url());if(['data:','blob:'].includes(u.protocol))return r.continue();if(u.origin!==server.base){external.push(u.href);return r.abort();}if(u.pathname==='/e')events.push(u.href);return r.continue();});
+ await context.route('**/*',async r=>{const u=new URL(r.request().url());if(['data:','blob:'].includes(u.protocol))return r.continue();if(u.origin!==server.base){external.push(u.href);return r.abort();}if(u.pathname==='/e')return recordMetrics(r,events);return r.continue();});
  const page=await context.newPage();
  page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{dialogs.push(d.type());await d.dismiss();});
  const refs=new Set();const titles=new Set();
@@ -68,7 +69,8 @@ try{
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(server.base);assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior),'auto');
  await page.locator('#demo-next').focus();await page.keyboard.press('Enter');await page.keyboard.press('Space');assert.equal(await page.locator('#demo-answer').innerText(),'13');
  assert.equal(await page.locator('#demo-next').evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
- assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.deepEqual(dialogs,[]);assert.deepEqual(events,[]);
- assert.match(await readFile('site/www.yanghat.cn/metrics-config.js','utf8'),/export default ""/);
- console.log(`PASS: 全站 ${refs.size} 个站内链接/资源 + 7 sitemap URL 无404，默认零 /e 请求、无第三方/运行时错误/原生dialog，键盘演示与减弱动效`);
+ assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.deepEqual(dialogs,[]);
+ assertSameOriginMetrics(events,server.base);
+ assert.match(await readFile('site/www.yanghat.cn/metrics-config.js','utf8'),/export default "\/e"/);
+ console.log(`PASS: 全站 ${refs.size} 个站内链接/资源 + 7 sitemap URL 无404，/e 仅同源且载荷只有 v/event/grade/count、无 cookie/referer/非同源请求，无运行时错误/原生dialog，键盘演示与减弱动效`);
 }finally{await browser.close();await server.close();}

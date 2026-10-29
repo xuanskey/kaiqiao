@@ -1,17 +1,19 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {homePreview} from './home-preview.mjs';
+import {assertSameOriginMetrics,recordMetrics} from './metrics-request-assert.mjs';
 const server=await homePreview();
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']});
 try {
  for(const [width,height] of [[375,812],[768,1024],[1280,800]]) {
   const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block'});
-  const errors=[],external=[],dialogs=[],videos=[];
-  await context.route('**/*',route=>{
+  const errors=[],external=[],dialogs=[],videos=[],events=[];
+  await context.route('**/*',async route=>{
    const url=new URL(route.request().url());
    if(['data:','blob:'].includes(url.protocol)) return route.continue();
    if(url.origin!==server.base){external.push(url.href);return route.abort();}
    if(/\.mp4$/.test(url.pathname)) videos.push(url.href);
+   if(url.pathname==='/e') return recordMetrics(route,events);
    return route.continue();
   });
   const page=await context.newPage();
@@ -74,6 +76,7 @@ try {
    if(grade===1){await app.getByRole('button',{name:'学情',exact:true}).click();await app.getByRole('button',{name:'导出备份',exact:true}).waitFor();}
   }
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(dialogs,[]);
+  assertSameOriginMetrics(events,server.base);
   console.log(`PASS ${width}×${height}: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、视频零预载、FAQ一致、站内资源、无外发/错误/dialog/溢出；备份入口真实可达`);
   await context.close();
  }

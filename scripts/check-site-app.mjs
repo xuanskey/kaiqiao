@@ -4,6 +4,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
+import { assertSameOriginMetrics, recordMetrics } from './metrics-request-assert.mjs';
 import { emptyPersist, SAVE_KEY } from '../src/lib/math/save.ts';
 import { enqueueReview, emptyReview, REVIEW_CONTENT_KEY, REVIEW_SCHEDULE_KEY } from '../src/lib/math/review.ts';
 
@@ -51,11 +52,13 @@ let browser;
 try {
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  const errors = [], external = [];
-  await context.route('**/*', route => {
+  const errors = [], external = [], events = [];
+  await context.route('**/*', async route => {
     const url = route.request().url();
-    if (url.startsWith(base) || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
-    external.push(url); return route.abort();
+    if (url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
+    if (!url.startsWith(base)) { external.push(url); return route.abort(); }
+    if (new URL(url).pathname === '/e') return recordMetrics(route, events);
+    return route.continue();
   });
   const page = await context.newPage();
   page.setDefaultTimeout(15000);
@@ -160,5 +163,6 @@ try {
   assertPracticeUrl(page);
   assert.deepEqual(errors, []);
   assert.deepEqual(external, []);
+  assertSameOriginMetrics(events, base);
   console.log('PASS: 主站入口 /?practice=1、地址栏无 /app/、iframe 内嵌、手机复习与刷新、课程直达、顶层 /app/ 回到 /?practice=1、练习 SW 不改写门面、离线刷新');
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }

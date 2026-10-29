@@ -6,6 +6,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
+import { assertSameOriginMetrics, recordMetrics } from './metrics-request-assert.mjs';
 
 const root = path.resolve('site/www.yanghat.cn');
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.mp4': 'video/mp4', '.jpg': 'image/jpeg' };
@@ -45,8 +46,13 @@ try {
   for (const width of [390, 1280]) {
     const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, serviceWorkers: 'block', acceptDownloads: true });
     const external = [], dialogs = [], events = [];
-    context.on('request', req => { if (!/^https?:/.test(req.url())) return; const url = new URL(req.url()); if (url.origin !== base) external.push(req.url()); if (url.pathname === '/e') events.push(req.url()); });
-    await context.route('**/*', route => route.request().url().startsWith(base) ? route.continue() : route.abort());
+    context.on('request', req => { if (!/^https?:/.test(req.url())) return; const url = new URL(req.url()); if (url.origin !== base) external.push(req.url()); });
+    await context.route('**/*', async route => {
+      const request = route.request();
+      if (!request.url().startsWith(base)) return route.abort();
+      if (new URL(request.url()).pathname === '/e') return recordMetrics(route, events);
+      return route.continue();
+    });
     const page = await context.newPage(); page.setDefaultTimeout(10000);
     page.on('dialog', async d => { dialogs.push(d.type()); await d.dismiss(); });
     await page.goto(base);
@@ -131,7 +137,9 @@ try {
     assert.deepEqual(await read(), after);
     assert.ok(await frame.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     assert.equal(new URL(await app.locator('a[href^="mailto:"]').getAttribute('href')).searchParams.get('subject'), '开窍反馈');
-    assert.deepEqual(external, []); assert.deepEqual(dialogs, []); assert.deepEqual(events, [], "默认关闭统计，含导出备份点击也不能请求 /e");
+    assert.deepEqual(external, []); assert.deepEqual(dialogs, []);
+    assertSameOriginMetrics(events, base);
+    assert.ok(events.some(event => JSON.parse(event.body).event === 'backup_export_click'), '导出备份点击应发往同源 /e，载荷仍只有 v/event/grade/count');
     console.log(`PASS ${width}: 首页/练习/学情零非同源请求；3题导出→清空→取消不写入→确认恢复五键；旧format:1确认/取消/坏数据/写入失败回滚；坏文件提示；无原生 dialog/溢出；反馈 subject 正确`);
     await context.close();
   }
