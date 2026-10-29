@@ -23,14 +23,13 @@
 npm run release
 ```
 
-然后从 `site/` 部署（以下仅为操作文档，本任务未执行）：
+然后在仓库根运行固定部署护栏（以下仅为操作文档，本任务未执行）：
 
 ```sh
-cd site
-wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
+npm run deploy:site
 ```
 
-关闭：把 `.env.production` 里的 `VITE_EVENT_ENDPOINT` 留空后重新 `npm run release`。单次构建也可以用空的 shell 变量覆盖文件：`VITE_EVENT_ENDPOINT= npm run release`。再从仓库根执行 `wrangler pages deploy site/www.yanghat.cn --project-name yanghat-cn`。根目录没有 `functions/`，因此普通静态部署撤去函数，客户端也恢复关闭。未绑定时合法 `/e` 返回 503，不影响练习。只 `unset VITE_EVENT_ENDPOINT` 时，文件里的 `/e` 仍会在下次普通 `npm run release` 生效。
+关闭：把 `.env.production` 里的 `VITE_EVENT_ENDPOINT` 留空后重新 `npm run release`。单次构建也可以用空的 shell 变量覆盖文件：`VITE_EVENT_ENDPOINT= npm run release`。再运行 `npm run deploy:site`。函数始终部署；未绑定或关闭时 `/e` 返回 503，`/api/help` 返回兜底。只 `unset VITE_EVENT_ENDPOINT` 时，文件里的 `/e` 仍会在下次普通 `npm run release` 生效。
 
 同源判断：`Origin` 存在且不是字面量 `null` 时必须等于请求源。现行 Fetch 里 `fetch()` 默认 mode 为 `cors`，即使 `referrerPolicy` 为 `no-referrer` 也发送真实 Origin（`public/metrics.js` 就是这种调用；Chromium 实测 Origin 为页面源，且不带 Referer）。字面量 `Origin: null` 只用于非 cors 的非 GET/HEAD，例如表单提交。服务端仍接受它，但必须同时有 `Sec-Fetch-Site: same-origin`；任何其他 `Sec-Fetch-Site` 一律 403。部署命令需带 `CLOUDFLARE_ACCOUNT_ID` 环境变量（与现有静态部署相同）。
 
@@ -40,33 +39,19 @@ wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
 
 仅管理员使用 [AE SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)：`POST https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/analytics_engine/sql`，请求 body 为 SQL，认证头为 `Authorization: Bearer <API_TOKEN>`。令牌需要 **Account | Account Analytics | Read**，限定目标账号；不要把真实令牌写入仓库、客户端或日志。本任务未调用此 API。
 
-最近七天生产事件与年级次数：
+推荐离线生成最近七天生产事件的 SQL，再由管理员在查询工具执行：
 
-```sql
-SELECT blob1 AS event, blob2 AS grade,
-       SUM(_sample_interval * double1) AS n
-FROM kaiqiao_metrics
-WHERE blob3 = 'prod' AND timestamp > NOW() - INTERVAL '7' DAY
-GROUP BY event, grade
-ORDER BY n DESC
+```sh
+node scripts/metrics-sql.mjs --days 7
 ```
 
-按天聚合（使用 AE timestamp 的默认 UTC 日界，不是北京时间自然日）：
-
-```sql
-SELECT toStartOfDay(timestamp) AS day, blob1 AS event, blob2 AS grade,
-       SUM(_sample_interval * double1) AS n
-FROM kaiqiao_metrics
-WHERE blob3 = 'prod' AND timestamp > NOW() - INTERVAL '7' DAY
-GROUP BY day, event, grade
-ORDER BY day, n DESC
-```
+脚本只打印 SQL，不联网、不读取令牌；默认只统计 prod，按 AE timestamp 的 UTC 日界、事件、年级分组，用 `SUM(_sample_interval)` 加权（double1 固定为 1）。它逐条按精确到秒的 UTC 时间戳及 event/grade/env 排除 `TEST_POINTS` 中已知测试写入。AE 不能删除数据，测试点只能在查询时排除；新增测试写入必须追加到 `scripts/metrics-sql.mjs` 的 `TEST_POINTS`。同秒同事件同年级同环境的真实记录也会被排除，因此这些点不是逐条记录标识。
 
 `blob1` 是事件，`blob2` 为 `none` 或 `1`–`6`，`blob3` 为 `prod` / `preview` / `dev`；`index1` 为事件，`double1` 固定 1。时间戳由 AE 生成，客户端不提交时间或标识。只查询聚合，不导出逐条事件。[默认保留三个月](https://developers.cloudflare.com/analytics/analytics-engine/limits/)；AE 可在写入和查询时采样，必须用 `_sample_interval` 加权，结果不能作为精确人数或审计账本。
 
 ## 启用 AI 帮助
 
-默认关闭：唯一客户端构建开关为 `VITE_HELP_ENDPOINT`，仅允许空字符串或 `/api/help`，其他值构建报错。首页 `help-config.js` 默认 `export default ""`，应用与首页都不显示帮助按钮、不发送帮助请求。帮助是单轮网站使用问答，不存聊天，不要求注册登录；发送前会用正则替换常见个人信息，请仍不要输入姓名、电话、学校、住址等信息。
+当前默认开启；留空即关闭。唯一客户端构建开关为 `VITE_HELP_ENDPOINT`，仅允许空字符串或 `/api/help`，其他值构建报错。关闭后首页 `help-config.js` 为 `export default ""`，应用与首页都不显示帮助按钮、不发送帮助请求。帮助是单轮网站使用问答，不存聊天，不要求注册登录；发送前会用正则替换常见个人信息，请仍不要输入姓名、电话、学校、住址等信息。
 
 系统提示覆盖开始练习、练习年级、学情、备份与恢复、反馈邮箱与充值说明。充值说明是 `workers/help/prompt.js` 的 `TOPUP_GUIDANCE` 常量；手动充值页上线前只回答「充值功能即将上线，请家长操作；有问题发邮件 hello@yanghat.cn」，不出现任何价格。上线充值页的 PR 只改该常量及 `prompt.test.ts`。
 
@@ -84,11 +69,10 @@ wrangler pages secret put DEEPSEEK_API_KEY --project-name yanghat-cn
 npm run release
 ```
 
-Vite 与 `scripts/build-grade-pages.mjs` 都用 `loadEnv('production')` 读取，shell 变量优先，所以单次构建也可 `VITE_HELP_ENDPOINT=/api/help npm run release`（统计仍由文件打开）。本提交的 `.env.production` 不含该行，默认关闭。然后从 `site/` 部署，确保编译 `site/functions/`：
+Vite 与 `scripts/build-grade-pages.mjs` 都用 `loadEnv('production')` 读取，shell 变量优先，所以单次构建也可 `VITE_HELP_ENDPOINT=/api/help npm run release`（统计仍由文件打开）。当前 `.env.production` 已含 `VITE_HELP_ENDPOINT=/api/help`，默认开启；留空即关闭。然后运行部署护栏，确保编译 `site/functions/`：
 
 ```sh
-cd site
-wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
+npm run deploy:site
 ```
 
 显式函数路由仅含 `/e` 与 `/api/help`；其余资源沿用 `_headers` 与 `_redirects`。本节命令仅为管理员操作文档，本任务不创建数据库、secret 或部署。
@@ -105,6 +89,8 @@ wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
 wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend ORDER BY day DESC LIMIT 7"
 ```
 
-回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 并**仍从 `site/` 部署**（否则会撤掉 `/e` 统计函数），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
+回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 后运行 `npm run deploy:site`（函数始终部署），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
 
 本地验证：`node scripts/check-help-client.mjs` 自动切换默认/启用构建，用 Playwright 拦截假回答，全程不调用外部 API，结束恢复默认产物。`node scripts/check-help-pagesdev.mjs` 使用 wrangler 4 和临时本地 D1，默认不传密钥，验证兜底、错误状态、静态头与旧重定向，结束清理进程与临时目录。`WRANGLER` 可指定二进制，默认 `/tmp/wrangler4/node_modules/.bin/wrangler`。仅管理员明确授权后才可运行 `HELP_REAL_ONCE=1` 模式：要求父进程已有密钥，仅经子进程环境传递（`CLOUDFLARE_INCLUDE_PROCESS_ENV=true`，wrangler 绑定表显示 `(hidden)`），一次真实提问后直接读取临时本地 D1 文件打印当日花费，不写密钥文件。
+
+部署护栏固定项目 yanghat-cn、main 分支和 site/ 工作目录，检查函数、路由、生成配置和静态入口，并拒绝 site/ 或 .env.production 未提交改动。`npm run deploy:site -- --check` 仅检查；`DEPLOY_ALLOW_DIRTY=1` 可带警告跳过已提交检查。部署子进程不继承 DEEPSEEK_API_KEY。

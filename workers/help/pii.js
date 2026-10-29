@@ -1,3 +1,9 @@
+// 拿不准就不当成姓名：虚词、身份和功能说法都留下。漏掉姓名风险低，误伤问句会把问题毁掉。
+const NOT_PERSON_NAME = /[的了吗呢吧啊呀嘛着过得是为和与或在有会能可以把被从到对让给用来要就也都很太最不没非这那哪什怎多少否个]|年级|学生|家长|老师|用户|妈妈|爸爸|孩子|新手|同学|小朋友|同班|你们|小学|新生|^[一二三四五六七八九十]/u;
+function looksLikePersonName(token) {
+  return /^[\p{Script=Han}]{2,4}$/u.test(token) && !NOT_PERSON_NAME.test(token);
+}
+
 /** @param {string} text */
 export function redactPII(text) {
   const boundary = '(?=$|[\\s，,。.!！?？、]|想|要|在|今年)';
@@ -15,6 +21,9 @@ export function redactPII(text) {
     })
     .replace(/\d+(?:栋|幢|号楼)\s*(?:\d+单元\s*)?\d+(?:室|号)?|\d+单元\s*\d+(?:室|号)|(?<!\d)\d{3,4}室/g, '[地址]')
     .replace(/(住在|住址是|家住|家在|我家在)\s*([\p{Script=Han}\d]{2,12}?)(?=$|[\s，,。.!！?？、])|(住在|住址是|家住|家在|我家在)\s*[\p{Script=Han}\d]{2,12}/gu, (_, lead, value, other) => (lead || other)+'[地址]');
+  text = text.replace(/(?:QQ|微信号?|vx|wx)\s*(?:号码|号)?\s*(?:是|为|[:：])\s*([\p{Script=Han}]{2,4})(?=$|[\s，,。.!！?？、])/giu, (whole, nickname) => looksLikePersonName(nickname) ? '[账号]' : whole);
+  text = text.replace(/我是([\p{Script=Han}]{2,4})(?=同学)/gu, (whole, name) => looksLikePersonName(name) ? '我是[名字]' : whole);
+  text = text.replace(/(我叫|我的名字是|名字是|名字叫)\s*([\p{Script=Han}]{4})(?=$|[\s，,。.!！?？、])/gu, (whole, lead, name) => looksLikePersonName(name) ? lead+'[名字]' : whole);
   text = text.replace(new RegExp('(我叫|我的名字是|名字是|名字叫)\\s*([A-Za-z]{1,20}|[\\p{Script=Han}]{1,3}?'+boundary+'|[\\p{Script=Han}]{2,3})','gu'),
     (whole, lead, name) => /^(?:什么|怎么|哪|多少)/u.test(name) ? whole : lead+'[名字]');
   text = text.replace(new RegExp('我是([\\p{Script=Han}]{2,3}?)'+boundary,'gu'),

@@ -9,14 +9,16 @@
     "preview": "vite preview --host 0.0.0.0 --port 5173",
     "mock:ai": "node scripts/mock-ai.mjs",
     "test:ai": "node --test workers/ai/*.test.ts",
-    "test": "node --test workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts workers/metrics/*.test.ts workers/help/*.test.ts",
+    "test": "node --test workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts workers/metrics/*.test.ts workers/help/*.test.ts scripts/metrics-sql.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run test:render && npm run build",
     "release": "node scripts/build-grade-pages.mjs && npm run build && node scripts/release.mjs",
     "test:render": "node scripts/check-render.mjs",
     "test:smoke": "node scripts/smoke.mjs",
     "test:state": "node scripts/state-regression.mjs",
-    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs && node scripts/check-home-simplify.mjs && node scripts/check-site-pages.mjs && node scripts/check-trust-backup.mjs && node scripts/check-metrics-backend.mjs && node scripts/check-help-backend.mjs"
+    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs && node scripts/check-home-simplify.mjs && node scripts/check-site-pages.mjs && node scripts/check-trust-backup.mjs && node scripts/check-metrics-backend.mjs && node scripts/check-help-backend.mjs && node scripts/check-deploy-guard.mjs",
+    "deploy:site": "node scripts/deploy-site.mjs",
+    "test:deploy-guard": "node scripts/check-deploy-guard.mjs"
   },
   "engines": {
     "node": ">=24"

@@ -2,10 +2,16 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
 import path from 'node:path';
+import vm from 'node:vm';
+const client=await readFile('site/www.yanghat.cn/help.js','utf8');
+for(const endpoint of ['', 'https://evil.example', '//evil.example', '/api/help?x=1', '/api/help/', null, 1]){
+ vm.runInNewContext(client.replace("import endpoint from './help-config.js';",''),{endpoint,document:{querySelector(){assert.fail('非法端点渲染了按钮');}},fetch(){assert.fail('非法端点发送了请求');}});
+}
+console.log('PASS 非法端点不渲染、不请求');
 import {spawn} from 'node:child_process';
 import {chromium} from 'playwright';
 const root=path.resolve('site/www.yanghat.cn');
-async function build(enabled){await new Promise((resolve,reject)=>{const child=spawn('npm',['run','release'],{stdio:'ignore',env:{...process.env,VITE_HELP_ENDPOINT:enabled?'/api/help':''}});child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(Error('release failed: '+code)));});}
+async function build(enabled){await new Promise((resolve,reject)=>{const child=spawn('npm',['run','release'],{stdio:'ignore',env:enabled===undefined?{...process.env}:{...process.env,VITE_HELP_ENDPOINT:enabled?'/api/help':''}});child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(Error('release failed: '+code)));});}
 const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
 const server=http.createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost');let file=path.resolve(root,'.'+decodeURIComponent(url.pathname));assert.ok(!path.relative(root,file).startsWith('..'));if((await stat(file)).isDirectory())file=path.join(file,'index.html');res.setHeader('Content-Type',mime[path.extname(file)]??'application/octet-stream');res.end(await readFile(file));}catch{res.writeHead(404).end();}});
 let browser;
@@ -33,6 +39,6 @@ try {
   }finally{await context.close();}
  }
 }finally{
- await browser?.close();await new Promise(resolve=>server.close(resolve));await build(false);
+ await browser?.close();await new Promise(resolve=>server.close(resolve));await build();
  console.log('PASS restored default release artifacts');
 }

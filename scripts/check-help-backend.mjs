@@ -11,7 +11,7 @@ const helpExports=[...(await readFile('site/www.yanghat.cn/help-config.js','utf8
 assert.equal(helpExports.length,1);
 assert.ok(helpExports[0]==='export default "";'||helpExports[0]==='export default "/api/help";',helpExports[0]);
 assert.match(await readFile('site/www.yanghat.cn/index.html','utf8'),/<script type="module" src="\/help.js"><\/script>/);
-assert.match(await readFile('site/www.yanghat.cn/help.js','utf8'),/if \(!endpoint\) return;/);
+assert.match(await readFile('site/www.yanghat.cn/help.js','utf8'),/if \(endpoint !== '\/api\/help'\) return;/);
 for(const file of await readdir('workers/help'))assert.doesNotMatch(await readFile('workers/help/'+file,'utf8'),forbidden);
 assert.doesNotMatch(await readFile('site/functions/api/help.js','utf8'),forbidden);
 console.log('PASS help deployment boundaries, help-config switch and privacy');
