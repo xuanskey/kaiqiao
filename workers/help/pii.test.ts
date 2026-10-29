@@ -9,3 +9,6 @@ for(const input of ['我想学小学数学','一道3号题','3单元怎么学','
 for(const [input,expected] of [
  ['微信是abc123','[账号]'],['我是小明','我是[名字]'],['我是小明想问备份','我是[名字]想问备份'],['名字是小明','名字是[名字]'],['住在幸福路','住在[地址]'],['幸福小区','[地址]'],['幸福小区3栋2单元101室','[地址]'],['我在幸福路小学上学','我在[学校]上学'],['郑州市第一中学','[学校]'],['我和同学去和平小学','我和同学去[学校]'],['6222021234567890123','[号码]']
 ])test('redact '+input,()=>assert.equal(redactPII(input),expected));
+
+for(const [input,expected] of [['我是小明同学','我是[名字]同学'],['微信是小明','[账号]'],['名字是欧阳娜娜','名字是[名字]']])test('漏网 '+input,()=>assert.equal(redactPII(input),expected));
+for(const input of ['我是三年级同学','我是新同学','我是你的同学','微信支付怎么用','微信里打开','名字是什么'])test('反例 '+input,()=>assert.equal(redactPII(input),input));
