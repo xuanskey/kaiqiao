@@ -1,3 +1,4 @@
+import { Pelican } from "@/components/math/pelican";
 import { track } from "@/lib/telemetry";
 import { useReducer, useRef } from "react";
 import { CheckCircle2, RefreshCw, XCircle } from "lucide-react";
@@ -46,6 +47,7 @@ export function Quiz({ demo, grade, nextLevel, setNextLevel, nonce, onRecord }: 
         <button type="submit" disabled={!draft.trim() || !!result}>提交</button>
       </form>}
     {result ? <div className={result.ok ? "quiz-feedback is-ok" : "quiz-feedback is-bad"} role="status">
+      {result.ok ? <Pelican /> : null}
       <p>{result.ok ? <><CheckCircle2 size={18} />答对了！</> : <><XCircle size={18} />还差一点。正确答案：{shown.answer}</>}</p>
       {!result.ok && result.hint ? <p className="quiz-hint">{result.hint}</p> : null}
       <ol>{shown.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>

@@ -37,3 +37,9 @@ const helpEndpoint=loadEnv('production',process.cwd(),'VITE_').VITE_HELP_ENDPOIN
 if(helpEndpoint!==''&&helpEndpoint!=='/api/help')throw Error('Only the same-origin /api/help endpoint can be enabled');
 await writeFile(`${root}/help-config.js`,`// Baked from VITE_HELP_ENDPOINT at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(helpEndpoint)};\n`);
 console.log(`Help config ${helpEndpoint||'(off)'}`);
+
+// Top-up payment UI. Unset or false keeps the page on "即将开放". Only the exact string true opens it.
+const topupFlag=process.env.TOPUP_OPEN??'';
+if(topupFlag!==''&&topupFlag!=='true'&&topupFlag!=='false')throw Error('TOPUP_OPEN must be true or false');
+await writeFile(`${root}/topup-open.js`,`// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default ${topupFlag==='true'};\n`);
+console.log(`Top-up payment ${topupFlag==='true'?'open':'closed'}`);

@@ -9,3 +9,9 @@ dist/
 .env.local
 *.zip
 e2e-shots/
+
+# Top-up issuer material must never enter the repository.
+*.jwk
+private-key*
+# Local Pages development state (never deploy or commit).
+.wrangler/

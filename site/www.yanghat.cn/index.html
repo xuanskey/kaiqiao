@@ -78,7 +78,7 @@
   ]
 }
   </script>
-</head>
+<link rel="stylesheet" href="/pelican.css"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="开窍"><meta name="apple-mobile-web-app-status-bar-style" content="default"><script type="module" src="/install.js"></script></head>
 <body>
   <script>
     if (window.__kaiqiaoSrc) {
@@ -124,13 +124,26 @@
     <section class="hero container" aria-labelledby="hero-title">
       <div class="hero-copy">
 
-        <h1 id="hero-title">不急着学会，<br>先让<span class="underlined">理解发生。</span></h1>
+<span class="pelican pelican-idle" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+  <ellipse cx="48" cy="94" rx="29" ry="4" fill="var(--forest,#244f3e)" opacity=".12"/>
+  <g class="pelican-body" stroke="var(--forest,#244f3e)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 83v9h-9m28-9v9h9" fill="none"/>
+    <path d="M24 55C12 82 34 91 53 86c18-4 19-19 13-32L65 36C64 15 39 14 37 34l2 22Z" fill="var(--white,#fffefa)"/>
+    <path d="M28 62q8 18 28 6" fill="none"/>
+    <path d="M59 38h35L69 55Q53 58 54 44Z" fill="#f0c96d"/>
+    <path d="M57 38h37" fill="none"/>
+    <ellipse class="pelican-eye" cx="51" cy="32" rx="2.5" ry="3.5" fill="var(--ink,#243f34)" stroke="none"/>
+    <path d="m40 18 3-7 5 7" fill="var(--white,#fffefa)"/>
+  </g>
+  <g class="pelican-stars" fill="#b07827" stroke="none"><path d="m14 22 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"/><path d="m83 67 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"/></g>
+</svg>
+</span>        <h1 id="hero-title">不急着学会，<br>先让<span class="underlined">理解发生。</span></h1>
         <p class="hero-description">小学数学 1–6 年级，选题练习、互动讲解、错题复习。</p>
         <div class="hero-actions">
           <a class="button button-primary" data-primary-cta href="/?practice=1">进入开窍 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
           <a class="text-link" href="#video">看 45 秒宣传片 <span aria-hidden="true">↓</span></a>
         </div>
-        <p class="hero-note">免费使用 · 无需注册 · 支持离线练习</p>
+        <aside id="install-hint" class="install-hint" aria-label="添加到主屏幕" hidden><span data-install-text>可以把开窍添加到手机主屏幕，下次一点就开。</span><button type="button" data-install hidden>添加</button><button type="button" data-dismiss aria-label="关闭添加到主屏幕提示">关闭</button></aside><p class="hero-note">免费使用 · 无需注册 · 支持离线练习</p>
         <nav class="grade-links" aria-label="选择练习年级"><a data-grade="1" href="/?practice=1&amp;grade=1">一年级</a><a data-grade="2" href="/?practice=1&amp;grade=2">二年级</a><a data-grade="3" href="/?practice=1&amp;grade=3">三年级</a><a data-grade="4" href="/?practice=1&amp;grade=4">四年级</a><a data-grade="5" href="/?practice=1&amp;grade=5">五年级</a><a data-grade="6" href="/?practice=1&amp;grade=6">六年级</a></nav>
         <nav class="grade-directory-links" aria-label="浏览年级目录">浏览目录：<a href="/grade/1/">一年级目录</a><a href="/grade/2/">二年级目录</a><a href="/grade/3/">三年级目录</a><a href="/grade/4/">四年级目录</a><a href="/grade/5/">五年级目录</a><a href="/grade/6/">六年级目录</a></nav>
       </div>
@@ -253,8 +266,8 @@
 
   <footer class="site-footer">
     <div class="container footer-main"><a class="brand" href="#top"><img src="assets/brand.svg" width="34" height="34" alt=""><span class="brand-name">养习<span class="brand-english">YANGHAT</span></span></a><p>学习的进步，藏在每天的练习里。</p><a class="back-to-top" href="#top">回到顶部 <span aria-hidden="true">↑</span></a></div>
-    <div class="container trust-footer"><p>不收集个人信息，练习记录只保存在本机。</p><a href="mailto:hello@yanghat.cn?subject=%E5%BC%80%E7%AA%8D%E5%8F%8D%E9%A6%88">意见反馈：hello@yanghat.cn</a></div>
-    <div class="container footer-bottom"><span>yanghat.cn</span><span>用一点耐心，养成一点习惯。</span><a href="#records">关于练习记录</a></div>
+    <div class="container trust-footer"><p>不收集个人信息，练习记录只保存在本机。</p><a href="mailto:hello@yanghat.cn?subject=%E5%BC%80%E7%AA%8D%E5%8F%8D%E9%A6%88">意见反馈：hello@yanghat.cn</a><details class="service-qr"><summary><img src="/assets/wechat-service-qr.png" width="72" height="72" alt="家长扫码联系客服（微信二维码）" loading="lazy"><span>家长扫码联系客服<br><small>点开放大二维码</small></span></summary><img class="service-qr-large" src="/assets/wechat-service-qr.png" width="280" height="280" alt="家长扫码联系客服（微信二维码）" loading="lazy"></details></div>
+    <div class="container footer-bottom"><a href="/topup">家长充值</a><span>yanghat.cn</span><span>用一点耐心，养成一点习惯。</span><a href="#records">关于练习记录</a></div>
   </footer>
 </body>
 </html>

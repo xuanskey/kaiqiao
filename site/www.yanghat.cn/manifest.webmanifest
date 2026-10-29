@@ -1,0 +1,15 @@
+{
+  "name": "养习开窍",
+  "short_name": "开窍",
+  "start_url": "/?practice=1",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#f7f6ef",
+  "background_color": "#f7f6ef",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "/assets/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
