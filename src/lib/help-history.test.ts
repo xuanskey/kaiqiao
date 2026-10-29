@@ -15,3 +15,9 @@ test('total counts Unicode code points and keeps boundary',()=>{
  assert.equal(trimHelpHistory(history,'新'.repeat(200)).length,5);
  const result=trimHelpHistory(history,'新'.repeat(201));assert.equal(result.length,3);assert.equal(result.at(-1)?.content,'新'.repeat(201));
 });
+test('request body stays under the 8192-byte server limit for 4-byte characters',()=>{
+ const history=[...pair('😀'.repeat(300),'😀'.repeat(600)),...pair('😀'.repeat(300),'😀'.repeat(600))];
+ const result=trimHelpHistory(history,'😀'.repeat(200));
+ assert.ok(new TextEncoder().encode(JSON.stringify({v:2,messages:result})).byteLength<=8000);
+ assert.equal(result.length,3);assert.equal(result.at(-1)?.content,'😀'.repeat(200));
+});
