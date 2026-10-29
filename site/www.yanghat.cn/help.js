@@ -1,4 +1,6 @@
 import endpoint from './help-config.js';
+// Worker 对上游设 15 秒上限并返回兜底答复；这里多留 5 秒，只兜住网络挂起。
+const HELP_TIMEOUT_MS=20000;
 function trimHelpHistory(history, question) {
   const messages = [...history, {role:'user',content:question.trim()}];
   while (messages.length > 12 || messages.reduce((sum,item)=>sum+Array.from(item.content).length,0) > 2000 || new TextEncoder().encode(JSON.stringify({v:2,messages})).byteLength > 8000) {
@@ -35,6 +37,7 @@ function initHelp() {
     event.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;
     const messages=trimHelpHistory(history,q);
     const controller=new AbortController();active=controller;send.disabled=true;answer.textContent='小助手正在想…';
+    let timedOut=false;const timer=setTimeout(()=>{timedOut=true;controller.abort();},HELP_TIMEOUT_MS);
     try {
       const response=await fetch('/api/help',{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:2,messages}),signal:controller.signal});
       const data=await response.json();if(!response.ok||data.v!==1||typeof data.answer!=='string'||!['ai','fallback'].includes(data.source))throw Error();
@@ -45,8 +48,8 @@ function initHelp() {
           log.replaceChildren(...history.map(item=>node('li',(item.role==='user'?'我：':'小助手：')+item.content)));
         }
       }
-    }catch{if(active===controller)answer.textContent='暂时没能回答，请稍后再试，或发邮件到 hello@yanghat.cn。';}
-    finally{if(active===controller){active=undefined;send.disabled=false;}}
+    }catch{if(active===controller)answer.textContent=timedOut?'小助手太久没有回应，请检查网络后再试，或发邮件到 hello@yanghat.cn。':'暂时没能回答，请稍后再试，或发邮件到 hello@yanghat.cn。';}
+    finally{clearTimeout(timer);if(active===controller){active=undefined;send.disabled=false;}}
   });
 }
 initHelp();

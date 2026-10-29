@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
 import {trimHelpHistory, type HelpMessage} from '@/lib/help-history';
-import {askHelp, helpEndpoint} from '@/lib/help';
+import {askHelp, helpEndpoint, HelpTimeoutError, HELP_ERROR_TEXT, HELP_TIMEOUT_TEXT} from '@/lib/help';
 export function HelpDialog() {
   const dialog=useRef<HTMLDialogElement>(null);
   const active=useRef<AbortController | null>(null);
@@ -20,7 +20,7 @@ export function HelpDialog() {
         const messages=trimHelpHistory(history,q);
         const controller=new AbortController();active.current=controller;setBusy(true);setAnswer('小助手正在想…');
         try {const result=await askHelp(messages,controller.signal);if(active.current===controller){setAnswer(result.answer);setQ('');if(result.source==='ai')setHistory([...messages,{role:'assistant',content:result.answer}]);}}
-        catch {if(active.current===controller)setAnswer('暂时没能回答，请稍后再试，或发邮件到 hello@yanghat.cn。');}
+        catch (error) {if(active.current===controller)setAnswer(error instanceof HelpTimeoutError?HELP_TIMEOUT_TEXT:HELP_ERROR_TEXT);}
         finally {if(active.current===controller){active.current=null;setBusy(false);}}
       }}>
         <label htmlFor="app-help-question">你的问题</label>
