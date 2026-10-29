@@ -1,2 +1,2 @@
-// Default off; opt in only in an explicitly authorized build.
-export default "";
+// Enabled for this production build: same-origin /e only.
+export default "/e";

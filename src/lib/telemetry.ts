@@ -1,3 +1,3 @@
 import { createTracker } from '../../public/metrics.js';
-// No endpoint is configured by default. /e has no deployed handler in this change.
+// Production sets VITE_EVENT_ENDPOINT=/e in .env.production. An empty value sends nothing.
 export const track = createTracker(import.meta.env.VITE_EVENT_ENDPOINT ?? '');

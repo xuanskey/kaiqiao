@@ -45,7 +45,7 @@ try {
   for (const width of [390, 1280]) {
     const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, serviceWorkers: 'block', acceptDownloads: true });
     const external = [], dialogs = [], events = [];
-    context.on('request', req => { if (!/^https?:/.test(req.url())) return; const url = new URL(req.url()); if (url.origin !== base) external.push(req.url()); if (url.pathname === '/e') events.push(req.url()); });
+    context.on('request', req => { if (!/^https?:/.test(req.url())) return; const url = new URL(req.url()); if (url.origin !== base) external.push(req.url()); if (url.pathname === '/e') events.push({ method: req.method(), origin: url.origin, body: req.postData(), cookie: req.headers()['cookie'], referer: req.headers()['referer'] }); });
     await context.route('**/*', route => route.request().url().startsWith(base) ? route.continue() : route.abort());
     const page = await context.newPage(); page.setDefaultTimeout(10000);
     page.on('dialog', async d => { dialogs.push(d.type()); await d.dismiss(); });
@@ -131,8 +131,20 @@ try {
     assert.deepEqual(await read(), after);
     assert.ok(await frame.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     assert.equal(new URL(await app.locator('a[href^="mailto:"]').getAttribute('href')).searchParams.get('subject'), '开窍反馈');
-    assert.deepEqual(external, []); assert.deepEqual(dialogs, []); assert.deepEqual(events, [], "默认关闭统计，含导出备份点击也不能请求 /e");
-    console.log(`PASS ${width}: 首页/练习/学情零非同源请求；3题导出→清空→取消不写入→确认恢复五键；旧format:1确认/取消/坏数据/写入失败回滚；坏文件提示；无原生 dialog/溢出；反馈 subject 正确`);
+    assert.deepEqual(external, []); assert.deepEqual(dialogs, []);
+    assert.deepEqual(events.map((event) => JSON.parse(event.body)), [
+      { v: 1, event: 'visit', grade: null, count: 1 },
+      { v: 1, event: 'grade_select', grade: 1, count: 1 },
+      { v: 1, event: 'backup_export_click', grade: 1, count: 1 },
+    ]);
+    for (const event of events) {
+      assert.equal(event.method, 'POST');
+      assert.equal(event.origin, base);
+      assert.equal(event.cookie, undefined);
+      assert.equal(event.referer, undefined);
+      assert.deepEqual(Object.keys(JSON.parse(event.body)), ['v', 'event', 'grade', 'count']);
+    }
+    console.log(`PASS ${width}: 首页/练习/学情零非同源请求；同源 /e 仅 visit、grade_select、backup_export_click，载荷无标识；3题导出→清空→取消不写入→确认恢复五键；旧format:1确认/取消/坏数据/写入失败回滚；坏文件提示；无原生 dialog/溢出；反馈 subject 正确`);
     await context.close();
   }
   // Hostnames are fulfilled from the local static server; no real domain is contacted.

@@ -13,6 +13,7 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://127.0.0.1');
     const pathname = decodeURIComponent(url.pathname);
+    if (pathname === '/e' && req.method === 'POST') { res.writeHead(204).end(); return; }
     if (pathname === '/练习' || pathname === '/练习/') {
       const extra = url.search.startsWith('?') ? '&' + url.search.slice(1) : '';
       res.writeHead(301, { Location: '/?practice=1' + extra }).end();

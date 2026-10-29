@@ -1,5 +1,6 @@
 // Build-time only: import existing catalogs; never modify curriculum or application routing.
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
+import {loadEnv} from 'vite';
 import {PEP_MATH,JK_SCIENCE,resolveUnits} from '../src/lib/lesson/curriculum.ts';
 import {DEMOS} from '../src/lib/lesson/demos.ts';
 const root='site/www.yanghat.cn';
@@ -25,7 +26,11 @@ for(let grade=1;grade<=6;grade++){
 await writeFile(`${root}/robots.txt`,'User-agent: *\nAllow: /\nSitemap: https://www.yanghat.cn/sitemap.xml\n');
 await writeFile(`${root}/sitemap.xml`,'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+['/',...names.map((_,i)=>`/grade/${i+1}/`)].map(p=>`  <url><loc>https://www.yanghat.cn${p}</loc></url>`).join('\n')+'\n</urlset>\n');
 await copyFile('public/metrics.js',`${root}/metrics.js`);
-const endpoint=process.env.VITE_EVENT_ENDPOINT||'';
+// Same value Vite inlines: .env / .env.production, with an existing process env winning.
+const endpoint=loadEnv('production',process.cwd(),'VITE_').VITE_EVENT_ENDPOINT??'';
 if(endpoint&&endpoint!=='/e')throw Error('Only the same-origin /e endpoint can be enabled');
-await writeFile(`${root}/metrics-config.js`,`// Default off; opt in only in an explicitly authorized build.\nexport default ${JSON.stringify(endpoint)};\n`);
-console.log('Generated six grade pages, robots/sitemap and default-off metrics config');
+const note=endpoint==='/e'
+ ? '// Enabled for this production build: same-origin /e only.'
+ : '// Default off; opt in only in an explicitly authorized build.';
+await writeFile(`${root}/metrics-config.js`,`${note}\nexport default ${JSON.stringify(endpoint)};\n`);
+console.log(`Generated six grade pages, robots/sitemap and metrics config ${JSON.stringify(endpoint)}`);

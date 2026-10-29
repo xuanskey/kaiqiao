@@ -9,7 +9,7 @@ const luminance=rgb=>rgb.map(n=>n/255).map(n=>n<=0.04045?n/12.92:((n+0.055)/1.05
 try{
  const context=await browser.newContext({serviceWorkers:'block'});
  const external=[],errors=[],dialogs=[],events=[];
- await context.route('**/*',r=>{const u=new URL(r.request().url());if(['data:','blob:'].includes(u.protocol))return r.continue();if(u.origin!==server.base){external.push(u.href);return r.abort();}if(u.pathname==='/e')events.push(u.href);return r.continue();});
+ await context.route('**/*',r=>{const u=new URL(r.request().url());if(['data:','blob:'].includes(u.protocol))return r.continue();if(u.origin!==server.base){external.push(u.href);return r.abort();}if(u.pathname==='/e')events.push({method:r.request().method(),url:u.href,body:r.request().postData(),cookie:r.request().headers()['cookie'],referer:r.request().headers()['referer']});return r.continue();});
  const page=await context.newPage();
  page.on('pageerror',e=>errors.push(e.message));page.on('dialog',async d=>{dialogs.push(d.type());await d.dismiss();});
  const refs=new Set();const titles=new Set();
@@ -68,7 +68,19 @@ try{
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(server.base);assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior),'auto');
  await page.locator('#demo-next').focus();await page.keyboard.press('Enter');await page.keyboard.press('Space');assert.equal(await page.locator('#demo-answer').innerText(),'13');
  assert.equal(await page.locator('#demo-next').evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
- assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.deepEqual(dialogs,[]);assert.deepEqual(events,[]);
- assert.match(await readFile('site/www.yanghat.cn/metrics-config.js','utf8'),/export default ""/);
- console.log(`PASS: 全站 ${refs.size} 个站内链接/资源 + 7 sitemap URL 无404，默认零 /e 请求、无第三方/运行时错误/原生dialog，键盘演示与减弱动效`);
+ assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.deepEqual(dialogs,[]);
+ // Fresh homepage loads send one visit. A back-forward cache restore of 「返回首页」 does not run the module again.
+ assert.ok(events.length>=3,'fresh homepage loads must POST /e');
+ for(const event of events){
+  assert.equal(event.method,'POST');
+  assert.equal(new URL(event.url).origin,server.base);
+  assert.equal(new URL(event.url).pathname,'/e');
+  assert.equal(event.cookie,undefined);
+  assert.equal(event.referer,undefined);
+  const body=JSON.parse(event.body);
+  assert.deepEqual(Object.keys(body),['v','event','grade','count']);
+  assert.deepEqual(body,{v:1,event:'visit',grade:null,count:1});
+ }
+ assert.match(await readFile('site/www.yanghat.cn/metrics-config.js','utf8'),/export default "\/e"/);
+ console.log(`PASS: 全站 ${refs.size} 个站内链接/资源 + 7 sitemap URL 无404，首页 ${events.length} 次同源 /e visit（载荷仅 v/event/grade/count）、无第三方/运行时错误/原生dialog，键盘演示与减弱动效`);
 }finally{await browser.close();await server.close();}

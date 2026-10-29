@@ -15,6 +15,8 @@ export async function homePreview(root = path.resolve('site/www.yanghat.cn')) {
   const url=new URL(req.url,'http://127.0.0.1');
   let pathname;
   try{pathname=decodeURIComponent(url.pathname);}catch{res.writeHead(400).end();return;}
+  // Local static preview has no Pages Function. Accept the anonymous beacon so the enabled client does not log a 404.
+  if(pathname==='/e'&&req.method==='POST'){res.writeHead(204).end();return;}
   const rule=redirects.find(r=>r[0]===pathname);
   if(rule){res.writeHead(Number(rule[2]),{Location:rule[1]+(url.search?'&'+url.search.slice(1):'')}).end();return;}
   const send=async(file,status=200)=>{
