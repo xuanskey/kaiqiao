@@ -24,8 +24,8 @@ for(const headers of [{Origin:''},{Origin:'https://evil.example'},{Origin:'null'
 test('missing origin',()=>{const r=req();r.headers.delete('Origin');return rejected(r,403);});
 test('host',()=>rejected(req(undefined,{},'https://evil.example/api/help'),403));
 test('media',()=>rejected(req(undefined,{headers:{'Content-Type':'text/plain'}}),415));
-test('declared bytes',()=>rejected(req(undefined,{headers:{'Content-Length':'2049'}}),413));
-test('stream cancels immediately',async()=>{let pulls=0,cancel=false;const body=new ReadableStream({pull(c){pulls++;c.enqueue(new Uint8Array(2049));},cancel(){cancel=true;}},{highWaterMark:0});await rejected(req(null,{body,duplex:'half'} as RequestInit),413);assert.equal(pulls,1);assert.ok(cancel);});
+test('declared bytes',()=>rejected(req(undefined,{headers:{'Content-Length':'8193'}}),413));
+test('stream cancels immediately',async()=>{let pulls=0,cancel=false;const body=new ReadableStream({pull(c){pulls++;c.enqueue(new Uint8Array(8193));},cancel(){cancel=true;}},{highWaterMark:0});await rejected(req(null,{body,duplex:'half'} as RequestInit),413);assert.equal(pulls,1);assert.ok(cancel);});
 test('broken stream',()=>rejected(req(null,{body:new ReadableStream({start(c){c.error(Error());}}),duplex:'half'} as RequestInit),400));
 for(const body of [null,[],{}, {v:1,q:'a',extra:1},{v:2,q:'a'},{v:1,q:2},{v:1,q:' '},{v:1,q:'a'.repeat(301)}])test('invalid '+JSON.stringify(body),()=>rejected(req(body),400));
 test('JSON',()=>rejected(req(null,{body:'{'}),400));
@@ -43,7 +43,7 @@ test('timeout keeps reserve',async()=>{const db=new D1();const r=await call(req(
 for(const content of ['',null,'<script>bad()</script>```code``` **你好** https://example.cn'])test('answer '+content,async()=>{const db=new D1();const r=await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:db},async()=>Response.json({choices:[{message:{content}}],usage}));const b=await r.json();assert.equal(b.source,content?'ai':'fallback');if(content)assert.equal(b.answer,'你好');});
 test('parse failure',async()=>assert.equal((await (await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:new D1()},async()=>new Response('{'))).json()).reason,'upstream'));
 test('fallback pricing and Beijing rollover',async()=>{const db=new D1();for(const time of ['2026-10-29T15:59:00Z','2026-10-29T16:00:00Z'])await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:db},async()=>Response.json({choices:[{message:{content:'好'}}],usage:{prompt_tokens:100,completion_tokens:10}}),{now:()=>Date.parse(time)});assert.deepEqual(db.amount().map(r=>[r.day,r.micro]),[['2026-10-29',280],['2026-10-30',280]]);});
-test('2048 boundary and code points',async()=>{assert.equal((await call(req({v:1,q:'😀'.repeat(300)},{body:JSON.stringify({v:1,q:'😀'.repeat(300)}).padEnd(2048-600,' '),headers:{'Content-Type':'application/json; charset=utf-8'}}))).status,200);});
+test('8192 boundary and code points',async()=>{assert.equal((await call(req({v:1,q:'😀'.repeat(300)},{body:JSON.stringify({v:1,q:'😀'.repeat(300)}).padEnd(8192-600,' '),headers:{'Content-Type':'application/json; charset=utf-8'}}))).status,200);});
 test('source privacy',async()=>{const forbidden=new RegExp(['con'+'sole\\.','cf-connecting'+'-ip','x-forwarded'+'-for','user'+'-agent','coo'+'kie','refe'+'rer','\\.c'+'f'].join('|'),'i');for(const f of [...(await readdir('workers/help')).map(f=>'workers/help/'+f),'site/functions/api/help.js'])assert.doesNotMatch(await readFile(f,'utf8'),forbidden);});
 
 test('network failure keeps reserve',async()=>{const db=new D1();const r=await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:db},async()=>{throw Error('private upstream details');});const text=await r.text();assert.equal(JSON.parse(text).reason,'upstream');assert.ok(!text.includes('private upstream'));assert.equal(db.amount()[0].micro,reservation());});
@@ -95,4 +95,23 @@ test('预留额使用固定输入输出价格',async()=>{
   throw Error('mock network failure');
  });
  assert.equal(reserved,(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO);
+});
+
+const message=(role:string,content='好')=>({role,content});
+const v2=(messages:any)=>({v:2,messages});
+for(const messages of [null,{},[],[message('system')],[message('invalid')],[message('assistant')],[message('user'),message('assistant')],[message('user'),message('user'),message('user')],Array.from({length:13},(_,i)=>message(i%2?'assistant':'user')),[message('user',' ')],[message('user','😀'.repeat(301))],[message('user'),message('assistant','😀'.repeat(601)),message('user')],[message('user','a'.repeat(300)),message('assistant','b'.repeat(600)),message('user','c'.repeat(300)),message('assistant','d'.repeat(600)),message('user','e'.repeat(201))],[{...message('user'),extra:1}],[{role:'user'}]])test('v2 invalid '+JSON.stringify(messages).slice(0,100),()=>rejected(req(v2(messages)),400));
+for(const body of [{v:2,messages:[message('user')],extra:1},{v:1,messages:[message('user')]},{v:2,q:'a',messages:[message('user')]}])test('v2 extra/wrong protocol '+JSON.stringify(body),()=>rejected(req(body),400));
+test('v2 forwards all turns with PII redacted and reserves all messages',async()=>{
+ const db=new D1();const messages=[message('user',' 邮箱abc@example.cn '),message('assistant','电话13812345678'),message('user','再联系def@example.cn')];
+ const clean=[message('user','邮箱[邮箱]'),message('assistant','电话[电话]'),message('user','再联系[邮箱]')];
+ const r=await call(req(v2(messages)),{DEEPSEEK_API_KEY:'fake',HELP_DB:db},async(_:any,init:RequestInit)=>{
+  const body=JSON.parse(init.body as string);assert.deepEqual(body.messages,[{role:'system',content:SYSTEM_PROMPT},...clean]);assert.equal(body.max_tokens,MAX_TOKENS);
+  assert.equal(db.amount()[0].micro,(new TextEncoder().encode(SYSTEM_PROMPT+clean.map(m=>m.content).join('')).byteLength+64*3)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO);
+  return upstream();
+ });assert.equal((await r.json()).source,'ai');
+ assert.deepEqual(db.sql.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all().map(r=>r.name),['help_minute','help_spend']);
+});
+test('v2 accepts exact content limits and 2000 code points',async()=>{
+ const messages=[message('user','😀'.repeat(300)),message('assistant','答'.repeat(600)),message('user','问'.repeat(300)),message('assistant','答'.repeat(600)),message('user','问'.repeat(200))];
+ assert.equal((await call(req(v2(messages)))).status,200);
 });

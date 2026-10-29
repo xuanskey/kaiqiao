@@ -21,7 +21,7 @@ let exited=false,startError;
 child.on('error',e=>{startError=e;});child.on('exit',()=>{exited=true;});
 // Discard runtime output; only explicitly selected public results are printed.
 child.stdout.resume();child.stderr.resume();
-const request=(body={v:1,q:'怎么开始练习？'},extra={})=>({method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body),...extra});
+const request=(body={v:2,messages:[{role:'user',content:'怎么开始练习？'}]},extra={})=>({method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body),...extra});
 async function check(response,status){assert.equal(response.status,status);assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(response.headers.get('x-content-type-options'),'nosniff');assert.equal(response.headers.get('referrer-policy'),'no-referrer');assert.equal(response.headers.get('set-cookie'),null);assert.equal(response.headers.get('access-control-allow-origin'),null);if(status!==200)assert.equal(await response.text(),'');return response;}
 try {
  let ready=false;
@@ -43,7 +43,7 @@ try {
   assert.equal((await check(await fetch(base+'/api/help'),405)).headers.get('allow'),'POST');
   await check(await fetch(base+'/api/help',request(undefined,{headers:{Origin:'https://other.example','Content-Type':'application/json'}})),403);
   await check(await fetch(base+'/api/help',request(undefined,{headers:{Origin:base,'Content-Type':'text/plain'}})),415);
-  await check(await fetch(base+'/api/help',request(undefined,{body:'x'.repeat(2049)})),413);
+  await check(await fetch(base+'/api/help',request(undefined,{body:'x'.repeat(8193)})),413);
   await check(await fetch(base+'/api/help',request({v:1})),400);console.log('PASS help 405/403/415/413/400, empty bodies and security headers');
   await check(await fetch(base+'/e',request({v:1,event:'visit',grade:null,count:1})),503);console.log('PASS /e remains 503 without binding');
   for(const path of ['/','/styles.css','/help.js','/help-config.js']){
