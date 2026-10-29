@@ -47,7 +47,9 @@ try {
   const page = await context.newPage();
   page.setDefaultTimeout(10000);
   const dialogs = [];
+  const pageErrors = [];
   page.on('dialog', async dialog => { dialogs.push(dialog.type()); await dialog.dismiss(); });
+  page.on('pageerror', (error) => pageErrors.push(String(error)));
   await page.goto(base);
   const link = page.locator('a[href*="lesson=decimal-div"]').first();
   console.log('真实课程卡链接:', await link.getAttribute('href'));
@@ -108,6 +110,38 @@ try {
   assert.match(await app.locator('.hero-kicker').innerText(), /今日计划 · 还差 2 个学习步骤/);
   await page.screenshot({ animations: 'disabled', path: 'reports/fix3-shots/plan-unit-390.png' });
   console.log('PASS: 今日计划还差 2 个学习步骤，390px 无溢出');
+  await app.getByRole('button', { name: '90 秒小挑战' }).click();
+  await app.locator('.question-prompt').waitFor();
+  await app.getByRole('button', { name: '结束练习', exact: true }).click();
+  await app.getByRole('dialog', { name: '结束练习？' }).waitFor();
+  await frame.evaluate(() => {
+    const orig = window.requestAnimationFrame.bind(window);
+    let extra = 0;
+    window.requestAnimationFrame = (cb) => orig((t) => { extra += 1000; cb(t + extra); });
+  });
+  await app.getByRole('heading', { name: '时间到', exact: true }).waitFor();
+  const afterTimer = await frame.evaluate(() => ({
+    dialogs: document.querySelectorAll('dialog').length,
+    modal: document.querySelector(':modal')?.tagName ?? null,
+    inert: document.body.inert || document.documentElement.inert,
+  }));
+  assert.deepEqual(afterTimer, { dialogs: 0, modal: null, inert: false });
+  await app.getByRole('button', { name: '回到练习', exact: true }).click();
+  await app.locator('#plan-title').waitFor();
+  console.log('PASS: 限时弹层期间时钟走完后弹层卸掉，结果页可操作，无报错');
+  await app.getByRole('button', { name: '和窍窍比一比' }).click();
+  await app.locator('.question-prompt').waitFor();
+  await app.getByRole('button', { name: '结束练习', exact: true }).click();
+  const duelDialog = app.getByRole('dialog', { name: '结束本轮对决？' });
+  await duelDialog.waitFor();
+  assert.match(await duelDialog.innerText(), /已提交的答案会保留。/);
+  assert.equal(await duelDialog.getByRole('button', { name: '继续对决', exact: true }).count(), 1);
+  assert.ok(await duelDialog.evaluate((el) => el.scrollWidth <= el.clientWidth));
+  await page.keyboard.press('Escape');
+  await duelDialog.waitFor({ state: 'detached' });
+  assert.equal(await app.locator('.question-prompt').count(), 1);
+  console.log('PASS: 结束对决使用独立文案，Esc 取消后题目仍在');
   assert.deepEqual(dialogs, []);
+  assert.deepEqual(pageErrors, []);
   console.log('PASS: 真实课程卡年级、课堂页头、五年级题库与出题');
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }
