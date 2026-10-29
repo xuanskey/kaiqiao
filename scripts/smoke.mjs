@@ -21,6 +21,8 @@ async function openPage(viewport, initStorage) {
   const external = [], errors = [];
   await context.route('**/*', (route) => {
     const url = route.request().url();
+    // vite preview 没有 Pages Functions：同源统计端点 /e 在线上返回 204，这里照样模拟，免得 404 被当成运行时错误。
+    if (url.startsWith(BASE) && new URL(url).pathname === '/e') return route.fulfill({ status: 204, body: '' });
     if (url.startsWith(BASE) || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
     external.push(url); return route.abort();
   });
