@@ -39,10 +39,10 @@ if(helpEndpoint!==''&&helpEndpoint!=='/api/help')throw Error('Only the same-orig
 await writeFile(`${root}/help-config.js`,`// Baked from VITE_HELP_ENDPOINT at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(helpEndpoint)};\n`);
 console.log(`Help config ${helpEndpoint||'(off)'}`);
 
-// Top-up payment UI. Unset or false keeps the page on "即将开放". Only the exact string true opens it.
+// Top-up payment UI. Unset opens payment. Only the exact string false closes it.
 const topupFlag=process.env.TOPUP_OPEN??'';
 if(topupFlag!==''&&topupFlag!=='true'&&topupFlag!=='false')throw Error('TOPUP_OPEN must be true or false');
-const topupOpen=topupFlag==='true';
-await writeFile(`${root}/topup-open.js`,`// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default ${topupOpen};\n`);
+const topupOpen=topupFlag!=='false';
+await writeFile(`${root}/topup-open.js`,`// Baked from TOPUP_OPEN at release. Unset opens payment. Only the exact string false closes it.\nexport default ${topupOpen};\n`);
 await syncPayQr(topupOpen, root);
 console.log(`Top-up payment ${topupOpen?'open':'closed'}`);

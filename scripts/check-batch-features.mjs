@@ -30,13 +30,15 @@ assert.equal(createHash('sha256').update(serviceQr).digest('hex'),'7091ae644b689
 const paySource=await readFile(PAY_QR_SOURCE);
 assert.ok(paySource.length>=8000&&paySource.length<=200000);
 assert.equal(createHash('sha256').update(paySource).digest('hex'),PAY_QR_HASH);
-await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));
-try{await syncPayQr(true);const published=await readFile(`${root}/assets/wechat-pay-qr.png`);assert.equal(createHash('sha256').update(published).digest('hex'),PAY_QR_HASH);}finally{await syncPayQr(false);}
-await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));
+const published=await readFile(`${root}/assets/wechat-pay-qr.png`);
+assert.equal(createHash('sha256').update(published).digest('hex'),PAY_QR_HASH);
+try{await syncPayQr(false);await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));}finally{await syncPayQr(true);}
+assert.equal(createHash('sha256').update(await readFile(`${root}/assets/wechat-pay-qr.png`)).digest('hex'),PAY_QR_HASH);
 const topup=await read('topup/index.html');assert.match(topup,/<meta name="robots" content="noindex">/);
 assert.doesNotMatch(topup,/wechat-pay-qr|class="pay-qr"/);
-for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里','懂技术的人能改本机数字','以实际付款与对账为准','充值功能即将开放','1–50'])assert.ok(topup.includes(text),text);
-assert.equal(await read('topup-open.js'),'// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default false;\n');
+for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里','懂技术的人能改本机数字','以实际付款与对账为准','充值功能即将开放','1–50','点数暂时还不能使用，功能上线前请按需充值；兑换前可联系客服全额退款'])assert.ok(topup.includes(text),text);
+assert.equal(await read('topup-open.js'),'// Baked from TOPUP_OPEN at release. Unset opens payment. Only the exact string false closes it.\nexport default true;\n');
+assert.match(await read('_headers'),/\/assets\/wechat-pay-qr\.png\n  Cache-Control: no-cache/);
 assert.doesNotMatch(topup,/1–200/);
 assert.doesNotMatch(await read('sitemap.xml'),/topup/);
 assert.match(await read('index.html'),/href="\/topup">家长充值/);
@@ -84,17 +86,15 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});
   for(const part of ['.pelican-body','.pelican-eye','.pelican-stars'])assert.equal(await page.locator(part).evaluate(el=>getComputedStyle(el).animationName),'none');
   await page.goto(server.base+'/?practice=1');assert.ok(await page.locator('#install-hint').isHidden());
-  const shots='/opt/cursor/artifacts/topup-switch';await mkdir(shots,{recursive:true});
-  await page.goto(server.base+'/topup');
-  await page.locator('#topup-closed').waitFor();
-  assert.equal(await page.locator('#topup-closed').innerText(),'充值功能即将开放');
-  assert.equal(await page.locator('.pay-qr').count(),0);
-  assert.doesNotMatch(await page.content(),/wechat-pay-qr/);
-  assert.ok(await page.locator('#redeem-form').isHidden());
-  assert.ok(await page.locator('#order-form').isHidden());
-  await page.screenshot({path:`${shots}/closed.png`,fullPage:true});
-  await context.route('**/topup-open.js',route=>route.fulfill({contentType:'application/javascript',body:'export default true;\n'}));
-  await context.route('**/assets/wechat-pay-qr.png',async route=>route.fulfill({contentType:'image/png',body:await readFile(PAY_QR_SOURCE)}));
+  const shots='/opt/cursor/artifacts/topup-open';await mkdir(shots,{recursive:true});
+  const closed=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+  await closed.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!==server.base)return route.abort();if(url.pathname==='/topup-open.js')return route.fulfill({contentType:'application/javascript',body:'// Baked from TOPUP_OPEN at release. Unset opens payment. Only the exact string false closes it.\nexport default false;\n'});return route.continue();});
+  const closedPage=await closed.newPage();
+  await closedPage.goto(server.base+'/topup/');
+  assert.equal(await closedPage.locator('#topup-closed').innerText(),'充值功能即将开放');
+  assert.equal(await closedPage.locator('.pay-qr').count(),0);
+  assert.doesNotMatch(await closedPage.content(),/wechat-pay-qr/);
+  await closed.close();
   await page.goto(server.base+'/topup/');
   await page.locator('#order-form').waitFor();
   assert.ok(await page.locator('#topup-closed').isHidden());
@@ -102,6 +102,7 @@ try{
   assert.ok(await page.locator('.pay-qr').isVisible());
   assert.ok(await page.locator('#redeem-form').isVisible());
   await page.screenshot({path:`${shots}/open.png`,fullPage:true});
+  assert.match(await page.locator('.parent-notice').innerText(),/点数暂时还不能使用，功能上线前请按需充值；兑换前可联系客服全额退款/);
   for(const invalid of ['0','-1','1.5','51','99']){await page.locator('#yuan').fill(invalid);await page.locator('#order-form button').click();await page.locator('#topup-message',{hasText:'整数元'}).waitFor();assert.equal(await page.locator('.topup-order').count(),0,invalid);}
   await page.locator('#yuan').fill('10');await page.locator('#order-form button').click();
   await page.locator('.topup-order').first().waitFor();
