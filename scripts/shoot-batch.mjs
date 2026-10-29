@@ -21,6 +21,8 @@ try{
   await page.goto(server.base,{waitUntil:'networkidle'});await page.screenshot({path:`${output}/home.png`});
   await page.locator('.trust-footer').scrollIntoViewIfNeeded();await page.screenshot({path:`${output}/footer.png`});
   await page.goto(server.base+'/404.html',{waitUntil:'networkidle'});await page.screenshot({path:`${output}/404.png`});
+  await page.goto(server.base+'/topup/',{waitUntil:'networkidle'});await page.screenshot({path:`${output}/topup-closed.png`,fullPage:true});
+  await context.route('**/topup-open.js',route=>route.fulfill({contentType:'application/javascript',body:'export default true;\n'}));
   await page.goto(server.base+'/topup/',{waitUntil:'networkidle'});await page.locator('#order-form button').click();
   await page.screenshot({path:`${output}/topup.png`,fullPage:true});
   const order=await page.evaluate(()=>JSON.parse(localStorage.getItem('kaiqiao.topup.v1')).orders[0]);

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, readdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { homePreview } from './home-preview.mjs';
 import { testSigner } from './batch-fixtures.mjs';
@@ -22,9 +23,12 @@ for(const name of ['index.html','404.html','topup/index.html']){
   assert.match(html,/<footer[\s\S]*家长扫码联系客服/);
   assert.match(html,/alt="家长扫码联系客服（微信二维码）"/);
 }
-for(const file of ['wechat-pay-qr.png','wechat-service-qr.png'])assert.ok((await readFile(`${root}/assets/${file}`)).length>0);
+const qrHash={'wechat-pay-qr.png':'8649d800da4a2d74cc235c6690b4ed332ef707fb08b91016cf6a6428d8b7e817','wechat-service-qr.png':'7091ae644b68983bbb4977a442f2df0ff2f01265da06c3c81680cd556d22bc0c'};
+for(const [file,hash] of Object.entries(qrHash)){const bytes=await readFile(`${root}/assets/${file}`);assert.ok(bytes.length>=8000&&bytes.length<=200000,file);assert.equal(createHash('sha256').update(bytes).digest('hex'),hash);}
 const topup=await read('topup/index.html');assert.match(topup,/<meta name="robots" content="noindex">/);
-for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里'])assert.ok(topup.includes(text));
+for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里','懂技术的人能改本机数字','以实际付款与对账为准','充值功能即将开放','1–50'])assert.ok(topup.includes(text),text);
+assert.equal(await read('topup-open.js'),'// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default false;\n');
+assert.doesNotMatch(topup,/1–200/);
 assert.doesNotMatch(await read('sitemap.xml'),/topup/);
 assert.match(await read('index.html'),/href="\/topup">家长充值/);
 assert.match(await read('pelican.css'),/prefers-reduced-motion:reduce/);
@@ -44,8 +48,8 @@ async function inspect(dir){for(const entry of await readdir(dir,{withFileTypes:
 }}
 await inspect('.');
 const headers=await read('_headers');
-for(const path of ['/manifest.webmanifest','/topup','/topup/','/topup/index.html','/topup.js','/topup-core.js','/topup-config.js'])assert.ok(headers.includes(`${path}\n  Cache-Control: no-cache`));
-const newPublic=['install.js','topup.js','topup-core.js','topup-config.js','topup/index.html','pelican.css','assets/pelican.svg','manifest.webmanifest'];
+for(const path of ['/manifest.webmanifest','/topup','/topup/','/topup/index.html','/topup.js','/topup-core.js','/topup-config.js','/topup-open.js'])assert.ok(headers.includes(`${path}\n  Cache-Control: no-cache`));
+const newPublic=['install.js','topup.js','topup-core.js','topup-config.js','topup-open.js','topup/index.html','pelican.css','assets/pelican.svg','manifest.webmanifest'];
 for(const file of newPublic){const source=await read(file);assert.doesNotMatch(source,/(?:src|poster)\s*=\s*["']https?:\/\/|(?:src|href)["']?\s*:\s*["']https?:\/\/|url\(\s*["']?https?:\/\/|@import\s*["']https?:\/\//i,file);}
 for(const file of ['src/components/math/pelican.tsx','scripts/make-pwa-icons.mjs','scripts/topup-keygen.mjs','scripts/shoot-batch.mjs','scripts/topup-core.test.mjs','scripts/batch-fixtures.mjs','scripts/check-batch-sw.mjs','scripts/check-batch-features.mjs','site/topup-code.md'])assert.doesNotMatch(await readFile(file,'utf8'),/(?:src|poster)\s*=\s*["']https?:\/\/|url\(\s*["']?https?:\/\/|@import\s*["']https?:\/\//i,file);
 console.log(`PASS batch static manifest/icons/three heads/QR/noindex/protocol/reduced motion; ${inspected} repository files without private JWK fields`);
@@ -71,14 +75,29 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});
   for(const part of ['.pelican-body','.pelican-eye','.pelican-stars'])assert.equal(await page.locator(part).evaluate(el=>getComputedStyle(el).animationName),'none');
   await page.goto(server.base+'/?practice=1');assert.ok(await page.locator('#install-hint').isHidden());
+  const shots='/opt/cursor/artifacts/topup-switch';await mkdir(shots,{recursive:true});
   await page.goto(server.base+'/topup');
-  for(const invalid of ['0','-1','1.5','201']){await page.locator('#yuan').fill(invalid);await page.locator('#order-form button').click();assert.equal(await page.locator('.topup-order').count(),0);}
+  await page.locator('#topup-closed').waitFor();
+  assert.equal(await page.locator('#topup-closed').innerText(),'充值功能即将开放');
+  assert.ok(await page.locator('.pay-qr').isHidden());
+  assert.ok(await page.locator('#redeem-form').isHidden());
+  assert.ok(await page.locator('#order-form').isHidden());
+  await page.screenshot({path:`${shots}/closed.png`,fullPage:true});
+  await context.route('**/topup-open.js',route=>route.fulfill({contentType:'application/javascript',body:'export default true;\n'}));
+  await page.goto(server.base+'/topup/');
+  await page.locator('#order-form').waitFor();
+  assert.ok(await page.locator('#topup-closed').isHidden());
+  assert.ok(await page.locator('.pay-qr').isVisible());
+  assert.ok(await page.locator('#redeem-form').isVisible());
+  await page.screenshot({path:`${shots}/open.png`,fullPage:true});
+  for(const invalid of ['0','-1','1.5','51','99']){await page.locator('#yuan').fill(invalid);await page.locator('#order-form button').click();await page.locator('#topup-message',{hasText:'整数元'}).waitFor();assert.equal(await page.locator('.topup-order').count(),0,invalid);}
   await page.locator('#yuan').fill('10');await page.locator('#order-form button').click();
+  await page.locator('.topup-order').first().waitFor();
   const state=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),STORAGE_KEY),order=state.orders[0];
   assert.match(order.id,/^KQ[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}$/);assert.equal(order.points,1000);assert.ok(order.payableFen>=1001&&order.payableFen<=1009);
-  await page.locator('#order-form button').click();assert.equal(await page.locator('.topup-order').count(),2);
+  await page.locator('#order-form button').click();await page.locator('.topup-order').nth(1).waitFor();assert.equal(await page.locator('.topup-order').count(),2);
   const latest=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),STORAGE_KEY);assert.notEqual(latest.orders[1].id,order.id);
-  await page.locator('.topup-order').first().locator('summary').click();await page.getByRole('button',{name:'确认删除未付款订单'}).first().click();assert.equal(await page.locator('.topup-order').count(),1);
+  await page.locator('.topup-order').first().locator('summary').click();await page.getByRole('button',{name:'确认删除未付款订单'}).first().click();await page.locator('#topup-message',{hasText:'已删除订单。'}).waitFor();assert.equal(await page.locator('.topup-order').count(),1);
   const code=await sign(order);
   await page.locator('#code').fill(code);await page.locator('#redeem-form button').click();
   await page.getByText('兑换成功，点数已存入本机余额。',{exact:true}).waitFor();assert.equal(await page.locator('#balance').innerText(),'1000');
@@ -86,6 +105,13 @@ try{
   await page.reload();assert.equal(await page.locator('#balance').innerText(),'1000');
   await page.locator('#code').fill(code);await page.locator('#redeem-form button').click();await page.getByText('这个订单已经兑换过了，不能重复兑换。',{exact:true}).waitFor();
   assert.equal(await page.locator('#balance').innerText(),'1000');
+  await page.locator('#yuan').fill('10');await page.locator('#order-form button').click();
+  await page.locator('.topup-order',{hasText:'待处理'}).first().waitFor();
+  await page.locator('.topup-order',{hasText:'待处理'}).first().locator('summary').click();
+  await page.evaluate(key=>{const state=JSON.parse(localStorage.getItem(key));const pending=state.orders.find(item=>!item.redeemed);pending.redeemed=true;state.balance+=pending.points;localStorage.setItem(key,JSON.stringify(state));},STORAGE_KEY);
+  await page.getByRole('button',{name:'确认删除未付款订单'}).click();
+  await page.getByText('该订单已兑换，未删除',{exact:true}).waitFor();
+  assert.equal(await page.locator('#balance').innerText(),'2000');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.locator('.service-qr summary').click();assert.ok(await page.locator('.service-qr-large').isVisible());
   assert.deepEqual(external,[]);assert.deepEqual(errors,[]);await context.close();
@@ -99,10 +125,11 @@ try{
   }
   for(const method of ['getItem','setItem']){
     const ctx=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
-    await ctx.route('**/*',r=>new URL(r.request().url()).origin===server.base?r.continue():r.abort());
+    await ctx.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!==server.base)return route.abort();if(url.pathname==='/topup-open.js')return route.fulfill({contentType:'application/javascript',body:'export default true;\n'});return route.continue();});
     await ctx.addInitScript(({method,key})=>{const original=Storage.prototype[method];Storage.prototype[method]=function(name,...args){if(name===key)throw new DOMException('test internal storage error','SecurityError');return original.call(this,name,...args);};},{method,key:STORAGE_KEY});
     const p=await ctx.newPage();await p.goto(server.base+'/topup/');
-    if(method==='setItem')await p.locator('#order-form button').click();
+    if(method==='setItem'){await p.locator('#order-form').waitFor();await p.locator('#order-form button').click();}
+    await p.locator('#topup-message',{hasText:'浏览器'}).waitFor();
     const text=await p.locator('#topup-message').innerText();assert.match(text,/浏览器/);assert.doesNotMatch(text,/test internal|SecurityError/);assert.equal(await p.locator('.topup-order').count(),0);
     await ctx.close();
   }

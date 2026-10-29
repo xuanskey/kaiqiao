@@ -1,13 +1,13 @@
 /** Offline top-up protocol. No storage, UI, network, or signing capability here. */
-export const MAX_YUAN = 200;
+export const MAX_YUAN = 50;
 export const ORDER_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 export const STORAGE_KEY = 'kaiqiao.topup.v1';
 const BASE32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const ORDER = /^KQ[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}$/;
 export function validateYuan(value) {
-  if (!/^[1-9]\d*$/.test(String(value))) throw Error('请输入 1–200 之间的整数元，不要填小数。');
+  if (!/^[1-9]\d*$/.test(String(value))) throw Error(`请输入 1–${MAX_YUAN} 之间的整数元，不要填小数。`);
   const yuan = Number(value);
-  if (!Number.isSafeInteger(yuan) || yuan > MAX_YUAN) throw Error('请输入 1–200 之间的整数元。');
+  if (!Number.isSafeInteger(yuan) || yuan > MAX_YUAN) throw Error(`请输入 1–${MAX_YUAN} 之间的整数元。`);
   return yuan;
 }
 /** Rejection sampling avoids modulo bias. */
@@ -82,4 +82,74 @@ export function applyRedemption(state, payload) {
 }
 export async function redeem(state, code, publicKeyJwk, subtle = crypto.subtle) {
   return applyRedemption(state,await verifyCode(code,publicKeyJwk,subtle));
+}
+/** Append an order onto the newest state. Balance and existing orders stay as they are. */
+export function projectCreate(latest, order) {
+  if (latest.orders.some(item => item.id === order.id)) return { state: latest, status: 'exists' };
+  return { state: { balance: latest.balance, orders: [...latest.orders, order] }, status: 'created' };
+}
+/** Drop an unpaid order. A redeemed order is left untouched. */
+export function projectDelete(latest, id) {
+  const order = latest.orders.find(item => item.id === id);
+  if (!order) return { state: latest, status: 'missing' };
+  if (order.redeemed) return { state: latest, status: 'redeemed' };
+  return { state: { balance: latest.balance, orders: latest.orders.filter(item => item.id !== id) }, status: 'deleted' };
+}
+/** Credit one order onto the newest state. Refuses a code that is already redeemed. */
+export function projectRedeem(latest, payload) {
+  const order = latest.orders.find(item => item.id === payload.id);
+  if (!order) throw Error('这张码对应的订单不在本机，请在生成订单的浏览器兑换。');
+  if (order.redeemed) throw Error('这个订单已经兑换过了，不能重复兑换。');
+  if (order.points !== payload.points) throw Error('充值码与订单点数不一致，请家长联系客服核对。');
+  const expected = latest.balance + order.points;
+  return { state: applyRedemption(latest, payload), expected, order: { ...order, redeemed: true } };
+}
+/**
+ * Read-back after a redeem write.
+ * Same-code double credit (balance exactly one extra copy) is rolled back.
+ * A stale overwrite that dropped the credit is written back onto the newest orders.
+ */
+export function reconcileRedeem(after, redeemedOrder, expectedBalance) {
+  const points = redeemedOrder.points;
+  const found = after.orders.find(item => item.id === redeemedOrder.id);
+  if (found?.redeemed && after.balance - expectedBalance === points) {
+    return { state: { balance: expectedBalance, orders: after.orders }, error: Error('这个订单已经兑换过了，不能重复兑换。') };
+  }
+  if (!found || !found.redeemed || after.balance < expectedBalance) {
+    const orders = found
+      ? after.orders.map(item => item.id === redeemedOrder.id ? { ...item, redeemed: true } : item)
+      : [...after.orders, redeemedOrder];
+    return { state: { balance: Math.max(after.balance, expectedBalance), orders } };
+  }
+  return null;
+}
+/**
+ * One critical section for create, delete, and redeem.
+ * With Web Locks the whole callback, including verification, holds the lock.
+ * Without locks, a storage listener marks foreign writes; commit reloads immediately
+ * before saving, then read-back can roll a duplicate credit back.
+ */
+export async function transact(io, run) {
+  const exec = async () => {
+    let foreign = false;
+    const stop = io.listen?.(key => { if (key === STORAGE_KEY) foreign = true; });
+    try {
+      return await run({
+        load: io.load,
+        sawForeign: () => foreign,
+        commit(project) {
+          const produced = project(io.load());
+          if (produced.error && produced.state === undefined) throw produced.error;
+          io.save(produced.state);
+          const after = io.load();
+          const fixed = produced.reconcile?.(after);
+          if (fixed?.state) io.save(fixed.state);
+          if (fixed?.error) throw fixed.error;
+          return produced;
+        },
+      });
+    } finally { stop?.(); }
+  };
+  if (io.locks?.request) return io.locks.request(STORAGE_KEY, exec);
+  return exec();
 }

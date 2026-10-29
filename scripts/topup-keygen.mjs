@@ -2,7 +2,11 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { mkdir, writeFile, chmod, lstat, realpath, access } from 'node:fs/promises';
 import path from 'node:path';
-const dir='/workspace/kaiqiao-topup-issuer';
+const dir = process.argv[2] || process.env.TOPUP_ISSUER_DIR || '';
+if (!dir) {
+  console.error('缺少私钥目录：设置环境变量 TOPUP_ISSUER_DIR，或传入目录参数。');
+  process.exit(1);
+}
 await mkdir(dir,{recursive:true,mode:0o700});
 if((await lstat(dir)).isSymbolicLink() || await realpath(dir)!==dir)throw Error('Issuer directory must be a real external directory');
 if(dir.startsWith(await realpath('.')+path.sep))throw Error('Issuer directory must be outside repository');

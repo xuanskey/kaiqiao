@@ -107,6 +107,9 @@ https://yanghat.cn/*
 /topup-config.js
   Cache-Control: no-cache
 
+/topup-open.js
+  Cache-Control: no-cache
+
 /assets/wechat-pay-qr.png
   Cache-Control: public, max-age=3600
 
