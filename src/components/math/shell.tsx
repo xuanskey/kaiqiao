@@ -1,3 +1,4 @@
+import { HelpDialog } from "@/components/help/help-dialog";
 import { track } from "@/lib/telemetry";
 import { useEffect, useRef, type ReactNode } from "react";
 import { BarChart3, ChevronDown, Home, Library, NotebookPen, Presentation, ShieldCheck, Volume2, VolumeX, type LucideIcon } from "lucide-react";
@@ -55,7 +56,7 @@ export function AppShell({ screen, children }: { screen: Screen; children: React
       {!focus ? <header className="topbar">
         <div className="mobile-brand"><LogoMark /><strong>开窍</strong></div>
         <span className="desktop-context">小学数学与科学 · 学习空间</span>
-        <div className="topbar-actions"><GradePicker /><button type="button" className="icon-button" aria-label={muted ? "打开声音" : "关闭声音"} aria-pressed={!muted} onClick={() => { unlockAudio(); setMuted(!muted); }}>{muted ? <VolumeX size={19} /> : <Volume2 size={19} />}</button></div>
+        <div className="topbar-actions"><HelpDialog /><GradePicker /><button type="button" className="icon-button" aria-label={muted ? "打开声音" : "关闭声音"} aria-pressed={!muted} onClick={() => { unlockAudio(); setMuted(!muted); }}>{muted ? <VolumeX size={19} /> : <Volume2 size={19} />}</button></div>
       </header> : null}
       <main className="main-content" ref={main} tabIndex={-1} aria-label="学习内容">
         {storageError ? <p role="alert" className="storage-alert">{storageError}</p> : null}
