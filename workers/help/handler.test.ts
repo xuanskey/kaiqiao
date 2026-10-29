@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,readdir} from 'node:fs/promises';
 // @ts-ignore JS module
-import {handleHelp, DAILY_CAP_MICRO} from './handler.js';
+import {handleHelp, DAILY_CAP_MICRO, PRICE_MISS_MICRO, PRICE_OUT_MICRO, MAX_TOKENS} from './handler.js';
 // @ts-ignore JS module
 import {SYSTEM_PROMPT} from './prompt.js';
 globalThis.fetch=async()=>{assert.fail('Unexpected non-mock network request');};
@@ -86,4 +86,12 @@ test('daily refusal still consumes minute slot',async()=>{
  const db=new D1();await seed(db,DAILY_CAP_MICRO);
  assert.equal((await (await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:db})).json()).reason,'cap');
  assert.equal(db.sql.prepare('SELECT calls FROM help_minute').get()?.calls,1);
+});
+
+test('预留额使用固定输入输出价格',async()=>{
+ const db=new D1(), q='怎么开始练习？';
+ await call(req({v:1,q}),{DEEPSEEK_API_KEY:'fake',HELP_DB:db},async()=>{
+  assert.equal(db.amount()[0].micro,(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO);
+  throw Error('mock network failure');
+ });
 });

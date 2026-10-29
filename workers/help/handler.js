@@ -54,7 +54,7 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
   if(data===null || typeof data!=='object' || Array.isArray(data) || Object.getPrototypeOf(data)!==Object.prototype || Object.keys(data).sort().join(',')!=='q,v' || data.v!==1 || typeof data.q!=='string' || [...data.q.trim()].length<1 || [...data.q.trim()].length>300) return reply(400);
   if(!env?.DEEPSEEK_API_KEY || !env?.HELP_DB) return fallback('unconfigured');
   const q=redactPII(data.q.trim());
-  const reserve=(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*2+MAX_TOKENS*8;
+  const reserve=(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO;
   const beijing=new Date(deps.now()+8*3600000).toISOString();
   const day=beijing.slice(0,10), minute=beijing.slice(0,16);
   const db=env.HELP_DB;
