@@ -11,6 +11,14 @@
 - FAQ 文案修改后运行 `node scripts/check-site-seo.mjs --write` 同步结构化数据，再运行默认校验（不带 `--write`）。
 - 缓存：仅 `/app/assets/*` 的哈希资源和明确带版本的分享图使用 immutable；新增长缓存资源须使用新文件名，并为其增加精确路径规则。未版本化媒体使用一小时缓存；首页 CSS/JS 的 query 版本不用于匹配 `_headers`，保持 no-cache。同步或发布脚本不重写主站 `_headers`。
 
+## 旧域 yanghat.cn 迁移顺序
+
+两个域名的本机存储互相隔离，裸域上的练习记录只能在裸域页面里导出。仓库内的设计是：首页第一个脚本 `domain-transition.js` 在裸域顶层判断——**有本机练习记录就留在裸域**，顶部提示先在「学情→导出备份」，再到 www 恢复；**没有记录才跳到 www**，保留路径、参数和锚点。`scripts/check-domain-transition.mjs` 在本地把 yanghat.cn 解析到预览服务器验证这两种情况，并检查仓库里没有裸域无条件跳转。
+
+2026-10-30 实测线上 `https://yanghat.cn/…` 返回 **301 → https://www.yanghat.cn/…**，响应来自 Cloudflare 规则而不是本仓库（`_redirects` 只有 `/练习` 两条，Functions 不做跳转）。301 发生在页面脚本之前，所以上面的保护在线上不会生效：裸域上有记录的用户进不了导出页面。
+
+需要管理员在 Cloudflare 后台做的改动（仓库改不了，本次未改）：在 yanghat.cn 区域找到产生这条 301 的规则（Redirect Rules、Page Rules 或 Bulk Redirects 之一），**迁移期内暂停它**，让裸域请求落到 Pages 项目 yanghat-cn，由页面脚本决定跳转或提示；迁移期结束后再恢复 301。暂停后用 `curl -sI https://yanghat.cn/?practice=1` 确认返回 200 而不是 301。暂停期间搜索引擎靠 `_headers` 里的 canonical Link 头和页面 canonical 识别正式地址。
+
 ## 启用统计
 
 当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。只统计六种事件的次数，不能推断独立人数。
