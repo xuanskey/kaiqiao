@@ -15,7 +15,7 @@ export function redactPII(text) {
     })
     .replace(/\d+(?:栋|幢|号楼)\s*(?:\d+单元\s*)?\d+(?:室|号)?|\d+单元\s*\d+(?:室|号)|(?<!\d)\d{3,4}室/g, '[地址]')
     .replace(/(住在|住址是|家住|家在|我家在)\s*([\p{Script=Han}\d]{2,12}?)(?=$|[\s，,。.!！?？、])|(住在|住址是|家住|家在|我家在)\s*[\p{Script=Han}\d]{2,12}/gu, (_, lead, value, other) => (lead || other)+'[地址]');
-  text = text.replace(/(?:QQ|微信号?|vx|wx)\s*(?:号码|号)?\s*(?:是|为|[:：])?\s*([\p{Script=Han}]{2,12})(?=$|[\s，,。.!！?？、])/giu, (whole,nickname) => /^(?:什么|怎么|哪里|支付|里|打开)/u.test(nickname) ? whole : '[账号]');
+  text = text.replace(/(?:QQ|微信号?|vx|wx)\s*(?:号码|号)?\s*(?:是|为|[:：])\s*([\p{Script=Han}]{2,12})(?=$|[\s，,。.!！?？、])/giu, (whole,nickname) => /^(?:什么|怎么|哪|多少|不是|否)/u.test(nickname) ? whole : '[账号]');
   text = text.replace(/我是([\p{Script=Han}]{2,4}?)(?=同学)/gu, (whole,name) => /年级|^新$|^你的$|^[一二三四五六七八九十]/u.test(name) ? whole : '我是[名字]');
   text = text.replace(new RegExp('(我叫|我的名字是|名字是|名字叫)\\s*([A-Za-z]{1,20}|[\\p{Script=Han}]{1,4}?'+boundary+'|[\\p{Script=Han}]{2,4})','gu'),
     (whole, lead, name) => /^(?:什么|怎么|哪|多少)/u.test(name) ? whole : lead+'[名字]');
