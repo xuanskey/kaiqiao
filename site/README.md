@@ -39,27 +39,13 @@ npm run deploy:site
 
 仅管理员使用 [AE SQL API](https://developers.cloudflare.com/analytics/analytics-engine/sql-api/)：`POST https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/analytics_engine/sql`，请求 body 为 SQL，认证头为 `Authorization: Bearer <API_TOKEN>`。令牌需要 **Account | Account Analytics | Read**，限定目标账号；不要把真实令牌写入仓库、客户端或日志。本任务未调用此 API。
 
-最近七天生产事件与年级次数：
+推荐离线生成最近七天生产事件的 SQL，再由管理员在查询工具执行：
 
-```sql
-SELECT blob1 AS event, blob2 AS grade,
-       SUM(_sample_interval * double1) AS n
-FROM kaiqiao_metrics
-WHERE blob3 = 'prod' AND timestamp > NOW() - INTERVAL '7' DAY
-GROUP BY event, grade
-ORDER BY n DESC
+```sh
+node scripts/metrics-sql.mjs --days 7
 ```
 
-按天聚合（使用 AE timestamp 的默认 UTC 日界，不是北京时间自然日）：
-
-```sql
-SELECT toStartOfDay(timestamp) AS day, blob1 AS event, blob2 AS grade,
-       SUM(_sample_interval * double1) AS n
-FROM kaiqiao_metrics
-WHERE blob3 = 'prod' AND timestamp > NOW() - INTERVAL '7' DAY
-GROUP BY day, event, grade
-ORDER BY day, n DESC
-```
+脚本只打印 SQL，不联网、不读取令牌；默认只统计 prod，按 AE timestamp 的 UTC 日界、事件、年级分组，用 `SUM(_sample_interval)` 加权（double1 固定为 1）。它逐条按精确到秒的 UTC 时间戳及 event/grade/env 排除 `TEST_POINTS` 中已知测试写入。AE 不能删除数据，测试点只能在查询时排除；新增测试写入必须追加到 `scripts/metrics-sql.mjs` 的 `TEST_POINTS`。同秒同事件同年级同环境的真实记录也会被排除，因此这些点不是逐条记录标识。
 
 `blob1` 是事件，`blob2` 为 `none` 或 `1`–`6`，`blob3` 为 `prod` / `preview` / `dev`；`index1` 为事件，`double1` 固定 1。时间戳由 AE 生成，客户端不提交时间或标识。只查询聚合，不导出逐条事件。[默认保留三个月](https://developers.cloudflare.com/analytics/analytics-engine/limits/)；AE 可在写入和查询时采样，必须用 `_sample_interval` 加权，结果不能作为精确人数或审计账本。
 
@@ -103,7 +89,7 @@ npm run deploy:site
 wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend ORDER BY day DESC LIMIT 7"
 ```
 
-回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 并**仍从 `site/` 部署**（否则会撤掉 `/e` 统计函数），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
+回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 后运行 `npm run deploy:site`（函数始终部署），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
 
 本地验证：`node scripts/check-help-client.mjs` 自动切换默认/启用构建，用 Playwright 拦截假回答，全程不调用外部 API，结束恢复默认产物。`node scripts/check-help-pagesdev.mjs` 使用 wrangler 4 和临时本地 D1，默认不传密钥，验证兜底、错误状态、静态头与旧重定向，结束清理进程与临时目录。`WRANGLER` 可指定二进制，默认 `/tmp/wrangler4/node_modules/.bin/wrangler`。仅管理员明确授权后才可运行 `HELP_REAL_ONCE=1` 模式：要求父进程已有密钥，仅经子进程环境传递（`CLOUDFLARE_INCLUDE_PROCESS_ENV=true`，wrangler 绑定表显示 `(hidden)`），一次真实提问后直接读取临时本地 D1 文件打印当日花费，不写密钥文件。
 
