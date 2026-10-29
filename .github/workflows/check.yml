@@ -47,8 +47,8 @@ jobs:
       - name: Browser smoke and React state regression
         run: npm run test:smoke
 
-  # 官网/充值/客服/存储禁用/错误边界等站点检查：按正式参数（.env.production，TOPUP_OPEN 不设即关闭收款）构建后本地起服务测试。
-  # 全部请求拦在本机，不访问外网，不调用模型；只用官方 actions。
+  # 官网/充值/客服/存储禁用/错误边界等站点检查：按正式参数构建后本地起服务测试。
+  # 全部请求拦在本机，不访问外网，不调用模型；只用官方 actions，不读密钥。
   site:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -66,7 +66,13 @@ jobs:
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Install Chromium
         run: npx playwright install --with-deps --only-shell chromium
-      - run: npm run release
+      - name: Release with production switches
+        run: TOPUP_OPEN=false VITE_EVENT_ENDPOINT=/e VITE_HELP_ENDPOINT=/api/help npm run release
+      - name: Release leaves a clean worktree and passes deploy check
+        run: |
+          status=$(git status --porcelain)
+          if [ -n "$status" ]; then printf '%s\n' "$status"; exit 1; fi
+          npm run deploy:site -- --check
       - name: Site checks
         run: npm run test:site
       - name: Release artifacts unchanged after site checks
