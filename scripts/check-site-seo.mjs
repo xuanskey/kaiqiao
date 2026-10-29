@@ -33,7 +33,21 @@ try {
       const summary = detail.querySelector('summary').cloneNode(true);
       summary.querySelectorAll('.faq-number, svg').forEach(node => node.remove());
       const clean = node => node.textContent.replace(/\s+/g, ' ').trim();
-      return { '@type': 'Question', name: clean(summary), acceptedAnswer: { '@type': 'Answer', text: clean(detail.querySelector('.faq-answer')) } };
+      // Keep only anchors, resolving the visible page href against its canonical URL.
+      // Escape text before serializing HTML so literal angle brackets remain text.
+      const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const answerHTML = node => {
+        if (node.nodeType === Node.TEXT_NODE) return escape(node.textContent);
+        const contents = [...node.childNodes].map(answerHTML).join('');
+        if (node.nodeName !== 'A') return contents;
+        const href = new URL(node.getAttribute('href'), doc.querySelector('link[rel="canonical"]').href);
+        if (href.protocol !== 'https:' || !['www.yanghat.cn', 'yanghat.cn'].includes(href.hostname) || href.pathname.startsWith('/app')) {
+          throw new Error('FAQ link must use the public HTTPS entry');
+        }
+        return `<a href="${escape(href.href)}">${contents}</a>`;
+      };
+      const answer = answerHTML(detail.querySelector('.faq-answer')).replace(/\s+/g, ' ').trim();
+      return { '@type': 'Question', name: clean(summary), acceptedAnswer: { '@type': 'Answer', text: answer } };
     });
   }, html);
   assert.ok(faq.length > 0);
