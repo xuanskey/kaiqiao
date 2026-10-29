@@ -130,6 +130,10 @@
 .gentle-note { display: flex; justify-content: center; align-items: center; gap: 7px; color: #68765e; font-size: 10px; line-height: 1.9; text-align: center; margin: 26px 0 8px; }
 .mascot { width: 150px; height: auto; overflow: visible; }
 .storage-alert { padding: 15px 18px; background: #fff3e7; color: #8b5a28; border-radius: 13px; font-size: 13px; line-height: 1.8; margin-bottom: 20px; }
+.error-fallback { padding: 20px; border: 1px solid #e3d6c4; background: #fffaf3; color: #3b2f22; border-radius: 13px; line-height: 1.8; }
+.error-fallback h2 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.error-fallback button { margin-top: 12px; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #2f6b4f; color: #fff; font-weight: 600; }
+.error-fallback button:focus-visible { outline: 3px solid #1f4fd1; outline-offset: 2px; }
 .storage-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: #eef4e6; color: #3f5a3a; }
 .storage-notice button { min-height: 44px; padding: 0 16px; border: 1px solid #cad9bc; border-radius: 10px; background: #fff; font-size: 13px; color: #285847; }
 .star-total { display: inline-flex; align-items: center; gap: 9px; padding: 11px 14px; border-radius: 13px; background: #faf0d0; color: #976d25; white-space: nowrap; }
