@@ -2,6 +2,7 @@ import {readFileSync,statSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync,spawnSync} from 'node:child_process';
+import {SOURCE_PATHS,verifyManifest} from './build-manifest.mjs';
 
 // 只读取给定根目录；不访问环境、不启动进程、不修改文件。
 export function checkSite(root) {
@@ -37,8 +38,11 @@ export function deploy(root,args=[]) {
   try {
     if(args.some(arg=>arg!=='--check'))throw Error('仅支持 --check 参数，部署目标不可覆盖');
     checkSite(root);
-    if(process.env.DEPLOY_ALLOW_DIRTY==='1')console.warn('警告：已跳过 site/ 与 .env.production 的已提交检查');
-    else if(execFileSync('git',['status','--porcelain','--','site/','.env.production'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim())throw Error('site/ 或 .env.production 有未提交改动');
+    if(process.env.DEPLOY_ALLOW_DIRTY==='1')console.warn('警告：已跳过 site/ 与源码的已提交检查（构建清单仍核对）');
+    else if(execFileSync('git',['status','--porcelain','--','site/',...SOURCE_PATHS],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim())throw Error('site/ 或源码有未提交改动');
+    // 产物必须由当前源码构建且之后未被改动、公开开关与构建时一致（site/build-manifest.json）。
+    const manifest=verifyManifest(root);
+    console.log(`构建清单一致：开关 ${JSON.stringify(manifest.switches)}`);
     const argv=['pages','deploy','www.yanghat.cn','--project-name','yanghat-cn','--branch','main'];
     if(args.includes('--check')){console.log('检查通过');console.log('将在 site/ 执行：wrangler '+argv.join(' '));return 0;}
     const env={...process.env};delete env.DEEPSEEK_API_KEY;

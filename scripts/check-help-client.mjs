@@ -5,7 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 const client=await readFile('site/www.yanghat.cn/help.js','utf8');
 for(const endpoint of ['', 'https://evil.example', '//evil.example', '/api/help?x=1', '/api/help/', null, 1]){
- vm.runInNewContext(client.replace("import endpoint from './help-config.js';",''),{endpoint,document:{querySelector(){assert.fail('非法端点渲染了按钮');}},fetch(){assert.fail('非法端点发送了请求');}});
+ vm.runInNewContext(client.replace("import endpoint from './help-config.js';",'').replace("import { redactPII } from './help-pii.js';",''),{endpoint,redactPII:t=>t,document:{querySelector(){assert.fail('非法端点渲染了按钮');}},fetch(){assert.fail('非法端点发送了请求');}});
 }
 console.log('PASS 非法端点不渲染、不请求');
 import {spawn} from 'node:child_process';

@@ -1,4 +1,7 @@
 import type {HelpMessage} from './help-history';
+import {redactPII} from '../../workers/help/pii.js';
+// 发送前在本机隐去电话、邮箱、证件号、姓名、学校、住址等；Worker 收到后还会再做一遍。
+export const redactQuestion = (text: string): string => redactPII(text);
 export const helpEndpoint = import.meta.env?.VITE_HELP_ENDPOINT ?? '';
 // Worker 对上游设 15 秒上限并返回兜底答复；客户端多留 5 秒，只兜住网络挂起，不抢在 Worker 兜底之前。
 export const HELP_TIMEOUT_MS = 20000;
@@ -15,7 +18,7 @@ export async function requestHelp(endpoint: string, messages: HelpMessage[], sig
   signal.addEventListener('abort', stop, {once: true}); timeout.signal.addEventListener('abort', stop, {once: true});
   if (signal.aborted) combined.abort();
   try {
-    const response = await (options.fetch ?? fetch)(endpoint, {method:'POST',credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:2,messages}),signal:combined.signal});
+    const response = await (options.fetch ?? fetch)(endpoint, {method:'POST',credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:2,messages:messages.map(item=>item.role==='user'?{...item,content:redactPII(item.content)}:item)}),signal:combined.signal});
     const data = await response.json();
     if (!response.ok || data.v !== 1 || typeof data.answer !== 'string' || !['ai','fallback'].includes(data.source)) throw new Error('Help unavailable');
     return {answer:data.answer,source:data.source};

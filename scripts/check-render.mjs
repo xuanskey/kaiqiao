@@ -3,6 +3,8 @@ import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { createServer } from 'vite';
 
+// 课堂在应用里按需加载（React.lazy），服务端一次性渲染只会得到占位；这里用单文件构建的静态别名直接渲染课堂。
+process.env.KAIQIAO_SINGLE_FILE = '1';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 try {
   const { Game } = await server.ssrLoadModule('/src/components/math/game.tsx');

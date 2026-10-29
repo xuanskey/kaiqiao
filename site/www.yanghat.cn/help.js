@@ -1,4 +1,5 @@
 import endpoint from './help-config.js';
+import { redactPII } from './help-pii.js';
 // Worker 对上游设 15 秒上限并返回兜底答复；这里多留 5 秒，只兜住网络挂起。
 const HELP_TIMEOUT_MS=20000;
 function trimHelpHistory(history, question) {
@@ -21,20 +22,23 @@ function initHelp() {
   const badge=node('strong','AI 回答，仅供参考');
   const warning=node('p','请不要输入姓名、电话、学校、住址等个人信息');warning.id='help-warning';
   const form=node('form');const label=node('label','你的问题');label.htmlFor='help-question';
-  const input=node('textarea');input.id='help-question';input.maxLength=300;input.required=true;input.setAttribute('aria-describedby','help-warning');
+  const input=node('textarea');input.id='help-question';input.maxLength=300;input.required=true;input.placeholder='请勿输入姓名电话等';input.setAttribute('aria-describedby','help-warning');
   const send=node('button','发送');send.type='submit';
   const answer=node('p');answer.setAttribute('role','status');answer.className='help-answer';
+  const redacted=node('p');redacted.className='help-redacted';redacted.hidden=true;
   const log=node('ol');log.className='help-log';log.setAttribute('aria-label','对话记录');
   const reset=node('button','清空对话');reset.type='button';
   const mail=node('a','找不到答案？发邮件到 hello@yanghat.cn');mail.href='mailto:hello@yanghat.cn';
   const close=node('button','关闭');close.type='button';
-  form.append(label,input,send);dialog.append(title,badge,warning,form,log,reset,answer,mail,close);footer.append(button);document.body.append(dialog);
+  form.append(label,input,send);dialog.append(title,badge,warning,form,redacted,log,reset,answer,mail,close);footer.append(button);document.body.append(dialog);
   let active, history=[];
   button.addEventListener('click',()=>dialog.showModal());close.addEventListener('click',()=>dialog.close());
-  const clear=()=>{active?.abort();active=undefined;input.value='';answer.textContent='';send.disabled=false;history=[];log.replaceChildren();};
+  const clear=()=>{active?.abort();active=undefined;input.value='';answer.textContent='';redacted.hidden=true;redacted.textContent='';send.disabled=false;history=[];log.replaceChildren();};
   dialog.addEventListener('close',clear);reset.addEventListener('click',clear);
   form.addEventListener('submit',async event=>{
-    event.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;
+    event.preventDefault();const raw=input.value.trim();if(!raw||send.disabled)return;
+    // 发送前在本机隐去电话、邮箱、证件号、姓名、学校、住址等；服务端还会再做一遍。
+    const q=redactPII(raw);redacted.hidden=q===raw;redacted.textContent=q===raw?'':'已在发送前隐去个人信息（如姓名、电话），发送内容：'+q;
     const messages=trimHelpHistory(history,q);
     const controller=new AbortController();active=controller;send.disabled=true;answer.textContent='小助手正在想…';
     let timedOut=false;const timer=setTimeout(()=>{timedOut=true;controller.abort();},HELP_TIMEOUT_MS);
