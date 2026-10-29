@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {onRequest} from '../site/functions/e.js';
 const forbidden=/console\.|CF-Connecting-IP|x-forwarded-for|user-agent|cookie|referer|\.cf/i;
-assert.deepEqual(JSON.parse(await readFile('site/www.yanghat.cn/_routes.json','utf8')),{version:1,include:['/e'],exclude:[]});
+assert.deepEqual(JSON.parse(await readFile('site/www.yanghat.cn/_routes.json','utf8')),{version:1,include:['/e','/api/help'],exclude:[]});
 for(const path of ['functions','_worker.js','wrangler.toml','wrangler.json','wrangler.jsonc','site/wrangler.toml','site/wrangler.json','site/wrangler.jsonc','site/www.yanghat.cn/_worker.js']) {
   await assert.rejects(access(path),{code:'ENOENT'});
 }
@@ -18,7 +18,7 @@ try {
   else {
     assert.equal(result.status,0,result.stderr);
     const routes=JSON.parse(await readFile(join(dir,'routes.json'),'utf8'));
-    assert.deepEqual(routes.include,['/e']);assert.deepEqual(routes.exclude,[]);
+    assert.deepEqual(routes.include,['/e','/api/help']);assert.deepEqual(routes.exclude,[]);
     let bundles=0;
     async function inspect(path) {for(const file of await readdir(path,{withFileTypes:true})) {
       const next=join(path,file.name);

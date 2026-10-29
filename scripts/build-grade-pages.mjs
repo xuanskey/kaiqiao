@@ -31,3 +31,9 @@ const endpoint=loadEnv('production',process.cwd(),'VITE_').VITE_EVENT_ENDPOINT??
 if(endpoint&&endpoint!=='/e')throw Error('Only the same-origin /e endpoint can be enabled');
 await writeFile(`${root}/metrics-config.js`,`// Baked from VITE_EVENT_ENDPOINT at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(endpoint)};\n`);
 console.log(`Generated six grade pages, robots/sitemap and metrics config ${endpoint||'(off)'}`);
+
+// AI help: same resolution as metrics; default off (not set in .env.production).
+const helpEndpoint=loadEnv('production',process.cwd(),'VITE_').VITE_HELP_ENDPOINT??'';
+if(helpEndpoint!==''&&helpEndpoint!=='/api/help')throw Error('Only the same-origin /api/help endpoint can be enabled');
+await writeFile(`${root}/help-config.js`,`// Baked from VITE_HELP_ENDPOINT at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(helpEndpoint)};\n`);
+console.log(`Help config ${helpEndpoint||'(off)'}`);

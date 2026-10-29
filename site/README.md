@@ -15,7 +15,7 @@
 
 当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。只统计六种事件的次数，不能推断独立人数。
 
-上线前由管理员在 Pages 项目 yanghat-cn 的目标环境绑定 Analytics Engine：变量 `METRICS` → 数据集 `kaiqiao_metrics`，并确认配额与 Functions 的 fail_open 设置。不新增 wrangler 配置文件。只有从 `site/` 目录部署才编译 `site/functions/`；显式 `_routes.json` 只包含 `/e`，其余静态资源继续使用原 `_headers` 和 `_redirects`。
+上线前由管理员在 Pages 项目 yanghat-cn 的目标环境绑定 Analytics Engine：变量 `METRICS` → 数据集 `kaiqiao_metrics`，并确认配额与 Functions 的 fail_open 设置。不新增 wrangler 配置文件。只有从 `site/` 目录部署才编译 `site/functions/`；显式 `_routes.json` 只包含 `/e` 与 `/api/help`，其余静态资源继续使用原 `_headers` 和 `_redirects`。
 
 在仓库根构建：
 
@@ -63,3 +63,48 @@ ORDER BY day, n DESC
 ```
 
 `blob1` 是事件，`blob2` 为 `none` 或 `1`–`6`，`blob3` 为 `prod` / `preview` / `dev`；`index1` 为事件，`double1` 固定 1。时间戳由 AE 生成，客户端不提交时间或标识。只查询聚合，不导出逐条事件。[默认保留三个月](https://developers.cloudflare.com/analytics/analytics-engine/limits/)；AE 可在写入和查询时采样，必须用 `_sample_interval` 加权，结果不能作为精确人数或审计账本。
+
+## 启用 AI 帮助
+
+默认关闭：唯一客户端构建开关为 `VITE_HELP_ENDPOINT`，仅允许空字符串或 `/api/help`，其他值构建报错。首页 `help-config.js` 默认 `export default ""`，应用与首页都不显示帮助按钮、不发送帮助请求。帮助是单轮网站使用问答，不存聊天，不要求注册登录；发送前会用正则替换常见个人信息，请仍不要输入姓名、电话、学校、住址等信息。
+
+系统提示覆盖开始练习、练习年级、学情、备份与恢复、反馈邮箱与充值说明。充值说明是 `workers/help/prompt.js` 的 `TOPUP_GUIDANCE` 常量；手动充值页上线前只回答「充值功能即将上线，请家长操作；有问题发邮件 hello@yanghat.cn」，不出现任何价格。上线充值页的 PR 只改该常量及 `prompt.test.ts`。
+
+上线前由管理员创建 D1 数据库 `kaiqiao_help`（确认免费额度），在 Pages 项目 **yanghat-cn 的生产环境**绑定 `HELP_DB` 到该库。只保存北京时间日期与当日累计微元花费、北京时间分钟桶与调用次数，无请求内容或用户标识；表在首次配置完整的合法请求中自动创建。不新增 wrangler 配置文件。
+
+管理员交互式输入密钥（不要写文件、不要把密钥放在命令行参数中）：
+
+```sh
+wrangler pages secret put DEEPSEEK_API_KEY --project-name yanghat-cn
+```
+
+获准启用后，与统计同一机制：在仓库根 `.env.production` 追加一行 `VITE_HELP_ENDPOINT=/api/help`（保留现有 `VITE_EVENT_ENDPOINT=/e`，统计保持开启），再运行：
+
+```sh
+npm run release
+```
+
+Vite 与 `scripts/build-grade-pages.mjs` 都用 `loadEnv('production')` 读取，shell 变量优先，所以单次构建也可 `VITE_HELP_ENDPOINT=/api/help npm run release`（统计仍由文件打开）。本提交的 `.env.production` 不含该行，默认关闭。然后从 `site/` 部署，确保编译 `site/functions/`：
+
+```sh
+cd site
+wrangler pages deploy www.yanghat.cn --project-name yanghat-cn
+```
+
+显式函数路由仅含 `/e` 与 `/api/help`；其余资源沿用 `_headers` 与 `_redirects`。本节命令仅为管理员操作文档，本任务不创建数据库、secret 或部署。
+
+每日上限固定 **1 元（1,000,000 微元）**，不能通过环境变量调大，按北京时间自然日重置。每次先由 D1 原子预留最坏花费，再按 usage 结算。保守使用输入未命中 2 微元/token、缓存命中 0.04 微元/token、输出 8 微元/token 的固定高峰价；超时、网络错误或缺少有效 usage 不退预留，非 2xx 全退。结算失败保留预留，因此查询数字可能高于实际账单，不作为账单凭证。D1 出错或配置缺失均关闭上游调用；达到上限只返回友好兜底，不影响练习。全站上限 **20 次/分钟**，使用北京时间分钟桶，原子计数并删除旧桶，不存用户数据；超限返回 busy 兜底，不预留日额度、不调用上游。分钟名额在日额度拒绝时也会消耗。settle 将花费夹紧到 0 至日上限。
+
+模型固定为 `deepseek-flash`，显式 `thinking: {type: 'disabled'}`，非思考模式，最多 300 token、temperature 0.3、不流式；只读取 content，绝不将 reasoning_content 用作答案。模型与思考参数见 https://api-docs.deepseek.com/api/create-chat-completion ，高峰定价见 https://api-docs.deepseek.com/zh-cn/quick_start/pricing 。
+
+答案清理后按 Unicode 码点截断到 600 字，避免截断 emoji 代理对。PII 保留邮箱、手机、座机脱敏，证件号限制为日期结构有效的 15/18 位；账号要求标记与至少三位标识，号码仅匹配银行卡式 16–19 位；地址要求门牌、楼栋组合或居住语境，姓名与学校结合边界和停用词，避免误伤数学题与年级。
+
+查询最近七个日期的累计花费（微元除以 1,000,000 为元）：
+
+```sh
+wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend ORDER BY day DESC LIMIT 7"
+```
+
+回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 并**仍从 `site/` 部署**（否则会撤掉 `/e` 统计函数），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
+
+本地验证：`node scripts/check-help-client.mjs` 自动切换默认/启用构建，用 Playwright 拦截假回答，全程不调用外部 API，结束恢复默认产物。`node scripts/check-help-pagesdev.mjs` 使用 wrangler 4 和临时本地 D1，默认不传密钥，验证兜底、错误状态、静态头与旧重定向，结束清理进程与临时目录。`WRANGLER` 可指定二进制，默认 `/tmp/wrangler4/node_modules/.bin/wrangler`。仅管理员明确授权后才可运行 `HELP_REAL_ONCE=1` 模式：要求父进程已有密钥，仅经子进程环境传递（`CLOUDFLARE_INCLUDE_PROCESS_ENV=true`，wrangler 绑定表显示 `(hidden)`），一次真实提问后直接读取临时本地 D1 文件打印当日花费，不写密钥文件。
