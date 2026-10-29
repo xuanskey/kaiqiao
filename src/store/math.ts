@@ -26,6 +26,7 @@ import type { AnswerLog, Grade, PlayKind, Question, Screen, WrongItem } from "..
 import { ACTIVITY_KEY, activityForBackup } from "../lib/activity.ts";
 import { CLASS_LOG_KEY, classLogForBackup } from "../lib/lesson/class-log.ts";
 import { SAVE_KEY, SAVE_VERSION, UNREADABLE_KEY, emptyPersist, parseSave, salvageSave, type BackupExtras, type PersistShape } from "../lib/math/save.ts";
+import { safeLocalStorage } from "../lib/safe-storage.ts";
 
 type Session = {
   kind: PlayKind;
@@ -405,7 +406,7 @@ export const useMath = create<MathState>((set, get) => ({
     const q = session.questions[session.index];
     if (!q) return false;
     const ok = isCorrect(q, given);
-    if (typeof window !== "undefined" && window.localStorage) recordActivity(window.localStorage, ok);
+    { const store = safeLocalStorage(); if (store) recordActivity(store, ok); }
     const ms = Math.max(200, performance.now() - session.shownAt);
     const combo = ok ? session.combo + 1 : 0;
     const skill = q.skill ?? inferSkill(q);

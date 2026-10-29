@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Send, Settings } from "lucide-react";
 import { DEFAULT_AI, askAi, loadAiConfig, saveAiConfig, validBaseUrl, type AiConfig, type AiContext, type AiRequests } from "@/lib/lesson/ai";
+import { safeLocalStorage } from "@/lib/safe-storage";
 
-const store = () => (typeof window === "undefined" ? undefined : window.localStorage);
+const store = () => safeLocalStorage();
 
 /** 可选 AI 老师：家长自备密钥。未开启时课堂使用离线规则老师。 */
 export function useAiConfig(): [AiConfig, (c: AiConfig) => void] {
