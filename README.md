@@ -65,7 +65,7 @@ npm run dev
 
 ```bash
 npm run check       # 类型检查 + 回归测试 + 生产构建
-npm run release     # 生成 docs/ 网站目录与 offline.html 单文件版
+npm run release     # 生成 docs/ 网站目录与 offline.html 单文件版（单文件版另做一次构建，课堂静态内嵌；网站版课堂按需加载并进 SW 预缓存）
 npm run test:smoke  # 原有冒烟 + 状态回归（先 npm run build；需要 Playwright Chromium）
 npm run test:state  # 单独运行题目生命周期与 AI 竞态回归（同样先构建）
 ```
