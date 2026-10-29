@@ -26,11 +26,19 @@ const version = createHash('sha256').update(html).digest('hex').slice(0, 12);
 const precache = ['./', './index.html', './manifest.webmanifest', ...files.map((file) => `./${file}`)];
 const worker = `const CACHE = 'kaiqiao-${version}';
 const ASSETS = ${JSON.stringify(precache)};
+// 新版本装好后等待，不自动接管；页面提示后由用户点「更新」（SKIP_WAITING），或所有标签页关闭后自然生效。
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
 });
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+// 激活后才清理：保留上一版缓存，仍开着的旧标签页按需加载旧版本文件时还能取到；更早的版本删除。
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('kaiqiao-') && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then((keys) => {
+    const old = keys.filter((key) => key.startsWith('kaiqiao-') && key !== CACHE);
+    return Promise.all(old.slice(0, -1).map((key) => caches.delete(key)));
+  }).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', (event) => {
   const request = event.request;
