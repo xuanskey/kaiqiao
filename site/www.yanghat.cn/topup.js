@@ -62,6 +62,13 @@ if (!open) {
 } else {
   $('#topup-closed').hidden = true;
   for (const section of document.querySelectorAll('[data-topup-flow]')) section.hidden = false;
+  const qr = document.createElement('img');
+  qr.className = 'pay-qr';
+  qr.src = '/assets/wechat-pay-qr.png';
+  qr.width = 240;
+  qr.height = 240;
+  qr.alt = '微信经营收款码';
+  $('#pay-qr-slot').replaceChildren(qr);
   $('#order-form').addEventListener('submit', event => {
     event.preventDefault();
     change(async () => {

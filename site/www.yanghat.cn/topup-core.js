@@ -138,8 +138,23 @@ export async function transact(io, run) {
         load: io.load,
         sawForeign: () => foreign,
         commit(project) {
-          const produced = project(io.load());
-          if (produced.error && produced.state === undefined) throw produced.error;
+          const replay = () => {
+            const produced = project(io.load());
+            if (produced.error && produced.state === undefined) throw produced.error;
+            return produced;
+          };
+          let produced;
+          try { produced = replay(); }
+          catch (error) {
+            if (io.locks?.request || !foreign) throw error;
+            foreign = false;
+            produced = replay();
+          }
+          // No Web Locks: another tab wrote. Drop the stale result, load again, replay this increment, then save.
+          if (!io.locks?.request && foreign) {
+            foreign = false;
+            produced = replay();
+          }
           io.save(produced.state);
           const after = io.load();
           const fixed = produced.reconcile?.(after);

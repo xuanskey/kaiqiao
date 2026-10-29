@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir } from 'node:fs/promises';
+import { syncPayQr, PAY_QR_HASH, PAY_QR_SOURCE } from './topup-pay-qr.mjs';
 import { chromium } from 'playwright';
 import { homePreview } from './home-preview.mjs';
 import { testSigner } from './batch-fixtures.mjs';
@@ -23,9 +24,17 @@ for(const name of ['index.html','404.html','topup/index.html']){
   assert.match(html,/<footer[\s\S]*家长扫码联系客服/);
   assert.match(html,/alt="家长扫码联系客服（微信二维码）"/);
 }
-const qrHash={'wechat-pay-qr.png':'8649d800da4a2d74cc235c6690b4ed332ef707fb08b91016cf6a6428d8b7e817','wechat-service-qr.png':'7091ae644b68983bbb4977a442f2df0ff2f01265da06c3c81680cd556d22bc0c'};
-for(const [file,hash] of Object.entries(qrHash)){const bytes=await readFile(`${root}/assets/${file}`);assert.ok(bytes.length>=8000&&bytes.length<=200000,file);assert.equal(createHash('sha256').update(bytes).digest('hex'),hash);}
+const serviceQr=await readFile(`${root}/assets/wechat-service-qr.png`);
+assert.ok(serviceQr.length>=8000&&serviceQr.length<=200000);
+assert.equal(createHash('sha256').update(serviceQr).digest('hex'),'7091ae644b68983bbb4977a442f2df0ff2f01265da06c3c81680cd556d22bc0c');
+const paySource=await readFile(PAY_QR_SOURCE);
+assert.ok(paySource.length>=8000&&paySource.length<=200000);
+assert.equal(createHash('sha256').update(paySource).digest('hex'),PAY_QR_HASH);
+await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));
+try{await syncPayQr(true);const published=await readFile(`${root}/assets/wechat-pay-qr.png`);assert.equal(createHash('sha256').update(published).digest('hex'),PAY_QR_HASH);}finally{await syncPayQr(false);}
+await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));
 const topup=await read('topup/index.html');assert.match(topup,/<meta name="robots" content="noindex">/);
+assert.doesNotMatch(topup,/wechat-pay-qr|class="pay-qr"/);
 for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里','懂技术的人能改本机数字','以实际付款与对账为准','充值功能即将开放','1–50'])assert.ok(topup.includes(text),text);
 assert.equal(await read('topup-open.js'),'// Baked from TOPUP_OPEN at release. Only the exact string true opens payment.\nexport default false;\n');
 assert.doesNotMatch(topup,/1–200/);
@@ -79,14 +88,17 @@ try{
   await page.goto(server.base+'/topup');
   await page.locator('#topup-closed').waitFor();
   assert.equal(await page.locator('#topup-closed').innerText(),'充值功能即将开放');
-  assert.ok(await page.locator('.pay-qr').isHidden());
+  assert.equal(await page.locator('.pay-qr').count(),0);
+  assert.doesNotMatch(await page.content(),/wechat-pay-qr/);
   assert.ok(await page.locator('#redeem-form').isHidden());
   assert.ok(await page.locator('#order-form').isHidden());
   await page.screenshot({path:`${shots}/closed.png`,fullPage:true});
   await context.route('**/topup-open.js',route=>route.fulfill({contentType:'application/javascript',body:'export default true;\n'}));
+  await context.route('**/assets/wechat-pay-qr.png',async route=>route.fulfill({contentType:'image/png',body:await readFile(PAY_QR_SOURCE)}));
   await page.goto(server.base+'/topup/');
   await page.locator('#order-form').waitFor();
   assert.ok(await page.locator('#topup-closed').isHidden());
+  assert.equal(await page.locator('.pay-qr').getAttribute('src'),'/assets/wechat-pay-qr.png');
   assert.ok(await page.locator('.pay-qr').isVisible());
   assert.ok(await page.locator('#redeem-form').isVisible());
   await page.screenshot({path:`${shots}/open.png`,fullPage:true});
