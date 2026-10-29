@@ -1,6 +1,7 @@
 import type { Grade } from "../math/types.ts";
 import { bandOf, gradeStyle } from "./grade-style.ts";
 import { DEMOS, type DemoId, type Params, displayParam } from "./demos.ts";
+import { redactPII } from "../../../workers/help/pii.js";
 
 /**
  * 可选的 AI 老师：家长自备 OpenAI 兼容接口（如 DeepSeek）的地址、模型和密钥。
@@ -53,8 +54,9 @@ export function buildMessages(ctx: AiContext): { role: "system" | "user"; conten
     `课题：${def.title}`,
     `当前参数：${paramText}`,
     `课堂事实：${ctx.facts.join("；") || "无"}`,
-    ctx.lastWrong ? `学生刚才做错的题：${ctx.lastWrong.prompt}；学生答：${ctx.lastWrong.given}；正确答案：${ctx.lastWrong.answer}` : "",
-    `学生说：${ctx.studentAsk.slice(0, 200)}`,
+    ctx.lastWrong ? `学生刚才做错的题：${ctx.lastWrong.prompt}；学生答：${redactPII(ctx.lastWrong.given)}；正确答案：${ctx.lastWrong.answer}` : "",
+    // 与网站客服同一套规则：发往家长自备接口前先在本机隐去电话、姓名、学校、住址等。
+    `学生说：${redactPII(ctx.studentAsk.slice(0, 200))}`,
   ].filter(Boolean).join("\n");
   return [{ role: "system", content: system }, { role: "user", content: user }];
 }

@@ -18,13 +18,14 @@ import { useMath } from "@/store/math";
 import { Mascot } from "./mascot";
 import { Backup } from "./backup";
 import { Meter, Metric, PageHeading } from "./shell";
+import { safeLocalStorage } from "@/lib/safe-storage";
 
 export function Home() {
   const s = useMath();
   const now = useNow();
   const epoch = useMath((state) => state.archiveEpoch);
   const [log, setLog] = useState<ClassLog>({});
-  useEffect(() => { setLog(loadClassLog(typeof window === "undefined" ? undefined : window.localStorage)); }, [epoch]);
+  useEffect(() => { setLog(loadClassLog(safeLocalStorage())); }, [epoch]);
   const next = nextCampaign(s.stars, s.selectedGrade);
   const chapter = chapterById(next.chapterId);
   const count = s.wrong.filter((w) => chapterById(w.chapterId).grade === s.selectedGrade).length;
@@ -110,7 +111,7 @@ export function WeekCard() {
   const now = useNow();
   const epoch = useMath((state) => state.archiveEpoch);
   const [act, setAct] = useState<Activity>({});
-  useEffect(() => { setAct(loadActivity(typeof window === "undefined" ? undefined : window.localStorage)); }, [epoch]);
+  useEffect(() => { setAct(loadActivity(safeLocalStorage())); }, [epoch]);
   const w = weekSummary(act, now);
   const top = Math.max(10, ...w.days.map((d) => d.n));
   return <section className="week-card" aria-label="最近 7 天学习记录">
@@ -227,7 +228,7 @@ export function Report() {
   const streak = currentStreak(s.streak, s.lastPlayDate);
   const recommendation = wrong.length ? `先把${GRADE_LABEL[s.selectedGrade]}的 ${wrong.length} 道错题想明白，再接着向前。` : `练一组${GRADE_LABEL[s.selectedGrade]}的题目，慢慢积累自己的学习记录。`;
   const exportReport = () => {
-    const store = typeof window === "undefined" ? undefined : window.localStorage;
+    const store = safeLocalStorage();
     const now = new Date();
     const week = weekSummary(loadActivity(store), now);
     const cls = classSummary(loadClassLog(store), now);

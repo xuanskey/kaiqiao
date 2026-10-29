@@ -64,7 +64,7 @@ export function Backup() {
   return (
     <section className="surface-card mt-5" aria-labelledby="backup-title">
       <a className="text-xs underline" href="mailto:hello@yanghat.cn?subject=%E5%BC%80%E7%AA%8D%E5%8F%8D%E9%A6%88">意见反馈：hello@yanghat.cn</a>
-      <p className="text-xs leading-relaxed text-muted-foreground">不用注册，不收集个人信息；练习记录只保存在本机浏览器，换设备或清理浏览器数据前请先导出备份。默认不启用联网 AI；主动使用 AI 时会发送课堂内容、提问及相关错题作答，请勿在提问中填写个人信息。自备接口会向所填服务商发送请求；平台 AI 会同时发送随机账号标识。</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">不用注册，不收集个人信息；练习记录只保存在本机浏览器，换设备或清理浏览器数据前请先导出备份。默认不启用联网 AI；主动使用 AI 时会发送课堂内容、提问及相关错题作答，发送前会自动隐去疑似姓名、电话等，但仍请勿在提问中填写个人信息。自备接口会向所填服务商发送请求。</p>
       <h3 id="backup-title" className="flex items-center gap-2 text-[15px]"><ShieldCheck size={17} className="text-primary" />备份与恢复</h3>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">记录只在本机浏览器，建议定期导出备份。备份包含今日复习题目与到期日、练习、课堂记录和最近 60 天的每日题数。换设备或清理浏览器前，先保存一份。</p>
       <div className="mt-3 flex flex-wrap gap-2">

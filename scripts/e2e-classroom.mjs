@@ -221,6 +221,9 @@ try {
     const ok2 = body.messages[0].content.includes('2 年级') && route.request().headers()['authorization'] === 'Bearer test-key';
     await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ choices: [{ message: { content: ok2 ? '<b>分针</b>指着 6，就是 30 分。' : '提示词不对' } }] }) });
   });
+  assert.equal(await page.getByLabel('AI 服务').count(), 0, '平台 AI 预付费演示入口已下线');
+  const aiCalls = [];
+  page.on('request', (r) => { if (new URL(r.url()).pathname.startsWith('/api/ai/')) aiCalls.push(r.url()); });
   await page.getByRole('button', { name: '设置', exact: true }).click();
   await page.getByLabel('开启 AI 老师').check();
   await page.getByLabel('服务地址').fill('https://api.example.com/v1');
@@ -233,6 +236,7 @@ try {
   await page.getByRole('button', { name: '设置', exact: true }).click();
   await page.getByRole('button', { name: '清除密钥' }).click();
   assert.equal(await page.evaluate(() => localStorage.getItem('kaiqiao-ai')), null);
+  assert.deepEqual(aiCalls, [], '课堂不再请求 /api/ai/*');
   ok('AI 老师（模拟接口）：按年级发送提示词，回复去掉 HTML 后显示；清除后不再保存密钥');
   // 随堂练习写入课堂记录
   await page.getByRole('button', { name: '开始随堂练习' }).click();

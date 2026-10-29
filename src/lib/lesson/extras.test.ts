@@ -80,6 +80,13 @@ describe("可选 AI 老师（自备密钥）", () => {
     assert.ok(m[1].content.includes("3 + 2 = 5"));
     assert.ok(buildMessages({ ...ctx, grade: 6, demo: "circle", params: defaultParams("circle") })[0].content.includes("可以用公式"));
   });
+  it("学生的话和错答在发给家长自备接口前先隐去个人信息", () => {
+    const m = buildMessages({ ...ctx, studentAsk: "我叫王小明，妈妈电话13812345678，我在阳光小学", lastWrong: { prompt: "3 + 2 = ?", given: "13912345678" } } as Parameters<typeof buildMessages>[0]);
+    const text = m.map((x) => x.content).join("\n");
+    assert.ok(!/王小明|13812345678|13912345678|阳光小学/.test(text), text);
+    assert.ok(text.includes("[电话]") && text.includes("3 + 2 = ?"));
+    assert.ok(buildMessages({ ...ctx, studentAsk: "3 + 5 等于几" })[1].content.includes("3 + 5 等于几"), "正常问题原样保留");
+  });
   it("回复清理成纯文本", () => {
     const t = sanitizeReply("<img src=x onerror=alert(1)>你好```js\nalert(2)\n```看 https://evil.example 吧**加油**");
     assert.ok(!/[<>]|alert|https?:|\*\*/.test(t));

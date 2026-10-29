@@ -46,7 +46,7 @@ try{
    }
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${target} overflow ${width}`);
    await page.locator('footer').scrollIntoViewIfNeeded();assert.ok(await page.locator('footer').isVisible());
-   assert.equal(await page.getByText('不收集个人信息，练习记录只保存在本机。',{exact:true}).count(),1);
+   assert.equal(await page.getByText('不收集个人信息，练习记录只保存在本机；客服提问发送前会自动隐去疑似姓名电话等，请勿填写。',{exact:true}).count(),1);
    const colors=await page.evaluate(()=>[...document.querySelectorAll('body *')].filter(el=>{
     const s=getComputedStyle(el);return !['SCRIPT','STYLE','VIDEO'].includes(el.tagName)&&!el.closest('video')&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&el.getClientRects().length&&s.visibility!=='hidden';
    }).map(el=>{

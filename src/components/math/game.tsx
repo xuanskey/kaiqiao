@@ -1,10 +1,10 @@
 import { Pelican } from "@/components/math/pelican";
 import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Learning } from "./learning";
-import { Classroom } from "@/components/lesson/classroom";
+import { Classroom } from "./screens";
 import { unitById } from "@/lib/math/units";
 import { lessonFromSearch, requestLesson } from "@/lib/lesson/today";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { shouldPublishTimer } from "@/lib/math/timer";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, Lightbulb, Star, Timer, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export function Game() {
   useEffect(() => () => hushSpeak(), []);
   return <AppShell screen={screen}>
     {screen === "home" ? <Home /> : null}
-    {screen === "class" ? <Classroom /> : null}
+    {screen === "class" ? <Suspense fallback={<ScreenLoading />}><Classroom /></Suspense> : null}
     {screen === "learn" ? <Learning /> : null}
     {screen === "map" ? <Map /> : null}
     {screen === "play" ? <Play /> : null}
@@ -55,6 +55,11 @@ export function Game() {
     {screen === "review" ? <Review /> : null}
     {screen === "report" ? <Report /> : null}
   </AppShell>;
+}
+
+/** 按需加载课堂时的占位，预留高度避免页面跳动。 */
+function ScreenLoading() {
+  return <div role="status" aria-live="polite" className="min-h-[60vh] grid place-items-center text-sm text-muted-foreground">正在打开…</div>;
 }
 
 /** 限时只在秒数变化时写入状态。页面隐藏时暂停，避免切回来把离开的时间一次扣完。 */

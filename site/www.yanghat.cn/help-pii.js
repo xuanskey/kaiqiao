@@ -1,0 +1,47 @@
+// 拿不准就不当成姓名：虚词、身份和功能说法都留下。漏掉姓名风险低，误伤问句会把问题毁掉。
+const NOT_PERSON_NAME = /[的了吗呢吧啊呀嘛着过得是为和与或在有会能可以把被从到对让给用来要就也都很太最不没非这那哪什怎多少否个]|年级|学生|家长|老师|用户|妈妈|爸爸|孩子|新手|同学|小朋友|同班|你们|小学|新生|^[一二三四五六七八九十]/u;
+function looksLikePersonName(token) {
+  return /^[\p{Script=Han}]{2,4}$/u.test(token) && !NOT_PERSON_NAME.test(token);
+}
+
+// 全角数字、字母、@ 先转半角再匹配，避免「１３８…」「ａ＠ｂ.cn」绕过；其他全角标点保持原样。
+const toHalfWidth = (text) => text.replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF20\uFF0E\uFF0D\uFF0B]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/\u3000/g, ' ');
+const FAMILY = '(?:儿子|女儿|孩子|小孩|宝宝|闺女|娃|我家孩子|我家宝宝)';
+
+/** @param {string} text */
+export function redactPII(text) {
+  const boundary = '(?=$|[\\s，,。.!！?？、]|想|要|在|今年)';
+  if (/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF20]/.test(text)) text = toHalfWidth(text);
+  text = text
+    .replace(/(?<!\d)\d{6}[ -]+(?:18|19|20)\d{2}[ -]*(?:0[1-9]|1[0-2])[ -]*(?:0[1-9]|[12]\d|3[01])[ -]*\d{3}[\dXx](?!\d)/g, '[证件号]')
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[邮箱]')
+    .replace(/(?<!\d)(?:\+?86[ -]*)?1[3-9](?:[ -]*\d){9}(?!\d)/g, '[电话]')
+    .replace(/(?<!\d)0\d{2,3}-?\d{7,8}(?!\d)/g, '[电话]')
+    .replace(/(?<!\d)(?:\d{6}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]|\d{6}\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3})(?!\d)/g, '[证件号]')
+    .replace(/(?:QQ|微信号?|vx|wx)\s*(?:号码|号)?\s*(?:是|为|[:：])?\s*[A-Za-z0-9_-]{3,}/gi, '[账号]')
+    .replace(/(?<!\d)\d(?:[ -]*\d){15,18}(?![ -]*\d)/g, '[号码]')
+    .replace(/[\p{Script=Han}]{1,10}(?:路|街|大道|巷|弄)\s*\d+号(?:\s*\d+(?:栋|幢|号楼|单元|室))*/gu, '[地址]')
+    .replace(/([\p{Script=Han}]{2,8})小区(?:\s*\d+(?:栋|幢|号楼)\s*(?:\d+单元\s*)?\d+(?:室|号)?|\s*\d+单元\s*\d+(?:室|号))?/gu, (whole, prefix) => {
+      const lead=prefix.match(/^(?:这个|那个|一个|某个|每个|哪个|这|那|某|每|各)/)?.[0] ?? '';
+      return prefix.length-lead.length>=2 ? lead+'[地址]' : whole;
+    })
+    .replace(/\d+(?:栋|幢|号楼)\s*(?:\d+单元\s*)?\d+(?:室|号)?|\d+单元\s*\d+(?:室|号)|(?<!\d)\d{3,4}室/g, '[地址]')
+    .replace(/(住在|住址是|家住|家在|我家在)\s*([\p{Script=Han}\d]{2,12}?)(?=$|[\s，,。.!！?？、])|(住在|住址是|家住|家在|我家在)\s*[\p{Script=Han}\d]{2,12}/gu, (_, lead, value, other) => (lead || other)+'[地址]');
+  text = text.replace(/(?:QQ|微信号?|vx|wx)\s*(?:号码|号)?\s*(?:是|为|[:：])\s*([\p{Script=Han}]{2,4})(?=$|[\s，,。.!！?？、])/giu, (whole, nickname) => looksLikePersonName(nickname) ? '[账号]' : whole);
+  text = text.replace(new RegExp(FAMILY+'(?:的名字)?(?:叫做|叫|名叫|名字叫|名字是)\\s*([A-Za-z]{1,20}|[\\p{Script=Han}]{1,4}?)(?=$|[\\s，,。.!！?？、]|今年|在|上|读|是)','gu'),
+    (whole, name) => /^(?:什么|怎么|哪|多少)/u.test(name) ? whole : whole.slice(0, whole.length - name.length) + '[名字]');
+  text = text.replace(/(姓名|真名|全名)\s*(?:是|为|叫|[:：])?\s*([A-Za-z]{1,20}|[\p{Script=Han}]{2,4}?)(?=$|[\s，,。.!！?？、])/gu,
+    (whole, lead, name) => /^(?:什么|怎么|哪|多少|不|没|要|能|可|填|写|用|会)/u.test(name) ? whole : lead+'[名字]');
+  text = text.replace(/我是([\p{Script=Han}]{2,4})(?=同学)/gu, (whole, name) => looksLikePersonName(name) ? '我是[名字]' : whole);
+  text = text.replace(/(我叫|我的名字是|名字是|名字叫)\s*([\p{Script=Han}]{4})(?=$|[\s，,。.!！?？、])/gu, (whole, lead, name) => looksLikePersonName(name) ? lead+'[名字]' : whole);
+  text = text.replace(new RegExp('(我叫|我的名字是|名字是|名字叫)\\s*([A-Za-z]{1,20}|[\\p{Script=Han}]{1,3}?'+boundary+'|[\\p{Script=Han}]{2,3})','gu'),
+    (whole, lead, name) => /^(?:什么|怎么|哪|多少)/u.test(name) ? whole : lead+'[名字]');
+  text = text.replace(new RegExp('我是([\\p{Script=Han}]{2,3}?)'+boundary,'gu'),
+    (whole, name) => /年级|学生|家长|老师|用户|妈妈|爸爸|孩子|新手|同学|小朋友|^[\d一二三四五六七八九十]/u.test(name) ? whole : '我是[名字]');
+  return text.replace(/([\p{Script=Han}]{0,8})(小学|中学|学校|附小|附中)/gu, (whole, prefix, suffix) => {
+    const stop=/[我你他她们想学上读念在的是个了要去这那哪就也都还会能到从级初高]/gu;
+    let start=0;
+    for(const match of prefix.matchAll(stop)) start=match.index+1;
+    return prefix.length-start>=2 ? prefix.slice(0,start)+'[学校]' : whole;
+  });
+}

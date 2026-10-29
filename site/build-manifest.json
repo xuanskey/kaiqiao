@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "sourceDigest": "8fc1e98b7b39e89da99fb0943735257cc31bc62146d0c48407827e9baf839dc5",
+  "outputDigest": "4ae9a95058514912717e9e974261f7049baac6f1de3b6cca0a526bbe74e672fe",
+  "files": {
+    "source": 203,
+    "output": 70
+  },
+  "switches": {
+    "help": "/api/help",
+    "metrics": "/e",
+    "topupOpen": false
+  }
+}

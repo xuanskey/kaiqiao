@@ -28,6 +28,7 @@ import { BarChartStage, MakeTenStage, PolyAreaStage } from "./stages-v10";
 import { DecimalDivStage, FractionMulStage } from "./stages-v12";
 import { EarthStage, FrictionStage, LeverStage, PlantStage, SlopeStage, SoundStage } from "./stages-lab";
 import { ChanceStage, ClockStage, NumberLineStage, ParallelStage, PercentStage, PigeonholeStage, RmbStage, RulerStage, ScaleStage, ShapesStage, WaterStage } from "./stages-more";
+import { safeLocalStorage } from "@/lib/safe-storage";
 
 const STAGES: Record<DemoId, ComponentType<StageProps>> = {
   "add-sub": AddSubStage, "group-share": GroupShareStage, fraction: FractionStage, "perimeter-area": PerimeterAreaStage, angle: AngleStage, law: LawStage,
@@ -75,7 +76,7 @@ export function Classroom() {
   const setStoreGrade = useMath((s) => s.setGrade);
 
   const [log, setLog] = useState<ClassLog>({});
-  useEffect(() => { setLog(loadClassLog(typeof window === "undefined" ? undefined : window.localStorage)); }, [open]);
+  useEffect(() => { setLog(loadClassLog(safeLocalStorage())); }, [open]);
 
   if (open) return <LessonView demo={open.demo} grade={open.grade ?? grade} unitTitle={open.unit} preset={open.preset} onBack={() => { setOpen(null); window.scrollTo({ top: 0, behavior: "instant" }); }} />;
 
@@ -102,7 +103,7 @@ export function Classroom() {
             : subject === "math" ? <button type="button" className="class-practice" onClick={() => { setStoreGrade(grade); go("map"); }}>去题库</button> : null}
         </li>)}</ol>}
     {grade === 3 && subject === "math" ? <section className="class-lab-entry"><Lightbulb size={20} /><div><strong>三年级理解实验室</strong><small>18 个知识单元，配分步讲解、动手小实验和单元小测</small></div><button type="button" onClick={() => { setStoreGrade(3); go("learn"); }}>进入理解实验室</button></section> : null}
-    <ClassLogCard log={log} onClear={() => { clearClassLog(window.localStorage); setLog({}); }} />
+    <ClassLogCard log={log} onClear={() => { clearClassLog(safeLocalStorage()); setLog({}); }} />
     <ImportPanel grade={grade} onOpen={(demo) => { const g = DEMOS[demo].grades.includes(grade) ? grade : DEMOS[demo].grades[0]; setOpen({ demo, unit: "导入资料", grade: g }); window.scrollTo({ top: 0, behavior: "instant" }); }} />
   </div>;
 }
@@ -284,7 +285,7 @@ function LessonSession({ demo, grade, unitTitle, onBack, preset }: LessonProps) 
       </dl>
       <p className="experiment-note">{def.experiment.virtualNote}</p>
     </section> : null}
-    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} nextLevel={tutor.level} setNextLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { aiRequests.cancel(); if (!r.ok) setLastWrong(r); recordAnswer(window.localStorage, demo, r.ok); recordActivity(window.localStorage, r.ok); }} />
+    <div ref={quizRef}>{showQuiz ? <Quiz demo={demo} grade={grade} nextLevel={tutor.level} setNextLevel={(level) => setTutor((t) => ({ ...t, level }))} nonce={quizNonce} onRecord={(r) => { aiRequests.cancel(); if (!r.ok) setLastWrong(r); const store = safeLocalStorage(); recordAnswer(store, demo, r.ok); recordActivity(store, r.ok); }} />
       : <button type="button" className="quiz-start" onClick={() => ask("quiz")}>开始随堂练习</button>}</div>
   </div>;
 }

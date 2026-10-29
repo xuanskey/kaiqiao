@@ -11,6 +11,30 @@
 - FAQ 文案修改后运行 `node scripts/check-site-seo.mjs --write` 同步结构化数据，再运行默认校验（不带 `--write`）。
 - 缓存：仅 `/app/assets/*` 的哈希资源和明确带版本的分享图使用 immutable；新增长缓存资源须使用新文件名，并为其增加精确路径规则。未版本化媒体使用一小时缓存；首页 CSS/JS 的 query 版本不用于匹配 `_headers`，保持 no-cache。同步或发布脚本不重写主站 `_headers`。
 
+## 旧域 yanghat.cn 迁移顺序
+
+两个域名的本机存储互相隔离，裸域上的练习记录只能在裸域页面里导出。仓库内的设计是：首页第一个脚本 `domain-transition.js` 在裸域顶层判断——**有本机练习记录就留在裸域**，顶部提示先在「学情→导出备份」，再到 www 恢复；**没有记录才跳到 www**，保留路径、参数和锚点。`scripts/check-domain-transition.mjs` 在本地把 yanghat.cn 解析到预览服务器验证这两种情况，并检查仓库里没有裸域无条件跳转。
+
+2026-10-30 实测线上 `https://yanghat.cn/…` 返回 **301 → https://www.yanghat.cn/…**，响应来自 Cloudflare 规则而不是本仓库（`_redirects` 只有 `/练习` 两条，Functions 不做跳转）。301 发生在页面脚本之前，所以上面的保护在线上不会生效：裸域上有记录的用户进不了导出页面。
+
+需要管理员在 Cloudflare 后台做的改动（仓库改不了，本次未改）：在 yanghat.cn 区域找到产生这条 301 的规则（Redirect Rules、Page Rules 或 Bulk Redirects 之一），**迁移期内暂停它**，让裸域请求落到 Pages 项目 yanghat-cn，由页面脚本决定跳转或提示；迁移期结束后再恢复 301。暂停后用 `curl -sI https://yanghat.cn/?practice=1` 确认返回 200 而不是 301。暂停期间搜索引擎靠 `_headers` 里的 canonical Link 头和页面 canonical 识别正式地址。
+
+## Cloudflare 网络错误日志（NEL）：建议关闭
+
+现状（2026-10-30 实测 `curl -sSI https://www.yanghat.cn/`）：响应里有 `nel: {"report_to":"cf-nel","success_fraction":0.0,...}` 和 `report-to: {"group":"cf-nel",...,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?..."}]}`。这两个头**不是本仓库加的**（`_headers` 里没有），是 Cloudflare 免费/Pro 区默认开启的 NEL。
+
+为什么建议关：
+- 浏览器连不上本站时，会把失败报告发到 Cloudflare 的 `a.nel.cloudflare.com`。报告不含姓名等个人信息（Cloudflare 文档说明），但含访客的网络状况、出错的网址和时间，并由浏览器发往第三方端点。站点面向不满 14 周岁的儿童，承诺「不加跟踪」，这类后台上报与承诺不一致，且站长从未主动开启、也不看这份数据。
+- `success_fraction` 为 0，只在出错时上报；关掉不影响任何功能。
+- CSP 的 `connect-src` 不管浏览器的 NEL 上报，所以无法从仓库侧关掉，只能在 Cloudflare 改。
+
+怎么关（需要杨哥本人在 Cloudflare 操作，仓库和部署脚本都不会改这个设置）：
+1. Cloudflare 控制台 → 账户首页 → Network → 找到 **Network Error Logging Monitoring**，把开关关掉。
+2. 或用 API：`PATCH /zones/{zone_id}/settings/nel`，值 `{"enabled":false}`（需要有该区设置写权限的令牌，令牌不要写进仓库或聊天）。
+3. 验证：`curl -sSI https://www.yanghat.cn/ | grep -iE '^(nel|report-to):'` 无输出即已关闭。注意浏览器已缓存的 NEL 策略最多保留 `max_age`（现为 604800 秒，7 天）后自然失效。
+
+替代做法（想知道“有人打不开站”时）：不在访客浏览器里上报，改由服务端匿名探测——例如外部定时用 `curl` 访问首页、`/app/`、`/api/help` 健康检查，只记录状态码和耗时，不涉及任何访客数据。本次未实现，仅作建议。
+
 ## 启用统计
 
 当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。只统计六种事件的次数，不能推断独立人数。
@@ -51,9 +75,9 @@ node scripts/metrics-sql.mjs --days 7
 
 ## 启用 AI 帮助
 
-当前默认开启；留空即关闭。唯一客户端构建开关为 `VITE_HELP_ENDPOINT`，仅允许空字符串或 `/api/help`，其他值构建报错。关闭后首页 `help-config.js` 为 `export default ""`，应用与首页都不显示帮助按钮、不发送帮助请求。帮助是单轮网站使用问答，不存聊天，不要求注册登录；发送前会用正则替换常见个人信息，请仍不要输入姓名、电话、学校、住址等信息。
+当前默认开启；留空即关闭。唯一客户端构建开关为 `VITE_HELP_ENDPOINT`，仅允许空字符串或 `/api/help`，其他值构建报错。关闭后首页 `help-config.js` 为 `export default ""`，应用与首页都不显示帮助按钮、不发送帮助请求。帮助是单轮网站使用问答，不存聊天，不要求注册登录；服务端和浏览器发送前用同一套规则（`workers/help/pii.js`，构建时复制为 `help-pii.js`）替换常见个人信息，页面会显示实际发送的内容；规则只能拦常见格式，请仍不要输入姓名、电话、学校、住址等信息。
 
-系统提示覆盖开始练习、练习年级、学情、备份与恢复、反馈邮箱与充值说明。充值说明是 `workers/help/prompt.js` 的 `TOPUP_GUIDANCE` 常量，已与 `/topup` 的家长手动充值流程一致，提醒点数存在本机、目前没有消费功能，不编造价格、优惠或退款规则；相关断言在 `prompt.test.ts`。
+系统提示覆盖开始练习、练习年级、学情、备份与恢复、反馈邮箱与充值说明。充值说明是 `workers/help/prompt.js` 的 `TOPUP_GUIDANCE` 常量，统一说明充值暂未开放、免费练习不需要付费，已付款家长可联系客服全额退款，不提供付款步骤；相关断言在 `prompt.test.ts`。
 
 上线前由管理员创建 D1 数据库 `kaiqiao_help`（确认免费额度），在 Pages 项目 **yanghat-cn 的生产环境**绑定 `HELP_DB` 到该库。只保存北京时间日期与当日累计微元花费、北京时间分钟桶与调用次数，无请求内容或用户标识；表在首次配置完整的合法请求中自动创建。不新增 wrangler 配置文件。
 
@@ -97,10 +121,10 @@ wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend OR
 
 ## 家长手动充值
 
-首页页脚点「家长充值」进入 `/topup`（Pages 会跳到 `/topup/`）。请家长操作，小朋友不要自己付款。发布开关 `TOPUP_OPEN` 默认开放：不设置时 `npm run release` 写出 `topup-open.js` 的 `export default true`，并把收款码拷进发布目录，由页面脚本插入。输入 1–50 正整数元，页面生成订单号和应付金额；整数元×100点，另加1–9分仅用于对账，不折算点数。家长用微信收款码付款，金额按页面填写，付款备注填订单号；付款后加页脚客服微信发送订单号，核账后领取充值码，再回同一浏览器输入兑换。单笔最多 50 元。点数暂时还不能使用，功能上线前请按需充值；兑换前可联系客服全额退款。点数目前没有可消费功能，平台AI尚未上线，免费练习不需要充值。下单、删除和兑换串行写本机记录：有 Web Locks 时整段放在同一把锁里；没有锁时若发现其他标签写过记录，就重新读取并重放本次修改后再写回，避免同一码双记或用旧快照盖掉已兑换订单。
+首页页脚点「家长充值」进入 `/topup`（Pages 会跳到 `/topup/`）。请家长操作，小朋友不要自己付款。发布开关 `TOPUP_OPEN` 默认关闭：不设置时写出 `export default false`，发布目录不带收款码。仅精确设置 `TOPUP_OPEN=true` 才打开并复制收款码。关闭时免费练习不需要付费，已付款家长可联系客服全额退款。以下是显式开放时保留的流程：输入 1–50 正整数元，页面生成订单号和应付金额；整数元×100点，另加1–9分仅用于对账，不折算点数。家长用微信收款码付款，金额按页面填写，付款备注填订单号；付款后加页脚客服微信发送订单号，核账后领取充值码，再回同一浏览器输入兑换。单笔最多 50 元。点数暂时还不能使用，功能上线前请按需充值；兑换前可联系客服全额退款。点数目前没有可消费功能，平台AI尚未上线，免费练习不需要充值。下单、删除和兑换串行写本机记录：有 Web Locks 时整段放在同一把锁里；没有锁时若发现其他标签写过记录，就重新读取并重放本次修改后再写回，避免同一码双记或用旧快照盖掉已兑换订单。
 
 点数和待处理订单只存在本机浏览器，不在练习备份里；换设备、换浏览器或清缓存会丢失。公钥在 `www.yanghat.cn/topup-config.js`，只供浏览器验证P-256签名；私钥与签发工具只在仓库外，由管理员保管，不提交、不部署。签发前必须核对微信实际收款金额、零头和备注订单号。协议与威胁模型见 [topup-code.md](topup-code.md)：签名只防普通伪造和串用，懂技术的人仍能改本机存储，不能把余额当可信服务端账本。
 
 换钥时停止签发，安全保管或移走旧钥匙文件，在仓库根运行 `TOPUP_ISSUER_DIR=/安全目录 node scripts/topup-keygen.mjs`（目录必填，拒绝覆盖已有私钥，且必须在仓库外），再按上述构建与发布流程更新公钥。旧码失效，已付款未兑换的订单需核账后补发新码；原有本机余额不会因更换公钥自动消失。私钥需离线备份，遗失或泄露都按此流程处理。
 
-回滚关闭收款：在仓库根执行 `TOPUP_OPEN=false VITE_EVENT_ENDPOINT=/e VITE_HELP_ENDPOINT=/api/help npm run release`，确认发布目录没有 `wechat-pay-qr.png`、页面只显示「充值功能即将开放」，再运行 `npm run deploy:site`。只有精确的 `false` 会关闭；不设置该变量的普通 release 会重新打开。
+关闭收款：不设置 `TOPUP_OPEN` 或设为 `false` 重建，检查发布目录没有收款码、页面显示「充值暂未开放」。空值也关闭，其他非法值报错；源收款码保留在发布目录之外。

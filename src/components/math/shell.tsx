@@ -8,6 +8,7 @@ import type { Grade, Screen } from "@/lib/math/types";
 import { useMath } from "@/store/math";
 import { cn } from "@/lib/utils";
 import { LogoMark, Mascot } from "./mascot";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const NAV: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: "home", label: "首页", icon: Home },
@@ -61,7 +62,7 @@ export function AppShell({ screen, children }: { screen: Screen; children: React
       <main className="main-content" ref={main} tabIndex={-1} aria-label="学习内容">
         {storageError ? <p role="alert" className="storage-alert">{storageError}</p> : null}
         {storageNotice ? <p role="status" className="storage-alert storage-notice">{storageNotice}<button type="button" onClick={() => useMath.setState({ storageNotice: null })}>知道了</button></p> : null}
-        {children}
+        <ErrorBoundary scope="page" resetKey={screen}>{children}</ErrorBoundary>
       </main>
     </div>
   </div>;
