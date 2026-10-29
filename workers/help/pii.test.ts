@@ -28,3 +28,5 @@ for(const [input,expected] of [
 ])test('加强 '+input,()=>assert.equal(redactPII(input),expected));
 for(const input of ['孩子叫什么都不理','孩子叫不醒怎么办','姓名要填吗','姓名写哪里','孩子名字怎么改','儿子做错了','宝宝今年二年级','3栋楼有5层'])test('加强不误伤 '+input,()=>assert.equal(redactPII(input),input));
 test('全角题目只把数字转半角，不脱敏',()=>{assert.equal(redactPII('３＋５＝？'),'3+5＝？');assert.equal(redactPII('第３单元'),'第3单元');});
+// 数学题面、年份、小数分数不当个人信息。
+for(const input of ['12345+678=?','12345678÷4=?','3.14×2','0.125×8','3/4+1/4','1又1/2','2026年','2026年10月30日','1998年出生的人今年几岁','长12345米','100000000是几位数','第12345题'])test('数学不误伤 '+input,()=>assert.equal(redactPII(input),input));

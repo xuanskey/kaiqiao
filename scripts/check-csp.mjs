@@ -13,7 +13,7 @@ try {
   for (const d of ["default-src 'self'", "object-src 'none'", "base-uri 'self'", "frame-ancestors 'self'", "form-action 'self'"]) assert.ok(csp.includes(d), d);
   assert.doesNotMatch(csp, /[ ;]'unsafe-eval'|\*/, '不放开 eval 和通配来源');
   const hsts = head.headers.get('strict-transport-security') || '';
-  assert.match(hsts, /^max-age=\d{7,}$/); assert.doesNotMatch(hsts, /preload|includeSubDomains/i);
+  assert.equal(hsts, 'max-age=15552000', '先用 180 天'); assert.doesNotMatch(hsts, /preload|includeSubDomains/i);
   assert.match(head.headers.get('permissions-policy') || '', /camera=\(\)/);
   assert.equal(head.headers.get('x-frame-options'), 'SAMEORIGIN');
   console.log('PASS 安全响应头齐全：CSP、HSTS（无 preload/子域）、Permissions-Policy、X-Frame-Options');
