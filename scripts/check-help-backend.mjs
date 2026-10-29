@@ -7,12 +7,14 @@ import {onRequest} from '../site/functions/api/help.js';
 const forbidden=/console\.|cf-connecting-ip|x-forwarded-for|user-agent|cookie|referer|\.cf/i;
 assert.deepEqual(JSON.parse(await readFile('site/www.yanghat.cn/_routes.json','utf8')),{version:1,include:['/e','/api/help'],exclude:[]});
 for(const path of ['functions','wrangler.toml','wrangler.json','wrangler.jsonc','site/wrangler.toml','site/wrangler.json','site/wrangler.jsonc'])await assert.rejects(access(path),{code:'ENOENT'});
-assert.match(await readFile('site/www.yanghat.cn/help-config.js','utf8'),/export default "";/);
+const helpExports=[...(await readFile('site/www.yanghat.cn/help-config.js','utf8')).matchAll(/^export default .*;$/gm)].map(match=>match[0]);
+assert.equal(helpExports.length,1);
+assert.ok(helpExports[0]==='export default "";'||helpExports[0]==='export default "/api/help";',helpExports[0]);
 assert.match(await readFile('site/www.yanghat.cn/index.html','utf8'),/<script type="module" src="\/help.js"><\/script>/);
 assert.match(await readFile('site/www.yanghat.cn/help.js','utf8'),/if \(!endpoint\) return;/);
 for(const file of await readdir('workers/help'))assert.doesNotMatch(await readFile('workers/help/'+file,'utf8'),forbidden);
 assert.doesNotMatch(await readFile('site/functions/api/help.js','utf8'),forbidden);
-console.log('PASS help deployment boundaries, default off and privacy');
+console.log('PASS help deployment boundaries, help-config switch and privacy');
 const dir=await mkdtemp(join(tmpdir(),'help-build-'));
 try {
  const r=spawnSync('wrangler',['pages','functions','build','site/functions','--outdir',dir,'--output-routes-path',join(dir,'routes.json')],{encoding:'utf8',env:{PATH:process.env.PATH,HOME:process.env.HOME,WRANGLER_SEND_METRICS:'false'}});

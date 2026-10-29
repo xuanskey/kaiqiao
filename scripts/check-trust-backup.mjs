@@ -136,7 +136,15 @@ try {
     await page.screenshot({ path: `reports/trust-shots/error-${width}.png` });
     assert.deepEqual(await read(), after);
     assert.ok(await frame.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    assert.equal(new URL(await app.locator('a[href^="mailto:"]').getAttribute('href')).searchParams.get('subject'), '开窍反馈');
+    const mailtos = await app.locator('a[href^="mailto:"]').evaluateAll((els) => els.map((el) => ({
+      href: el.getAttribute('href'),
+      help: Boolean(el.closest('dialog.help-dialog[aria-labelledby="app-help-title"]')),
+    })));
+    const helpMails = mailtos.filter((item) => item.help).map((item) => item.href);
+    const otherMails = mailtos.filter((item) => !item.help).map((item) => item.href);
+    assert.deepEqual(helpMails, ['mailto:hello@yanghat.cn']);
+    assert.equal(otherMails.length, 1);
+    assert.equal(new URL(otherMails[0]).searchParams.get('subject'), '开窍反馈');
     assert.deepEqual(external, []); assert.deepEqual(dialogs, []);
     assertSameOriginMetrics(events, base);
     assert.ok(events.some(event => JSON.parse(event.body).event === 'backup_export_click'), '导出备份点击应发往同源 /e，载荷仍只有 v/event/grade/count');
