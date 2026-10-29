@@ -1,0 +1,20 @@
+scripts/check-site-app.mjs:10:const root = path.resolve('site/www.yanghat.cn');
+scripts/check-site-app.mjs:78:  const entries = links.filter(href => href?.includes('practice=1') || href?.includes('/app') || href?.includes('kaiqiao.yanghat.cn'));
+site/www.yanghat.cn/index.html:8:  <link rel="canonical" href="https://www.yanghat.cn/">
+site/www.yanghat.cn/index.html:13:  <meta property="og:url" content="https://www.yanghat.cn/">
+site/www.yanghat.cn/index.html:15:  <meta property="og:image" content="https://www.yanghat.cn/assets/og-cover-20261029.jpg">
+site/www.yanghat.cn/index.html:22:  <meta name="twitter:image" content="https://www.yanghat.cn/assets/og-cover-20261029.jpg">
+site/www.yanghat.cn/index.html:63:        "text": "无需注册。点击「进入开窍」，选择合适的年级和题型，就可以开始练习。\u003ca href=\"https://www.yanghat.cn/?practice=1\">现在去开窍\u003c/a>"
+site/www.yanghat.cn/index.html:287:    <div class="container footer-bottom"><span>yanghat.cn</span><span>用一点耐心，养成一点习惯。</span><a href="#records">关于练习记录</a></div>
+scripts/check-fix3.mjs:10:const root = path.resolve('site/www.yanghat.cn');
+scripts/sync-app-to-site.mjs:2:const target = 'site/www.yanghat.cn/app';
+scripts/sync-app-to-site.mjs:8:console.log(`App synced: ${target}/ (internal; public entry is https://www.yanghat.cn/?practice=1)`);
+scripts/check-site-seo.mjs:5:const file = 'site/www.yanghat.cn/index.html';
+scripts/check-site-seo.mjs:20:  assert.equal(head.meta['og:url'], 'https://www.yanghat.cn/');
+scripts/check-site-seo.mjs:23:  assert.equal(head.meta['og:image'], 'https://www.yanghat.cn/assets/og-cover-20261029.jpg');
+scripts/check-site-seo.mjs:44:        if (href.protocol !== 'https:' || !['www.yanghat.cn', 'yanghat.cn'].includes(href.hostname) || href.pathname.startsWith('/app')) {
+public/使用说明.txt:33:正式入口：https://www.yanghat.cn/?practice=1 （地址栏不显示 /app/；北京时间规则）
+public/使用说明.txt:35:新备份包含复习内容与独立调度；旧备份从错题重建次日队列。旧子域 kaiqiao.yanghat.cn 将停用：请先在旧入口导出备份，再到新入口恢复；两个域名的本机存储不会自动迁移。
+site/www.yanghat.cn/app/使用说明.txt:33:正式入口：https://www.yanghat.cn/?practice=1 （地址栏不显示 /app/；北京时间规则）
+site/www.yanghat.cn/app/使用说明.txt:35:新备份包含复习内容与独立调度；旧备份从错题重建次日队列。旧子域 kaiqiao.yanghat.cn 将停用：请先在旧入口导出备份，再到新入口恢复；两个域名的本机存储不会自动迁移。
+scripts/check-site-cache.mjs:4:const root = 'site/www.yanghat.cn';

@@ -40,3 +40,28 @@
   Cache-Control: no-cache
 /sw-practice.js
   Cache-Control: no-cache
+
+# Canonical hints only; real 301 is a later Cloudflare redirect rule.
+https://yanghat.cn/*
+  Link: <https://www.yanghat.cn/:splat>; rel="canonical"
+/domain-transition.js
+  Cache-Control: no-cache
+
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: no-cache
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: no-cache
+/grade/*
+  Cache-Control: no-cache
+/404.html
+  Cache-Control: no-cache
+/app/*
+  X-Robots-Tag: noindex
+/metrics.js
+  Cache-Control: no-cache
+/metrics-config.js
+  Cache-Control: no-cache
+/landing-track.js
+  Cache-Control: no-cache

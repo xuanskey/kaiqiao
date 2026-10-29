@@ -83,7 +83,13 @@ npm run test:state  # 单独运行题目生命周期与 AI 竞态回归（同样
 
 先邀请少量家长试用，记录是否愿意连续使用、哪些解析看不懂，再验证“练习计划 + 人工解读报告”的付费服务。具体流程见 [PILOT.md](PILOT.md)。收入尚未验证，不承诺提分。
 
-许可证见 [LICENSE](LICENSE)。
+## 许可 / License
+
+代码采用 [MIT License](LICENSE)。自2026-10-29起新发布、且作者有权授权的原创课程文字、讲解、题干模板、教学插图及宣传内容采用 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans)，允许非商业分享和改编，须署名 yangge / 开窍、附许可链接并注明修改。收费培训、补习班、付费课程等商业使用内容需联系 hello@yanghat.cn 单独授权。具体路径、混合文件和第三方例外见 [CONTENT-LICENSE.md](CONTENT-LICENSE.md)。
+
+「开窍」「养习」名称、logo 和 yanghat.cn 域名不在本次许可范围内。以 main@17a25022（17a25022bf02997f99564820c0b9f92a25bf8bca）为界，该提交及以前按 MIT 发布的内容继续适用 MIT；之后新发布的可授权原创内容适用 CC BY-NC 4.0，继承的历史 MIT 内容不撤销原许可；第三方作品保留原许可。宣传片照片段与音轨、宣传片海报图、OG 分享图为 AI 辅助生成或来源待核实，不纳入 CC BY-NC 授权；自录产品录屏段可归原创内容。logo、favicon、灯笼均为品牌标识，不授权品牌使用。
+
+Code is MIT-licensed. New original educational and promotional content that the author may license is CC BY-NC 4.0 from 2026-10-29; noncommercial sharing and adaptation require attribution, a license link and notice of changes. Commercial content use, including paid tutoring and courses, requires permission: hello@yanghat.cn. See CONTENT-LICENSE.md for scope and exceptions. Names, logos and the yanghat.cn domain are reserved. The boundary is main@17a25022 (17a25022bf02997f99564820c0b9f92a25bf8bca): that commit and earlier MIT-licensed material retain MIT permissions; new licensable original content after it is CC BY-NC 4.0. Unchanged historical content retains MIT permissions. Third-party licenses remain applicable; AI-assisted or unverified video photographs/audio, promotional posters and OG imagery are excluded. Logos, favicons and the lantern mascot are reserved brand identifiers.
 
 ## v0.13.3 限时流畅度与备份完整性
 

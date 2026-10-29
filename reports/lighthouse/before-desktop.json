@@ -1,0 +1,2137 @@
+{
+  "phase": "before",
+  "mode": "desktop",
+  "baseline": "17a25022bf02997f99564820c0b9f92a25bf8bca",
+  "lighthouseVersion": "13.6.0",
+  "fetchTime": "2026-10-29T11:30:05.948Z",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/139.0.0.0 Safari/537.36",
+  "configSettings": {
+    "output": [
+      "json"
+    ],
+    "maxWaitForFcp": 30000,
+    "maxWaitForLoad": 45000,
+    "pauseAfterFcpMs": 1000,
+    "pauseAfterLoadMs": 1000,
+    "networkQuietThresholdMs": 1000,
+    "cpuQuietThresholdMs": 1000,
+    "formFactor": "desktop",
+    "throttling": {
+      "rttMs": 40,
+      "throughputKbps": 10240,
+      "requestLatencyMs": 0,
+      "downloadThroughputKbps": 0,
+      "uploadThroughputKbps": 0,
+      "cpuSlowdownMultiplier": 1
+    },
+    "throttlingMethod": "simulate",
+    "screenEmulation": {
+      "mobile": false,
+      "width": 1350,
+      "height": 940,
+      "deviceScaleFactor": 1,
+      "disabled": false
+    },
+    "emulatedUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+    "auditMode": false,
+    "gatherMode": false,
+    "clearStorageTypes": [
+      "file_systems",
+      "shader_cache",
+      "service_workers",
+      "cache_storage"
+    ],
+    "disableStorageReset": false,
+    "debugNavigation": false,
+    "channel": "cli",
+    "usePassiveGathering": false,
+    "disableFullPageScreenshot": false,
+    "skipAboutBlank": false,
+    "blankPage": "about:blank",
+    "ignoreStatusCode": false,
+    "locale": "en-US",
+    "blockedUrlPatterns": null,
+    "additionalTraceCategories": null,
+    "extraHeaders": null,
+    "precomputedLanternData": null,
+    "onlyAudits": null,
+    "onlyCategories": [
+      "performance",
+      "accessibility",
+      "best-practices",
+      "seo"
+    ],
+    "skipAudits": null
+  },
+  "scores": {
+    "performance": 100,
+    "accessibility": 93,
+    "best-practices": 100,
+    "seo": 92
+  },
+  "issues": [
+    {
+      "id": "aria-prohibited-attr",
+      "title": "Elements use prohibited ARIA attributes",
+      "score": 0,
+      "description": "Using ARIA attributes in roles where they are prohibited can mean that important information is not communicated to users of assistive technologies. [Learn more about prohibited ARIA roles](https://dequeuniversity.com/rules/axe/4.14/aria-prohibited-attr).",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "valueType": "node",
+            "subItemsHeading": {
+              "key": "relatedNode",
+              "valueType": "node"
+            },
+            "label": "Failing Elements"
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "1-0-SPAN",
+              "path": "1,HTML,1,BODY,4,MAIN,0,SECTION,1,DIV,2,DIV,2,DIV,1,SPAN",
+              "selector": "div.hero-visual > div.math-paper > div.paper-footer > span#demo-progress",
+              "boundingRect": {
+                "top": 789,
+                "bottom": 795,
+                "left": 1191,
+                "right": 1216,
+                "width": 25,
+                "height": 6
+              },
+              "snippet": "<span class=\"demo-progress\" id=\"demo-progress\" aria-label=\"示例第 1 步，共 3 步\">",
+              "nodeLabel": "示例第 1 步，共 3 步",
+              "explanation": "Fix all of the following:\n  aria-label attribute cannot be used on \"span\" elements with no valid role attribute."
+            }
+          }
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "impact": "serious",
+          "tags": [
+            "cat.aria",
+            "wcag2a",
+            "wcag412",
+            "EN-301-549",
+            "EN-9.4.1.2",
+            "RGAAv4",
+            "RGAA-7.1.1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "color-contrast",
+      "title": "Background and foreground colors do not have a sufficient contrast ratio.",
+      "score": 0,
+      "description": "Low-contrast text is difficult or impossible for many users to read. [Learn how to provide sufficient color contrast](https://dequeuniversity.com/rules/axe/4.14/color-contrast).",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "valueType": "node",
+            "subItemsHeading": {
+              "key": "relatedNode",
+              "valueType": "node"
+            },
+            "label": "Failing Elements"
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "1-1-SPAN",
+              "path": "1,HTML,1,BODY,4,MAIN,0,SECTION,1,DIV,2,DIV,0,DIV,1,SPAN",
+              "selector": "div.hero-visual > div.math-paper > div.paper-heading > span.demo-label",
+              "boundingRect": {
+                "top": 224,
+                "bottom": 252,
+                "left": 1174,
+                "right": 1241,
+                "width": 67,
+                "height": 28
+              },
+              "snippet": "<span class=\"demo-label\">",
+              "nodeLabel": "理解示例",
+              "explanation": "Fix any of the following:\n  Element has insufficient color contrast of 4.44 (foreground color: #65745e, background color: #f1f3e9, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          },
+          {
+            "node": {
+              "type": "node",
+              "lhId": "1-2-P",
+              "path": "1,HTML,1,BODY,4,MAIN,0,SECTION,1,DIV,2,DIV,1,DIV,0,P",
+              "selector": "div.hero-visual > div.math-paper > div.math-body > p#demo-title",
+              "boundingRect": {
+                "top": 275,
+                "bottom": 318,
+                "left": 766,
+                "right": 1233,
+                "width": 466,
+                "height": 43
+              },
+              "snippet": "<p class=\"math-prompt\" id=\"demo-title\">",
+              "nodeLabel": "把数字，变成看得见的理解。",
+              "explanation": "Fix any of the following:\n  Element has insufficient color contrast of 4.44 (foreground color: #6d7b68, background color: #fffefa, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            "subItems": {
+              "type": "subitems",
+              "items": [
+                {
+                  "relatedNode": {
+                    "type": "node",
+                    "lhId": "1-3-DIV",
+                    "path": "1,HTML,1,BODY,4,MAIN,0,SECTION,1,DIV,2,DIV",
+                    "selector": "main#main > section.hero > div.hero-visual > div.math-paper",
+                    "boundingRect": {
+                      "top": 184,
+                      "bottom": 818,
+                      "left": 714,
+                      "right": 1268,
+                      "width": 554,
+                      "height": 635
+                    },
+                    "snippet": "<div class=\"math-paper\" role=\"group\" aria-labelledby=\"demo-title\">",
+                    "nodeLabel": "今日的一点开窍\n理解示例\n\n把数字，变成看得见的理解。\n\n8\n+\n5\n=\n?\n先看 8 个\n再加 5 个\n8 离 10，还差几个？\n\n先想一想，再一起看看。\n…"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "node": {
+              "type": "node",
+              "lhId": "1-4-SPAN",
+              "path": "1,HTML,1,BODY,4,MAIN,0,SECTION,1,DIV,3,DIV,1,SPAN",
+              "selector": "section.hero > div.hero-visual > div.handwritten-note > span",
+              "boundingRect": {
+                "top": 796,
+                "bottom": 847,
+                "left": 737,
+                "right": 866,
+                "width": 129,
+                "height": 51
+              },
+              "snippet": "<span>",
+              "nodeLabel": "原来，是这样。",
+              "explanation": "Fix any of the following:\n  Element has insufficient color contrast of 2.97 (foreground color: #7d8b65, background color: #e5eadb, font size: 13.5pt (18px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            "subItems": {
+              "type": "subitems",
+              "items": [
+                {
+                  "relatedNode": {
+                    "type": "node",
+                    "lhId": "1-5-DIV",
+                    "path": "1,HTML,1,BODY,4,MAIN,0,SECTION,1,DIV,0,DIV",
+                    "selector": "main#main > section.hero > div.hero-visual > div.paper-back",
+                    "boundingRect": {
+                      "top": 162,
+                      "bottom": 846,
+                      "left": 683,
+                      "right": 1280,
+                      "width": 597,
+                      "height": 684
+                    },
+                    "snippet": "<div class=\"paper-back\" aria-hidden=\"true\">",
+                    "nodeLabel": "main#main > section.hero > div.hero-visual > div.paper-back"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "node": {
+              "type": "node",
+              "lhId": "1-6-A",
+              "path": "1,HTML,1,BODY,5,FOOTER,0,DIV,2,A",
+              "selector": "body > footer.site-footer > div.container > a.back-to-top",
+              "boundingRect": {
+                "top": 4105,
+                "bottom": 4149,
+                "left": 1170,
+                "right": 1260,
+                "width": 89,
+                "height": 44
+              },
+              "snippet": "<a class=\"back-to-top\" href=\"#top\">",
+              "nodeLabel": "回到顶部\n↑",
+              "explanation": "Fix any of the following:\n  Element has insufficient color contrast of 4.09 (foreground color: #6c7d5f, background color: #f7f6ef, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
+            },
+            "subItems": {
+              "type": "subitems",
+              "items": [
+                {
+                  "relatedNode": {
+                    "type": "node",
+                    "lhId": "1-7-BODY",
+                    "path": "1,HTML,1,BODY",
+                    "selector": "body",
+                    "boundingRect": {
+                      "top": 0,
+                      "bottom": 4248,
+                      "left": 0,
+                      "right": 1335,
+                      "width": 1335,
+                      "height": 4248
+                    },
+                    "snippet": "<body>",
+                    "nodeLabel": "body"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "impact": "serious",
+          "tags": [
+            "cat.color",
+            "wcag2aa",
+            "wcag143",
+            "TTv5",
+            "TT13.c",
+            "EN-301-549",
+            "EN-9.1.4.3",
+            "ACT",
+            "RGAAv4",
+            "RGAA-3.2.1"
+          ]
+        }
+      }
+    },
+    {
+      "id": "label-content-name-mismatch",
+      "title": "Elements with visible text labels do not have matching accessible names.",
+      "score": 0,
+      "description": "Visible text labels that do not match the accessible name can result in a confusing experience for screen reader users. [Learn more about accessible names](https://dequeuniversity.com/rules/axe/4.14/label-content-name-mismatch).",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "valueType": "node",
+            "subItemsHeading": {
+              "key": "relatedNode",
+              "valueType": "node"
+            },
+            "label": "Failing Elements"
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "1-8-A",
+              "path": "1,HTML,1,BODY,3,HEADER,0,NAV,0,A",
+              "selector": "body > header#top > nav.container > a.brand",
+              "boundingRect": {
+                "top": 25,
+                "bottom": 71,
+                "left": 76,
+                "right": 187,
+                "width": 111,
+                "height": 47
+              },
+              "snippet": "<a class=\"brand\" href=\"#top\" aria-label=\"养习，回到首页顶部\">",
+              "nodeLabel": "养习\nYANGHAT",
+              "explanation": "Fix any of the following:\n  Text inside the element is not included in the accessible name"
+            }
+          }
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "impact": "serious",
+          "tags": [
+            "cat.semantics",
+            "wcag21a",
+            "wcag253",
+            "EN-301-549",
+            "EN-9.2.5.3",
+            "RGAAv4",
+            "RGAA-6.1.5"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unminified-javascript",
+      "title": "Minify JavaScript",
+      "score": 0.5,
+      "displayValue": "Est savings of 4 KiB",
+      "description": "Minifying JavaScript files can reduce payload sizes and script parse time. [Learn how to minify JavaScript](https://developer.chrome.com/docs/lighthouse/performance/unminified-javascript/).",
+      "details": {
+        "type": "opportunity",
+        "headings": [
+          {
+            "key": "url",
+            "valueType": "url",
+            "label": "URL"
+          },
+          {
+            "key": "totalBytes",
+            "valueType": "bytes",
+            "label": "Transfer Size"
+          },
+          {
+            "key": "wastedBytes",
+            "valueType": "bytes",
+            "label": "Est Savings"
+          }
+        ],
+        "items": [
+          {
+            "url": "http://127.0.0.1:41031/app.js?v=20261021",
+            "totalBytes": 4205,
+            "wastedBytes": 4186,
+            "wastedPercent": 99.55981356809943
+          }
+        ],
+        "overallSavingsMs": 0,
+        "overallSavingsBytes": 4186,
+        "sortedBy": [
+          "wastedBytes"
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "unused-css-rules",
+      "title": "Reduce unused CSS",
+      "score": 0.5,
+      "displayValue": "Est savings of 14 KiB",
+      "description": "Reduce unused rules from stylesheets and defer CSS not used for above-the-fold content to decrease bytes consumed by network activity. [Learn how to reduce unused CSS](https://developer.chrome.com/docs/lighthouse/performance/unused-css-rules/).",
+      "details": {
+        "type": "opportunity",
+        "headings": [
+          {
+            "key": "url",
+            "valueType": "url",
+            "label": "URL"
+          },
+          {
+            "key": "totalBytes",
+            "valueType": "bytes",
+            "label": "Transfer Size"
+          },
+          {
+            "key": "wastedBytes",
+            "valueType": "bytes",
+            "label": "Est Savings"
+          }
+        ],
+        "items": [
+          {
+            "url": "http://127.0.0.1:41031/styles.css?v=20261021",
+            "wastedBytes": 14702,
+            "wastedPercent": 46.28641772671317,
+            "totalBytes": 31763
+          }
+        ],
+        "overallSavingsMs": 10,
+        "overallSavingsBytes": 14702,
+        "sortedBy": [
+          "wastedBytes"
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "metricSavings": {
+            "FCP": 10,
+            "LCP": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "robots-txt",
+      "title": "robots.txt is not valid",
+      "score": 0,
+      "displayValue": "280 errors found",
+      "description": "If your robots.txt file is malformed, crawlers may not be able to understand how you want your website to be crawled or indexed. [Learn more about robots.txt](https://developer.chrome.com/docs/lighthouse/seo/invalid-robots-txt/).",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "index",
+            "valueType": "text",
+            "label": "Line #"
+          },
+          {
+            "key": "line",
+            "valueType": "code",
+            "label": "Content"
+          },
+          {
+            "key": "message",
+            "valueType": "code",
+            "label": "Error"
+          }
+        ],
+        "items": [
+          {
+            "index": "1",
+            "line": "<!doctype html>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "2",
+            "line": "<html lang=\"zh-CN\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "3",
+            "line": "<head>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "4",
+            "line": "  <meta charset=\"utf-8\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "5",
+            "line": "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "6",
+            "line": "  <meta name=\"theme-color\" content=\"#f7f6ef\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "7",
+            "line": "  <meta name=\"color-scheme\" content=\"light\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "8",
+            "line": "  <link rel=\"canonical\" href=\"https://www.yanghat.cn/\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "9",
+            "line": "  <meta name=\"description\" content=\"开窍提供适合1–6年级的小学数学练习，互动课按人教版目录整理，可选择年级和学期，配合分步演示、随堂练习与错题复习，无需注册。\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "10",
+            "line": "  <meta property=\"og:title\" content=\"开窍数学练习_小学1-6年级人教版跟练｜养习\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "11",
+            "line": "  <meta property=\"og:description\" content=\"开窍提供适合1–6年级的小学数学练习，互动课按人教版目录整理，可选择年级和学期，配合分步演示、随堂练习与错题复习，无需注册。\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "12",
+            "line": "  <meta property=\"og:type\" content=\"website\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "13",
+            "line": "  <meta property=\"og:url\" content=\"https://www.yanghat.cn/\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "14",
+            "line": "  <meta property=\"og:site_name\" content=\"养习\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "15",
+            "line": "  <meta property=\"og:image\" content=\"https://www.yanghat.cn/assets/og-cover-20261029.jpg\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "16",
+            "line": "  <meta property=\"og:image:width\" content=\"1200\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "17",
+            "line": "  <meta property=\"og:image:height\" content=\"630\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "18",
+            "line": "  <meta property=\"og:image:alt\" content=\"养习开窍数学练习，小学1–6年级，人教版目录互动课与练习\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "19",
+            "line": "  <meta name=\"twitter:card\" content=\"summary_large_image\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "20",
+            "line": "  <meta name=\"twitter:title\" content=\"开窍数学练习_小学1-6年级人教版跟练｜养习\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "21",
+            "line": "  <meta name=\"twitter:description\" content=\"开窍提供适合1–6年级的小学数学练习，互动课按人教版目录整理，可选择年级和学期，配合分步演示、随堂练习与错题复习，无需注册。\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "22",
+            "line": "  <meta name=\"twitter:image\" content=\"https://www.yanghat.cn/assets/og-cover-20261029.jpg\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "23",
+            "line": "  <title>开窍数学练习_小学1-6年级人教版跟练｜养习</title>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "24",
+            "line": "  <script>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "25",
+            "line": "    (function () {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "26",
+            "line": "      var params = new URLSearchParams(location.search);",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "27",
+            "line": "      if (params.get(\"practice\") !== \"1\") return;",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "28",
+            "line": "      document.documentElement.classList.add(\"is-practice\");",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "29",
+            "line": "      var inner = new URLSearchParams();",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "30",
+            "line": "      [\"lesson\", \"grade\"].forEach(function (key) {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "31",
+            "line": "        var value = params.get(key);",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "32",
+            "line": "        if (value) inner.set(key, value);",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "33",
+            "line": "      });",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "34",
+            "line": "      window.__kaiqiaoSrc = \"/app/\" + (inner.toString() ? \"?\" + inner.toString() : \"\") + location.hash;",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "35",
+            "line": "    })();",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "36",
+            "line": "  </script>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "37",
+            "line": "  <style>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "38",
+            "line": "    html.is-practice, html.is-practice body { margin: 0; background: #f7f6ef; }",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "39",
+            "line": "    html.is-practice body > :not(#practice-frame) { display: none !important; }",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "40",
+            "line": "    html.is-practice #practice-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #f7f6ef; }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "41",
+            "line": "  </style>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "42",
+            "line": "  <link rel=\"icon\" href=\"assets/favicon.svg\" type=\"image/svg+xml\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "43",
+            "line": "  <link rel=\"stylesheet\" href=\"styles.css?v=20261021\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "44",
+            "line": "  <script src=\"app.js?v=20261021\" defer></script>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "45",
+            "line": "  <script type=\"application/ld+json\" id=\"faq-schema\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "46",
+            "line": "{",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "47",
+            "line": "  \"@context\": \"https://schema.org\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "48",
+            "line": "  \"@type\": \"FAQPage\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "49",
+            "line": "  \"mainEntity\": [",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "50",
+            "line": "    {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "51",
+            "line": "      \"@type\": \"Question\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "52",
+            "line": "      \"name\": \"开窍适合谁使用？\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "53",
+            "line": "      \"acceptedAnswer\": {",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "54",
+            "line": "        \"@type\": \"Answer\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "55",
+            "line": "        \"text\": \"适合需要进行小学数学基础练习的孩子，也适合家长陪伴使用。进入开窍后，可以根据当前学习进度选择年级和题型。\"",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "56",
+            "line": "      }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "57",
+            "line": "    },",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "58",
+            "line": "    {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "59",
+            "line": "      \"@type\": \"Question\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "60",
+            "line": "      \"name\": \"开始练习需要注册吗？\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "61",
+            "line": "      \"acceptedAnswer\": {",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "62",
+            "line": "        \"@type\": \"Answer\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "63",
+            "line": "        \"text\": \"无需注册。点击「进入开窍」，选择合适的年级和题型，就可以开始练习。\\u003ca href=\\\"https://www.yanghat.cn/?practice=1\\\">现在去开窍\\u003c/a>\"",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "64",
+            "line": "      }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "65",
+            "line": "    },",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "66",
+            "line": "    {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "67",
+            "line": "      \"@type\": \"Question\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "68",
+            "line": "      \"name\": \"遇到不会的题，怎么办？\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "69",
+            "line": "      \"acceptedAnswer\": {",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "70",
+            "line": "        \"@type\": \"Answer\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "71",
+            "line": "        \"text\": \"先认真想一想，完成作答后查看解析。也可以回到错题页复习，把没弄明白的地方再过一遍。\"",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "72",
+            "line": "      }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "73",
+            "line": "    },",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "74",
+            "line": "    {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "75",
+            "line": "      \"@type\": \"Question\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "76",
+            "line": "      \"name\": \"互动课和练习有什么不同？\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "77",
+            "line": "      \"acceptedAnswer\": {",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "78",
+            "line": "        \"@type\": \"Answer\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "79",
+            "line": "        \"text\": \"互动课先看老师一步步演示，再自己动手调一调、做几道随堂小练习，适合刚学新内容的时候；练习和错题本适合巩固。两者都在开窍里，选好年级就能用。\"",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "80",
+            "line": "      }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "81",
+            "line": "    },",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "82",
+            "line": "    {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "83",
+            "line": "      \"@type\": \"Question\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "84",
+            "line": "      \"name\": \"换设备后，练习记录还在吗？\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "85",
+            "line": "      \"acceptedAnswer\": {",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "86",
+            "line": "        \"@type\": \"Answer\",",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "87",
+            "line": "        \"text\": \"记录保存在当前浏览器，不提供云端同步。更换设备、清理浏览器或使用无痕模式，可能影响记录保留。请提前在开窍「学情」页面导出备份，并妥善保存备份文件。\"",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "88",
+            "line": "      }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "89",
+            "line": "    }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "90",
+            "line": "  ]",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "91",
+            "line": "}",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "92",
+            "line": "  </script>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "93",
+            "line": "</head>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "94",
+            "line": "<body>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "95",
+            "line": "  <script>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "96",
+            "line": "    if (window.__kaiqiaoSrc) {",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "97",
+            "line": "      document.write('<iframe id=\"practice-frame\" title=\"开窍练习\" src=\"' + String(window.__kaiqiaoSrc).replace(/\"/g, \"\") + '\"></iframe>');",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "98",
+            "line": "      if (\"serviceWorker\" in navigator) navigator.serviceWorker.register(\"/sw-practice.js\").catch(function () {});",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "99",
+            "line": "    }",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "100",
+            "line": "  </script>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "101",
+            "line": "  <a class=\"skip-link\" href=\"#main\">跳到主要内容</a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "102",
+            "line": "  <svg class=\"icon-library\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\">",
+            "message": "Unknown directive"
+          },
+          {
+            "index": "103",
+            "line": "    <symbol id=\"i-arrow\" viewBox=\"0 0 24 24\"><path d=\"M4 12h15m-6-6 6 6-6 6\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "104",
+            "line": "    <symbol id=\"i-up-right\" viewBox=\"0 0 24 24\"><path d=\"M6 18 18 6M6 6h12v12\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "105",
+            "line": "    <symbol id=\"i-book\" viewBox=\"0 0 24 24\"><path d=\"M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "106",
+            "line": "    <symbol id=\"i-spark\" viewBox=\"0 0 24 24\"><path d=\"m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "107",
+            "line": "    <symbol id=\"i-repeat\" viewBox=\"0 0 24 24\"><path d=\"M19.5 9A8 8 0 0 0 5 6M4 2v5h5m-4.5 8A8 8 0 0 0 14 20a8 8 0 0 0 5-3m1 5v-5h-5\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "108",
+            "line": "    <symbol id=\"i-shield\" viewBox=\"0 0 24 24\"><path d=\"m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z\"/><path d=\"m8 12 3 3 5-6\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "109",
+            "line": "    <symbol id=\"i-plus\" viewBox=\"0 0 24 24\"><path d=\"M5 12h14m-7-7v14\"/></symbol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "110",
+            "line": "  </svg>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "112",
+            "line": "  <header class=\"site-header\" id=\"top\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "113",
+            "line": "    <nav class=\"container navigation\" aria-label=\"主导航\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "114",
+            "line": "      <a class=\"brand\" href=\"#top\" aria-label=\"养习，回到首页顶部\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "115",
+            "line": "        <img src=\"assets/brand.svg\" width=\"39\" height=\"39\" alt=\"\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "116",
+            "line": "        <span class=\"brand-name\">养习<span class=\"brand-english\">YANGHAT</span></span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "117",
+            "line": "      </a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "118",
+            "line": "      <div class=\"nav-desktop\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "119",
+            "line": "        <a href=\"#approach\">学习的方式</a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "120",
+            "line": "        <a href=\"#lessons\">互动课</a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "121",
+            "line": "        <a href=\"#kaiqiao\">认识开窍</a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "122",
+            "line": "        <a href=\"#questions\">常见问题</a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "123",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "124",
+            "line": "      <a class=\"nav-cta\" href=\"/?practice=1\">开始练习 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "125",
+            "line": "      <button class=\"menu-toggle\" type=\"button\" aria-expanded=\"false\" aria-controls=\"mobile-menu\" aria-label=\"打开导航菜单\" hidden><span></span><span></span></button>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "126",
+            "line": "    </nav>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "127",
+            "line": "    <div class=\"mobile-menu container\" id=\"mobile-menu\" hidden>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "128",
+            "line": "      <a href=\"#approach\">学习的方式 <span aria-hidden=\"true\">01</span></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "129",
+            "line": "      <a href=\"#lessons\">互动课 <span aria-hidden=\"true\">02</span></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "130",
+            "line": "      <a href=\"#kaiqiao\">认识开窍 <span aria-hidden=\"true\">03</span></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "131",
+            "line": "      <a href=\"#questions\">常见问题 <span aria-hidden=\"true\">04</span></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "132",
+            "line": "    </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "133",
+            "line": "  </header>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "135",
+            "line": "  <main id=\"main\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "136",
+            "line": "    <section class=\"hero container\" aria-labelledby=\"hero-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "137",
+            "line": "      <div class=\"hero-copy\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "138",
+            "line": "        <p class=\"eyebrow\"><span class=\"seed-dot\" aria-hidden=\"true\"></span> 一个安静的学习入口</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "139",
+            "line": "        <h1 id=\"hero-title\">不急着学会，<br>先让<span class=\"underlined\">理解发生。</span></h1>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "140",
+            "line": "        <p class=\"hero-description\">把一道题想明白，把一个小习惯留下来。<br class=\"desktop-break\">学习的进步，就藏在每天的练习里。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "141",
+            "line": "        <div class=\"hero-actions\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "142",
+            "line": "          <a class=\"button button-primary\" href=\"/?practice=1\">进入开窍 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "143",
+            "line": "          <a class=\"text-link\" href=\"#video\">看 45 秒宣传片 <span aria-hidden=\"true\">↓</span></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "144",
+            "line": "        </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "145",
+            "line": "        <p class=\"hero-note\"><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-book\"/></svg> 小学数学 · 一到六年级 <span aria-hidden=\"true\">·</span> 无需注册</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "146",
+            "line": "        <a class=\"news-pill\" href=\"#lessons\"><span class=\"news-tag\">新课</span><span>五年级小数除法 · 六年级分数乘法</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "147",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "149",
+            "line": "      <div class=\"hero-visual\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "150",
+            "line": "        <div class=\"paper-back\" aria-hidden=\"true\"></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "151",
+            "line": "        <svg class=\"sprout-drawing\" viewBox=\"0 0 92 102\" aria-hidden=\"true\"><path d=\"M45 93c2-37 3-55 25-75M50 68C20 68 8 49 9 29c23 0 39 12 41 39ZM58 44c-2-24 9-35 29-38 2 21-7 35-29 38Z\"/><path d=\"M27 47c9 7 14 13 22 24M72 24c-6 6-9 11-14 20\"/></svg>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "152",
+            "line": "        <div class=\"math-paper\" role=\"group\" aria-labelledby=\"demo-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "153",
+            "line": "          <div class=\"paper-heading\"><span><span class=\"paper-dot\" aria-hidden=\"true\"></span> 今日的一点开窍</span><span class=\"demo-label\">理解示例</span></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "154",
+            "line": "          <div class=\"math-body\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "155",
+            "line": "            <p class=\"math-prompt\" id=\"demo-title\">把数字，变成看得见的理解。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "156",
+            "line": "            <div class=\"equation\" aria-label=\"8 加 5 等于多少\"><span>8</span><span class=\"math-symbol\">+</span><span>5</span><span class=\"math-symbol\">=</span><span class=\"answer\" id=\"demo-answer\">?</span></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "157",
+            "line": "            <div class=\"counting-illustration\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "158",
+            "line": "              <svg id=\"counting-demo\" viewBox=\"0 0 384 156\" role=\"img\" aria-labelledby=\"counting-title counting-description\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "159",
+            "line": "                <title id=\"counting-title\">8 加 5 的凑十示例</title>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "160",
+            "line": "                <desc id=\"counting-description\">左边十格框中有 8 个绿色圆点，右边有 5 个黄色圆点。</desc>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "161",
+            "line": "                <rect class=\"ten-frame-bg\" x=\"9\" y=\"10\" width=\"210\" height=\"100\" rx=\"12\"/>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "162",
+            "line": "                <path class=\"frame-grid\" d=\"M51 10v100m42-100v100m42-100v100m42-100v100M9 60h210\"/>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "163",
+            "line": "                <circle class=\"empty-dot\" cx=\"156\" cy=\"85\" r=\"12\"/><circle class=\"empty-dot\" cx=\"198\" cy=\"85\" r=\"12\"/>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "164",
+            "line": "                <g class=\"green-tokens\"><circle cx=\"30\" cy=\"35\" r=\"12\"/><circle cx=\"72\" cy=\"35\" r=\"12\"/><circle cx=\"114\" cy=\"35\" r=\"12\"/><circle cx=\"156\" cy=\"35\" r=\"12\"/><circle cx=\"198\" cy=\"35\" r=\"12\"/><circle cx=\"30\" cy=\"85\" r=\"12\"/><circle cx=\"72\" cy=\"85\" r=\"12\"/><circle cx=\"114\" cy=\"85\" r=\"12\"/></g>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "165",
+            "line": "                <path class=\"counting-plus\" d=\"M233 60h14m-7-7v14\"/>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "166",
+            "line": "                <g class=\"gold-tokens\"><circle data-token=\"0\" cx=\"272\" cy=\"35\" r=\"12\"/><circle data-token=\"1\" cx=\"311\" cy=\"35\" r=\"12\"/><circle data-token=\"2\" cx=\"350\" cy=\"35\" r=\"12\"/><circle data-token=\"3\" cx=\"292\" cy=\"85\" r=\"12\"/><circle data-token=\"4\" cx=\"331\" cy=\"85\" r=\"12\"/></g>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "167",
+            "line": "                <text class=\"count-label\" id=\"left-count-label\" x=\"114\" y=\"142\">先看 8 个</text><text class=\"count-label\" id=\"right-count-label\" x=\"311\" y=\"142\">再加 5 个</text>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "168",
+            "line": "              </svg>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "169",
+            "line": "            </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "170",
+            "line": "            <div class=\"demo-explanation\" id=\"demo-explanation\" aria-live=\"polite\" aria-atomic=\"true\"><strong>8 离 10，还差几个？</strong><p>先想一想，再一起看看。</p></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "171",
+            "line": "            <noscript><p class=\"no-script-note\">把 5 拆成 2 和 3，8 + 2 = 10，10 + 3 = 13。</p></noscript>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "172",
+            "line": "            <button class=\"demo-next\" id=\"demo-next\" type=\"button\" hidden><span id=\"demo-button-label\">看一看，怎么想</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></button>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "173",
+            "line": "          </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "174",
+            "line": "          <div class=\"paper-footer\"><span>答案之外，还有理解的过程。</span><span class=\"demo-progress\" id=\"demo-progress\" aria-label=\"示例第 1 步，共 3 步\"><i class=\"is-active\"></i><i></i><i></i></span></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "175",
+            "line": "        </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "176",
+            "line": "        <div class=\"handwritten-note\" aria-hidden=\"true\"><svg viewBox=\"0 0 72 48\"><path d=\"M3 4c6 34 35 42 60 18M50 21l15-1-2 15\"/></svg><span>原来，是这样。</span></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "177",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "178",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "180",
+            "line": "    <section class=\"approach container\" id=\"approach\" aria-labelledby=\"approach-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "181",
+            "line": "      <p class=\"section-kicker\">关于养习 <span class=\"kicker-line\" aria-hidden=\"true\"></span></p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "182",
+            "line": "      <div class=\"approach-copy\"><h2 id=\"approach-title\">让每一次「原来如此」，<br class=\"mobile-break\">成为向前的一小步。</h2><p>给思考一点时间，给练习一点耐心。<br>从看见，到想明白，再到下一次做得到。</p></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "183",
+            "line": "      <svg class=\"growth-drawing\" viewBox=\"0 0 152 90\" aria-hidden=\"true\"><path d=\"M7 76h139M28 75V53m0 7C17 61 12 55 12 47c10 0 16 4 16 13Zm37 15V36m0 11c-15 0-21-7-21-18 13 0 21 6 21 18Zm1-11c0-12 7-19 19-20 0 12-7 20-19 20Zm44 39V23m0 26c-17 0-27-10-27-23 17 0 27 8 27 23Zm0-16c0-17 10-25 26-25 0 15-11 25-26 25Z\"/></svg>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "184",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "186",
+            "line": "    <section class=\"lessons container\" id=\"lessons\" aria-labelledby=\"lessons-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "187",
+            "line": "      <div class=\"lessons-head\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "188",
+            "line": "        <p class=\"section-kicker\">开窍 · 互动课堂 <span class=\"kicker-line\" aria-hidden=\"true\"></span></p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "189",
+            "line": "        <h2 id=\"lessons-title\">看着它一步步<span class=\"serif-accent\">变明白。</span></h2>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "190",
+            "line": "        <p class=\"section-description\">每节课都有分步讲解、能动手的演示和几道随堂小练习，按人教版目录排好，跟着课本走。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "191",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "192",
+            "line": "      <ul class=\"lesson-grid\" role=\"list\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "193",
+            "line": "        <li class=\"lesson-card\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "194",
+            "line": "          <a href=\"/?practice=1&amp;lesson=decimal-div&amp;grade=5\" aria-describedby=\"lesson-dd-desc\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "195",
+            "line": "            <span class=\"lesson-meta\"><span class=\"lesson-badge\">新课</span>五年级上册</span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "196",
+            "line": "            <svg class=\"lesson-art\" viewBox=\"0 0 220 84\" aria-hidden=\"true\"><text x=\"8\" y=\"36\" class=\"art-num\">7.2 ÷ 0.4</text><path class=\"art-arrow\" d=\"M30 46c18 14 52 14 70 0m-8-4 8 4-6 7\"/><text x=\"8\" y=\"76\" class=\"art-num art-strong\">72 ÷ 4 = 18</text></svg>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "197",
+            "line": "            <h3>小数除法：除数是小数怎么办</h3>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "198",
+            "line": "            <p id=\"lesson-dd-desc\">被除数和除数同时乘 10，商不变。竖式一步步除，除不尽也能看懂循环小数。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "199",
+            "line": "            <span class=\"lesson-go\">去上课 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "200",
+            "line": "          </a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "201",
+            "line": "        </li>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "202",
+            "line": "        <li class=\"lesson-card\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "203",
+            "line": "          <a href=\"/?practice=1&amp;lesson=fraction-mul&amp;grade=6\" aria-describedby=\"lesson-fm-desc\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "204",
+            "line": "            <span class=\"lesson-meta\"><span class=\"lesson-badge\">新课</span>六年级上册</span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "205",
+            "line": "            <svg class=\"lesson-art\" viewBox=\"0 0 220 84\" aria-hidden=\"true\"><g class=\"art-grid\"><rect x=\"8\" y=\"8\" width=\"96\" height=\"68\"/><rect x=\"8\" y=\"8\" width=\"72\" height=\"68\" class=\"art-a\"/><rect x=\"8\" y=\"8\" width=\"72\" height=\"45.3\" class=\"art-b\"/><path d=\"M32 8v68M56 8v68M80 8v68M8 30.7h96M8 53.3h96\"/></g><text x=\"122\" y=\"50\" class=\"art-num art-strong\">3/4 × 2/3</text></svg>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "206",
+            "line": "            <h3>分数乘法：求一个数的几分之几</h3>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "207",
+            "line": "            <p id=\"lesson-fm-desc\">在长方形里先取 3/4，再取它的 2/3，数一数重叠的格子，就知道为什么分子乘分子。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "208",
+            "line": "            <span class=\"lesson-go\">去上课 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "209",
+            "line": "          </a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "210",
+            "line": "        </li>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "211",
+            "line": "        <li class=\"lesson-card lesson-card-all\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "212",
+            "line": "          <a href=\"/?practice=1\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "213",
+            "line": "            <span class=\"lesson-meta\">一到六年级</span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "214",
+            "line": "            <p class=\"lesson-count\"><strong>25</strong> 节数学互动课<br><strong>11</strong> 个科学小实验</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "215",
+            "line": "            <h3>凑十法、条形统计图、多边形面积……</h3>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "216",
+            "line": "            <p>选年级和上下册，打开就能上课。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "217",
+            "line": "            <span class=\"lesson-go\">进入课堂 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></span>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "218",
+            "line": "          </a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "219",
+            "line": "        </li>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "220",
+            "line": "      </ul>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "221",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "223",
+            "line": "    <section class=\"promo container\" id=\"video\" aria-labelledby=\"promo-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "224",
+            "line": "      <div class=\"promo-copy\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "225",
+            "line": "        <p class=\"section-kicker\">45 秒认识开窍 <span class=\"kicker-line\" aria-hidden=\"true\"></span></p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "226",
+            "line": "        <h2 id=\"promo-title\">让数学知识<br><span class=\"serif-accent\">看得见、动得起来。</span></h2>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "227",
+            "line": "        <p class=\"section-description\">凑十法、分数乘法的面积模型、小数除法……片中每一个演示，都是开窍里真实的互动课录屏。从理解，到练习，再到巩固。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "228",
+            "line": "        <a class=\"button button-primary\" href=\"/?practice=1\">亲自试一节课 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "229",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "230",
+            "line": "      <div class=\"promo-frame\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "231",
+            "line": "        <video controls playsinline preload=\"none\" poster=\"assets/kaiqiao-promo-poster.jpg\" width=\"1080\" height=\"1920\" aria-describedby=\"promo-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "232",
+            "line": "          <source src=\"assets/kaiqiao-promo.mp4\" type=\"video/mp4\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "233",
+            "line": "          你的浏览器暂不支持视频播放，可以<a href=\"assets/kaiqiao-promo.mp4\">下载宣传片</a>观看。",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "234",
+            "line": "        </video>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "235",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "236",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "238",
+            "line": "    <section class=\"product-section container\" id=\"kaiqiao\" aria-labelledby=\"product-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "239",
+            "line": "      <div class=\"product-intro\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "240",
+            "line": "        <p class=\"section-kicker\">为每天的练习而做 <span class=\"kicker-line\" aria-hidden=\"true\"></span></p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "241",
+            "line": "        <h2 id=\"product-title\">少一点干扰，<br>多一点<span class=\"serif-accent\">想明白。</span></h2>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "242",
+            "line": "        <p class=\"section-description\">开窍，是养习的数学练习空间。<br>从一道适合的题开始，认真思考，<br class=\"desktop-break\">慢慢积累自己的理解。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "243",
+            "line": "        <a class=\"button button-primary\" href=\"/?practice=1\">去开窍练一练 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "244",
+            "line": "        <p class=\"quiet-caption\">不必一口气学很多。今天，想明白一点就好。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "245",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "246",
+            "line": "      <div class=\"product-panel\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "247",
+            "line": "        <div class=\"product-panel-top\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "248",
+            "line": "          <div><p class=\"tiny-label\">MEET KAIQIAO</p><h3>开窍<span>小学数学练习</span></h3><p>每一次思考，都在点亮一点什么。</p></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "249",
+            "line": "          <img class=\"lantern\" src=\"assets/lantern.svg\" width=\"128\" height=\"134\" alt=\"微笑的小灯笼，开窍的学习伙伴\" loading=\"lazy\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "250",
+            "line": "        </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "251",
+            "line": "        <ol class=\"feature-list\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "252",
+            "line": "          <li><span class=\"feature-icon\"><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-book\"/></svg></span><div><h4>从适合自己的题开始</h4><p>选择年级与题型，一道一道认真作答。</p></div><span class=\"feature-number\" aria-hidden=\"true\">01</span></li>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "253",
+            "line": "          <li><span class=\"feature-icon\"><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-spark\"/></svg></span><div><h4>让解题过程，也看得明白</h4><p>互动课堂分步演示，看懂解析，把这一次的疑问变成理解。</p></div><span class=\"feature-number\" aria-hidden=\"true\">02</span></li>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "254",
+            "line": "          <li><span class=\"feature-icon\"><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-repeat\"/></svg></span><div><h4>回到错题，再想通一次</h4><p>在错题复习中，巩固还不够熟悉的地方。</p></div><span class=\"feature-number\" aria-hidden=\"true\">03</span></li>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "255",
+            "line": "        </ol>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "256",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "257",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "259",
+            "line": "    <section class=\"questions-section\" id=\"questions\" aria-labelledby=\"questions-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "260",
+            "line": "      <div class=\"container questions-grid\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "261",
+            "line": "        <div class=\"questions-intro\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "262",
+            "line": "          <p class=\"section-kicker\">开始之前 <span class=\"kicker-line\" aria-hidden=\"true\"></span></p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "263",
+            "line": "          <h2 id=\"questions-title\">你可能<br class=\"desktop-break\">想知道的。</h2>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "264",
+            "line": "          <div class=\"local-note\" id=\"records\"><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-shield\"/></svg><div><h3>练习记录，留在你的设备。</h3><p>重要学情，记得在开窍「学情」页面<br class=\"desktop-break\">定期导出备份。</p></div></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "265",
+            "line": "        </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "266",
+            "line": "        <div class=\"faq-list\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "267",
+            "line": "          <details name=\"faq\" open><summary><span><span class=\"faq-number\">01</span>开窍适合谁使用？</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-plus\"/></svg></summary><div class=\"faq-answer\"><p>适合需要进行小学数学基础练习的孩子，也适合家长陪伴使用。进入开窍后，可以根据当前学习进度选择年级和题型。</p></div></details>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "268",
+            "line": "          <details name=\"faq\"><summary><span><span class=\"faq-number\">02</span>开始练习需要注册吗？</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-plus\"/></svg></summary><div class=\"faq-answer\"><p>无需注册。点击「进入开窍」，选择合适的年级和题型，就可以开始练习。</p><a href=\"/?practice=1\">现在去开窍</a></div></details>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "269",
+            "line": "          <details name=\"faq\"><summary><span><span class=\"faq-number\">03</span>遇到不会的题，怎么办？</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-plus\"/></svg></summary><div class=\"faq-answer\"><p>先认真想一想，完成作答后查看解析。也可以回到错题页复习，把没弄明白的地方再过一遍。</p></div></details>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "270",
+            "line": "          <details name=\"faq\"><summary><span><span class=\"faq-number\">04</span>互动课和练习有什么不同？</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-plus\"/></svg></summary><div class=\"faq-answer\"><p>互动课先看老师一步步演示，再自己动手调一调、做几道随堂小练习，适合刚学新内容的时候；练习和错题本适合巩固。两者都在开窍里，选好年级就能用。</p></div></details>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "271",
+            "line": "          <details name=\"faq\"><summary><span><span class=\"faq-number\">05</span>换设备后，练习记录还在吗？</span><svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-plus\"/></svg></summary><div class=\"faq-answer\"><p>记录保存在当前浏览器，不提供云端同步。更换设备、清理浏览器或使用无痕模式，可能影响记录保留。请提前在开窍「学情」页面导出备份，并妥善保存备份文件。</p></div></details>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "272",
+            "line": "        </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "273",
+            "line": "      </div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "274",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "276",
+            "line": "    <section class=\"closing container\" aria-labelledby=\"closing-title\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "277",
+            "line": "      <div class=\"closing-mark\" aria-hidden=\"true\"><svg viewBox=\"0 0 60 68\"><path d=\"M30 61V25m0 22C12 47 6 35 6 21c17 0 24 10 24 26Zm0-16C30 14 39 6 55 6c0 17-10 25-25 25Z\"/></svg></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "278",
+            "line": "      <p class=\"tiny-label\">A LITTLE UNDERSTANDING, EVERY DAY.</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "279",
+            "line": "      <h2 id=\"closing-title\">每天理解<span>多一点。</span></h2>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "280",
+            "line": "      <p>下一次「原来如此」，就从今天开始。</p>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "281",
+            "line": "      <a class=\"button button-primary\" href=\"/?practice=1\">开始今天的练习 <svg class=\"icon\" aria-hidden=\"true\"><use href=\"#i-arrow\"/></svg></a>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "282",
+            "line": "    </section>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "283",
+            "line": "  </main>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "285",
+            "line": "  <footer class=\"site-footer\">",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "286",
+            "line": "    <div class=\"container footer-main\"><a class=\"brand\" href=\"#top\"><img src=\"assets/brand.svg\" width=\"34\" height=\"34\" alt=\"\"><span class=\"brand-name\">养习<span class=\"brand-english\">YANGHAT</span></span></a><p>学习的进步，藏在每天的练习里。</p><a class=\"back-to-top\" href=\"#top\">回到顶部 <span aria-hidden=\"true\">↑</span></a></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "287",
+            "line": "    <div class=\"container footer-bottom\"><span>yanghat.cn</span><span>用一点耐心，养成一点习惯。</span><a href=\"#records\">关于练习记录</a></div>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "288",
+            "line": "  </footer>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "289",
+            "line": "</body>",
+            "message": "Syntax not understood"
+          },
+          {
+            "index": "290",
+            "line": "</html>",
+            "message": "Syntax not understood"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cache-insight",
+      "title": "Use efficient cache lifetimes",
+      "score": 0.5,
+      "displayValue": "Est savings of 42 KiB",
+      "description": "A long cache lifetime can speed up repeat visits to your page. [Learn more about caching](https://developer.chrome.com/docs/performance/insights/cache).",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "url",
+            "valueType": "url",
+            "label": "Request"
+          },
+          {
+            "key": "cacheLifetimeMs",
+            "valueType": "ms",
+            "label": "Cache TTL",
+            "displayUnit": "duration"
+          },
+          {
+            "key": "totalBytes",
+            "valueType": "bytes",
+            "label": "Transfer Size",
+            "displayUnit": "kb",
+            "granularity": 1
+          }
+        ],
+        "items": [
+          {
+            "url": "http://127.0.0.1:41031/assets/kaiqiao-promo-poster.jpg",
+            "cacheLifetimeMs": 3600000,
+            "totalBytes": 52580,
+            "wastedBytes": 42064
+          },
+          {
+            "url": "http://127.0.0.1:41031/assets/brand.svg",
+            "cacheLifetimeMs": 3600000,
+            "totalBytes": 633,
+            "wastedBytes": 506.40000000000003
+          }
+        ],
+        "sortedBy": [
+          "wastedBytes"
+        ],
+        "skipSumming": [
+          "cacheLifetimeMs"
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "wastedBytes": 42570.4
+        }
+      }
+    },
+    {
+      "id": "document-latency-insight",
+      "title": "Document request latency",
+      "score": 0.5,
+      "displayValue": "Est savings of 15 KiB",
+      "description": "Your first network request is the most important. [Reduce its latency](https://developer.chrome.com/docs/performance/insights/document-latency) by avoiding redirects, ensuring a fast server response, and enabling text compression.",
+      "details": {
+        "type": "checklist",
+        "items": {
+          "noRedirects": {
+            "label": "Avoids redirects",
+            "value": true
+          },
+          "serverResponseIsFast": {
+            "label": "Server responds quickly (observed 1 ms)",
+            "value": true
+          },
+          "usesCompression": {
+            "label": "No compression applied",
+            "value": false
+          }
+        },
+        "debugData": {
+          "type": "debugdata",
+          "redirectDuration": 0,
+          "serverResponseTime": 1,
+          "uncompressedResponseBytes": 15444,
+          "wastedBytes": 15444
+        }
+      }
+    },
+    {
+      "id": "image-delivery-insight",
+      "title": "Improve image delivery",
+      "score": 0.5,
+      "displayValue": "Est savings of 31 KiB",
+      "description": "Reducing the download time of images can improve the perceived load time of the page and LCP. [Learn more about optimizing image size](https://developer.chrome.com/docs/performance/insights/image-delivery).",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "valueType": "node",
+            "label": ""
+          },
+          {
+            "key": "url",
+            "valueType": "url",
+            "label": "URL",
+            "subItemsHeading": {
+              "key": "reason",
+              "valueType": "text"
+            }
+          },
+          {
+            "key": "totalBytes",
+            "valueType": "bytes",
+            "label": "Resource Size"
+          },
+          {
+            "key": "wastedBytes",
+            "valueType": "bytes",
+            "label": "Est Savings",
+            "subItemsHeading": {
+              "key": "wastedBytes",
+              "valueType": "bytes"
+            }
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "page-1-VIDEO",
+              "path": "1,HTML,1,BODY,4,MAIN,3,SECTION,1,DIV,0,VIDEO",
+              "selector": "main#main > section#video > div.promo-frame > video",
+              "boundingRect": {
+                "top": 1775,
+                "bottom": 2367,
+                "left": 926,
+                "right": 1254,
+                "width": 328,
+                "height": 592
+              },
+              "snippet": "<video controls=\"\" playsinline=\"\" preload=\"none\" poster=\"assets/kaiqiao-promo-poster.jpg\" width=\"1080\" height=\"1920\" aria-describedby=\"promo-title\">",
+              "nodeLabel": "main#main > section#video > div.promo-frame > video"
+            },
+            "url": "http://127.0.0.1:41031/assets/kaiqiao-promo-poster.jpg",
+            "totalBytes": 52308,
+            "wastedBytes": 32084,
+            "subItems": {
+              "type": "subitems",
+              "items": [
+                {
+                  "reason": "This image file is larger than it needs to be (532x960) for its displayed dimensions (333x592). Use responsive images to reduce the image download size.",
+                  "wastedBytes": 32084
+                }
+              ]
+            }
+          }
+        ],
+        "debugData": {
+          "type": "debugdata",
+          "wastedBytes": 32084
+        }
+      }
+    },
+    {
+      "id": "network-dependency-tree-insight",
+      "title": "Network dependency tree",
+      "score": 0,
+      "description": "[Avoid chaining critical requests](https://developer.chrome.com/docs/performance/insights/network-dependency-tree) by reducing the length of chains, reducing the download size of resources, or deferring the download of unnecessary resources to improve page load",
+      "details": {
+        "type": "list",
+        "items": [
+          {
+            "type": "list-section",
+            "value": {
+              "type": "network-tree",
+              "chains": {
+                "ECA897896CEE34332A6A1B4CA1A8835C": {
+                  "url": "http://127.0.0.1:41031/",
+                  "navStartToEndTime": 36,
+                  "transferSize": 23324,
+                  "isLongest": true,
+                  "children": {
+                    "388579.2": {
+                      "url": "http://127.0.0.1:41031/styles.css?v=20261021",
+                      "navStartToEndTime": 29,
+                      "transferSize": 32036,
+                      "children": {}
+                    }
+                  }
+                }
+              },
+              "longestChain": {
+                "duration": 36
+              }
+            }
+          },
+          {
+            "type": "list-section",
+            "title": "Preconnected origins",
+            "description": "[preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints help the browser establish a connection earlier in the page load, saving time when the first request for that origin is made. The following are the origins that the page preconnected to.",
+            "value": {
+              "type": "text",
+              "value": "No origins were preconnected"
+            }
+          },
+          {
+            "type": "list-section",
+            "title": "Preconnect candidates",
+            "description": "Add [preconnect](https://developer.chrome.com/docs/lighthouse/performance/uses-rel-preconnect/) hints to your most important origins, but try to use no more than 4",
+            "value": {
+              "type": "text",
+              "value": "No additional origins are good candidates for preconnecting"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "render-blocking-insight",
+      "title": "Render-blocking requests",
+      "score": 0.5,
+      "displayValue": "Est savings of 20 ms",
+      "description": "Requests are blocking the page’s initial render, which may delay LCP. [Deferring or inlining](https://developer.chrome.com/docs/performance/insights/render-blocking) can move these network requests out of the critical path.",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "url",
+            "valueType": "url",
+            "label": "URL"
+          },
+          {
+            "key": "totalBytes",
+            "valueType": "bytes",
+            "label": "Transfer Size"
+          },
+          {
+            "key": "wastedMs",
+            "valueType": "timespanMs",
+            "label": "Duration"
+          }
+        ],
+        "items": [
+          {
+            "url": "http://127.0.0.1:41031/styles.css?v=20261021",
+            "totalBytes": 32036,
+            "wastedMs": 81
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "sections": [
+    "不急着学会，\n先让理解发生。",
+    "看一眼",
+    "认识开窍",
+    "宣传片",
+    "你可能想知道的。"
+  ],
+  "entries": [
+    {
+      "text": "开始练习",
+      "href": "/?practice=1",
+      "primary": false
+    },
+    {
+      "text": "进入开窍",
+      "href": "/?practice=1",
+      "primary": true
+    },
+    {
+      "text": "一年级",
+      "href": "/?practice=1&grade=1",
+      "primary": false
+    },
+    {
+      "text": "二年级",
+      "href": "/?practice=1&grade=2",
+      "primary": false
+    },
+    {
+      "text": "三年级",
+      "href": "/?practice=1&grade=3",
+      "primary": false
+    },
+    {
+      "text": "四年级",
+      "href": "/?practice=1&grade=4",
+      "primary": false
+    },
+    {
+      "text": "五年级",
+      "href": "/?practice=1&grade=5",
+      "primary": false
+    },
+    {
+      "text": "六年级",
+      "href": "/?practice=1&grade=6",
+      "primary": false
+    },
+    {
+      "text": "新课五年级上册 7.2 ÷ 0.472 ÷ 4 = 18 小数除法：除数是小数怎么办 被除数和除数同时乘 10，商不变。竖式一步步除，除不尽也能看懂循环小数。 去上课",
+      "href": "/?practice=1&lesson=decimal-div&grade=5",
+      "primary": false
+    },
+    {
+      "text": "新课六年级上册 3/4 × 2/3 分数乘法：求一个数的几分之几 在长方形里先取 3/4，再取它的 2/3，数一数重叠的格子，就知道为什么分子乘分子。 去上课",
+      "href": "/?practice=1&lesson=fraction-mul&grade=6",
+      "primary": false
+    },
+    {
+      "text": "一到六年级 25 节数学互动课11 个科学小实验 凑十法、条形统计图、多边形面积…… 选年级和上下册，打开就能上课。 进入课堂",
+      "href": "/?practice=1",
+      "primary": false
+    },
+    {
+      "text": "进入开窍后，点「学情」→「导出备份」",
+      "href": "/?practice=1",
+      "primary": false
+    },
+    {
+      "text": "开始今天的练习",
+      "href": "/?practice=1",
+      "primary": true
+    }
+  ],
+  "registration": 1,
+  "registrationAllFAQ": 1,
+  "video": "<video controls=\"\" playsinline=\"\" preload=\"none\" poster=\"assets/kaiqiao-promo-poster.jpg\" width=\"1080\" height=\"1920\" aria-describedby=\"promo-title\">\n          <source src=\"assets/kaiqiao-promo.mp4\" type=\"video/mp4\">\n          你的浏览器暂不支持视频播放，可以<a href=\"assets/kaiqiao-promo.mp4\">下载宣传片</a>观看。\n        </video>",
+  "faq": 3,
+  "gradeDirectoryLinks": 6,
+  "footer": "不收集个人信息，练习记录只保存在本机。\n\n意见反馈：hello@yanghat.cn"
+}

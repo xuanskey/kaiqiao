@@ -1,3 +1,4 @@
+import { track } from "@/lib/telemetry";
 import { ConfirmAction } from "@/components/ui/confirm-action";
 import { useEffect, useMemo, useReducer, useRef, useState, type ComponentType } from "react";
 import { ArrowLeft, BarChart3, BookOpen, Lightbulb, FlaskConical, Hand, MessageCircle, Presentation, ShieldAlert } from "lucide-react";
@@ -82,7 +83,7 @@ export function Classroom() {
   return <div className="page-enter classroom">
     <PageHeading eyebrow="看见知识 · 动手操作 · 讲给自己听" title="互动课堂" description="选年级、学期和教材，打开带动画板书的课。每节课都能暂停、回放，也能自己动手试。" />
     <section className="class-picker" aria-label="选择课程">
-      <div className="class-row" role="group" aria-label="年级">{([1, 2, 3, 4, 5, 6] as Grade[]).map((g) => <button key={g} type="button" aria-pressed={grade === g} onClick={() => setGrade(g)}>{GRADE_LABEL[g]}</button>)}</div>
+      <div className="class-row" role="group" aria-label="年级">{([1, 2, 3, 4, 5, 6] as Grade[]).map((g) => <button key={g} type="button" aria-pressed={grade === g} onClick={() => { track("grade_select", g); setGrade(g); }}>{GRADE_LABEL[g]}</button>)}</div>
       <div className="class-row">
         <div role="group" aria-label="学期" className="class-seg">{(["上", "下"] as Term[]).map((t) => <button key={t} type="button" aria-pressed={term === t} onClick={() => setTerm(t)}>{`${t}册`}</button>)}</div>
         <div role="group" aria-label="学科" className="class-seg">{(["math", "science"] as Subject[]).map((s) => <button key={s} type="button" aria-pressed={subject === s} onClick={() => chooseSubject(s)}>{SUBJECT_LABEL[s]}</button>)}</div>
@@ -123,6 +124,8 @@ export function LessonView(props: LessonProps) {
 }
 
 function LessonSession({ demo, grade, unitTitle, onBack, preset }: LessonProps) {
+  const trackedStart = useRef(false);
+  useEffect(() => { if (!trackedStart.current) { trackedStart.current = true; track("lesson_start", grade); } }, [grade]);
   const def = DEMOS[demo];
   const [aiRequests] = useState(createAiRequests);
   useEffect(() => () => aiRequests.cancel(), [aiRequests]);

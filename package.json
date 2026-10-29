@@ -12,11 +12,11 @@
     "test": "node --test workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run test:render && npm run build",
-    "release": "npm run build && node scripts/release.mjs",
+    "release": "node scripts/build-grade-pages.mjs && npm run build && node scripts/release.mjs",
     "test:render": "node scripts/check-render.mjs",
     "test:smoke": "node scripts/smoke.mjs",
     "test:state": "node scripts/state-regression.mjs",
-    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs"
+    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs && node scripts/check-home-simplify.mjs && node scripts/check-site-pages.mjs && node scripts/check-trust-backup.mjs"
   },
   "engines": {
     "node": ">=24"

@@ -247,6 +247,7 @@ export function Report() {
   };
   return <div className="page-enter">
     <PageHeading eyebrow="看见自己的每一步" title="学习小结" description="汇总当前浏览器内所有年级的练习记录，只和自己比。" action={<Button variant="outline" onClick={exportReport}><Download />导出学情</Button>} />
+    <Backup />
     <div className="report-overview">
       <section className="accuracy-card"><div className="accuracy-ring" style={{ '--accuracy': `${acc ?? 0}%` } as import('react').CSSProperties}><div><strong>{acc === null ? '—' : acc}<small>{acc === null ? '' : '%'}</small></strong><span>{acc === null ? '等待第一次练习' : '累计正确率'}</span></div></div><p>{s.stats.answered ? `答对 ${s.stats.correct} / ${s.stats.answered} 题` : '还没有练习记录，开始一组就好。'}</p></section>
       <div className="report-metrics"><Metric icon={Target} label="累计答题" value={String(s.stats.answered)} /><Metric icon={Flame} tone="peach" label="连续练习 · 天" value={String(streak)} /><Metric icon={Star} tone="gold" label="闯关星星" value={String(totalStars(s.stars))} /><Metric icon={Lightbulb} tone="lavender" label="成长积分" value={String(s.xp)} /></div>
@@ -263,7 +264,7 @@ export function Report() {
         const done = chapters.reduce((sum, c) => sum + clearedLevels(s.stars, c.id), 0);
         return <details key={grade} open={grade === s.selectedGrade}><summary><span>{GRADE_LABEL[grade]}</span><small>{done}/{chapters.length * LEVELS_PER_CHAPTER} 关</small><ChevronRight size={16} /></summary><ul>{chapters.map((c) => <li key={c.id}><span>{c.name}</span><span>{clearedLevels(s.stars, c.id)}/{LEVELS_PER_CHAPTER} <Star size={12} />{chapterStarSum(s.stars, c.id)}</span></li>)}</ul></details>;
       })}</div></section>
-      <UnitProgress /><Backup />
+      <UnitProgress />
     </div></div>
     <p className="gentle-note">已提交的答案会计入统计；未完成的练习不计通关和连续练习。</p>
   </div>;

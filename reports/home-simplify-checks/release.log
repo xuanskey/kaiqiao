@@ -1,0 +1,33 @@
+
+> kaiqiao@0.14.0 release
+> npm run build && node scripts/release.mjs
+
+
+> kaiqiao@0.14.0 build
+> vite build && node scripts/sync-app-to-site.mjs
+
+vite v6.4.3 building for production...
+transforming...
+✓ 2057 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                        1.29 kB │ gzip:   0.73 kB
+dist/assets/pdf.worker.min-CjEcRF4W.mjs            1,264.34 kB
+dist/assets/index-L06Y0g6G.css                       104.43 kB │ gzip:  20.91 kB
+dist/assets/pdf.worker.min-Dualf0xi.js                 0.09 kB │ gzip:   0.11 kB
+dist/assets/_commonjs-dynamic-modules-TDtrdbi3.js      0.24 kB │ gzip:   0.19 kB
+dist/assets/jszip.min-DFpckJ0_.js                      0.50 kB │ gzip:   0.36 kB
+dist/assets/index-FMRAqmSj.js                         15.67 kB │ gzip:   6.75 kB
+dist/assets/jszip.min-CGJjQX7t.js                     97.10 kB │ gzip:  30.06 kB
+dist/assets/index-DqQm1zPS.js                        213.14 kB │ gzip:  70.03 kB
+dist/assets/pdf-BtCWNl9F.js                          483.74 kB │ gzip: 144.80 kB
+dist/assets/index-pkbaAswS.js                        655.89 kB │ gzip: 218.34 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 4.93s
+App synced: site/www.yanghat.cn/app/ (internal; public entry is https://www.yanghat.cn/?practice=1)
+Release ready: docs/ and docs/offline.html (aec36980a564)
+App synced: site/www.yanghat.cn/app/ (internal; public entry is https://www.yanghat.cn/?practice=1)

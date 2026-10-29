@@ -1,3 +1,4 @@
+import { track } from "@/lib/telemetry";
 import { useEffect, useRef, type ReactNode } from "react";
 import { BarChart3, ChevronDown, Home, Library, NotebookPen, Presentation, ShieldCheck, Volume2, VolumeX, type LucideIcon } from "lucide-react";
 import { GRADE_LABEL, chapterById } from "@/lib/math/chapters";
@@ -70,7 +71,7 @@ function GradePicker() {
   const setGrade = useMath((s) => s.setGrade);
   return <div className="grade-picker">
     <label htmlFor="grade">练习年级</label>
-    <div className="relative"><select id="grade" value={grade} onChange={(e) => setGrade(Number(e.target.value) as Grade)}>
+    <div className="relative"><select id="grade" value={grade} onChange={(e) => { const grade = Number(e.target.value) as Grade; track("grade_select", grade); setGrade(grade); }}>
       {([1, 2, 3, 4, 5, 6] as const).map((g) => <option key={g} value={g}>{GRADE_LABEL[g]}</option>)}
     </select><ChevronDown size={14} aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" /></div>
   </div>;

@@ -1,0 +1,62 @@
+{
+  "sections": [
+    "不急着学会，\n先让理解发生。",
+    "让每一次「原来如此」，\n成为向前的一小步。",
+    "看着它一步步变明白。",
+    "让数学知识\n看得见、动得起来。",
+    "少一点干扰，\n多一点想明白。",
+    "你可能想知道的。",
+    "每天理解多一点。"
+  ],
+  "entries": [
+    {
+      "text": "开始练习",
+      "href": "/?practice=1",
+      "primary": true
+    },
+    {
+      "text": "进入开窍",
+      "href": "/?practice=1",
+      "primary": true
+    },
+    {
+      "text": "新课\n五年级上册\n7.2 ÷ 0.4\n72 ÷ 4 = 18\n小数除法：除数是小数怎么办\n\n被除数和除数同时乘 10，商不变。竖式一步步除，除不尽也能看懂循环小数。\n\n去上课",
+      "href": "/?practice=1&lesson=decimal-div&grade=5",
+      "primary": false
+    },
+    {
+      "text": "新课\n六年级上册\n3/4 × 2/3\n分数乘法：求一个数的几分之几\n\n在长方形里先取 3/4，再取它的 2/3，数一数重叠的格子，就知道为什么分子乘分子。\n\n去上课",
+      "href": "/?practice=1&lesson=fraction-mul&grade=6",
+      "primary": false
+    },
+    {
+      "text": "一到六年级\n\n25 节数学互动课\n11 个科学小实验\n\n凑十法、条形统计图、多边形面积……\n\n选年级和上下册，打开就能上课。\n\n进入课堂",
+      "href": "/?practice=1",
+      "primary": false
+    },
+    {
+      "text": "亲自试一节课",
+      "href": "/?practice=1",
+      "primary": true
+    },
+    {
+      "text": "去开窍练一练",
+      "href": "/?practice=1",
+      "primary": true
+    },
+    {
+      "text": "现在去开窍",
+      "href": "/?practice=1",
+      "primary": false
+    },
+    {
+      "text": "开始今天的练习",
+      "href": "/?practice=1",
+      "primary": true
+    }
+  ],
+  "registration": 1,
+  "video": "<video controls=\"\" playsinline=\"\" preload=\"none\" poster=\"assets/kaiqiao-promo-poster.jpg\" width=\"1080\" height=\"1920\" aria-describedby=\"promo-title\">\n          <source src=\"assets/kaiqiao-promo.mp4\" type=\"video/mp4\">\n          你的浏览器暂不支持视频播放，可以<a href=\"assets/kaiqiao-promo.mp4\">下载宣传片</a>观看。\n        </video>",
+  "faq": 5,
+  "registrationAllFAQ": 2
+}

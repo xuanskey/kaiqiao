@@ -5,7 +5,7 @@ const root = 'site/www.yanghat.cn';
 const rules = [];
 for (const line of (await readFile(`${root}/_headers`, 'utf8')).split('\n')) {
   if (!line.trim() || line.trim().startsWith('#')) continue;
-  if (line.startsWith('/')) {
+  if (line.startsWith('/') || line.startsWith('https://')) {
     rules.push({ path: line.trim(), headers: [] });
   } else {
     const match = line.trim().match(/^([^:]+):\s*(.*)$/);
@@ -26,4 +26,7 @@ for (const name of bundles) {
   assert.match(name, /-[\w-]{8,}\.[\w.]+$/, `Immutable bundle must have a hash: ${name}`);
   expectCache(`/app/assets/${name}`, 'public, max-age=31536000, immutable');
 }
+const apex = rules.find(r => r.path === 'https://yanghat.cn/*');
+assert.deepEqual(apex?.headers, [['link', '<https://www.yanghat.cn/:splat>; rel="canonical"']]);
+expectCache('/domain-transition.js', 'no-cache');
 console.log('Cache verified: HTML/SW revalidate, versioned assets immutable, no merged Cache-Control');

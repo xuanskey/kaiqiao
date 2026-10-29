@@ -1,0 +1,11 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForRequest: Timeout 30000ms exceeded while waiting for event "request"
+    at /workspace/kaiqiao-home-codex/scripts/check-home-simplify.mjs:63:27 {
+  log: [],
+  name: 'TimeoutError'
+}
+
+Node.js v24.11.0

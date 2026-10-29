@@ -1,3 +1,4 @@
+import { track } from "@/lib/telemetry";
 import { useReducer, useRef } from "react";
 import { CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { initialQuiz, reduceQuiz, type QuizRecord } from "@/lib/lesson/quiz-state";
@@ -29,6 +30,7 @@ export function Quiz({ demo, grade, nextLevel, setNextLevel, nonce, onRecord }: 
     submitted.current = shown.id;
     dispatch(action);
     onRecord(next.result);
+    track("quiz_complete", grade);
     const level = adaptLevel(nextLevel, next.history);
     if (level !== nextLevel) setNextLevel(level);
   };
