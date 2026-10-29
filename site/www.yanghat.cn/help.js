@@ -1,6 +1,6 @@
 import endpoint from './help-config.js';
 function initHelp() {
-  if (!endpoint) return;
+  if (endpoint !== '/api/help') return;
   if (new URLSearchParams(location.search).get('practice') === '1') return;
   const footer=document.querySelector('.trust-footer');
   if(!footer)return;
@@ -24,7 +24,7 @@ function initHelp() {
     event.preventDefault();const q=input.value.trim();if(!q||send.disabled)return;
     const controller=new AbortController();active=controller;send.disabled=true;answer.textContent='小助手正在想…';
     try {
-      const response=await fetch(endpoint,{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:1,q}),signal:controller.signal});
+      const response=await fetch('/api/help',{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:1,q}),signal:controller.signal});
       const data=await response.json();if(!response.ok||data.v!==1||typeof data.answer!=='string')throw Error();
       if(active===controller)answer.textContent=data.answer;
     }catch{if(active===controller)answer.textContent='暂时没能回答，请稍后再试，或发邮件到 hello@yanghat.cn。';}
