@@ -10,10 +10,15 @@ try{
  for(const name of ['functions/e.js','functions/api/help.js','www.yanghat.cn/_headers','www.yanghat.cn/_redirects','www.yanghat.cn/index.html','www.yanghat.cn/404.html'])await put(name,'');
  for(const name of ['help-config.js','metrics-config.js','_routes.json'])await put('www.yanghat.cn/'+name,await readFile('site/www.yanghat.cn/'+name,'utf8'));
  assert.equal(checkSite(root),true);
- for(const [name,content] of [['functions/e.js',null],['functions/api/help.js',null],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e"],"exclude":[]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e","/api/help","/extra"],"exclude":[]}'],['www.yanghat.cn/help-config.js','export default "https://evil.example";'],['www.yanghat.cn/help-config.js','export default "/api/help";'],['www.yanghat.cn/metrics-config.js','export default "/bad";'],['www.yanghat.cn/_headers',null]]){
+ for(const [name,content] of [['functions/e.js',null],['functions/api/help.js',null],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e"],"exclude":[]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e","/api/help","/extra"],"exclude":[]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/e","/api/help"],"exclude":["/e"]}'],['www.yanghat.cn/_routes.json','{"version":1,"include":["/api/help","/api/help"],"exclude":[]}'],['www.yanghat.cn/help-config.js','export default "https://evil.example";'],['www.yanghat.cn/help-config.js','export default "/api/help";'],['www.yanghat.cn/metrics-config.js','export default "/bad";'],['www.yanghat.cn/_headers',null]]){
   const file=path.join(root,'site',name),original=await readFile(file);if(content===null)await rm(file);else await writeFile(file,content);
   assert.throws(()=>checkSite(root));await writeFile(file,original);
  }
+ const routesFile=path.join(root,'site/www.yanghat.cn/_routes.json'),savedRoutes=await readFile(routesFile);
+ for(const ok of ['{"version":1,"include":["/api/help","/e"],"exclude":[]}','{"version":1,"include":["/e","/api/help"]}','{"version":1,"include":["/api/help","/e"]}','{"version":1,"include":["/e","/api/help","/e"]}']){
+  await writeFile(routesFile,ok);assert.equal(checkSite(root),true,ok);
+ }
+ await writeFile(routesFile,savedRoutes);
  execFileSync('git',['init','-q'],{cwd:root});execFileSync('git',['add','.'],{cwd:root});execFileSync('git',['-c','user.name=Codex','-c','user.email=codex@openai.com','commit','-qm','fixture'],{cwd:root});
  await mkdir(path.join(root,'scripts'));await copyFile('scripts/deploy-site.mjs',path.join(root,'scripts/deploy-site.mjs'));
  const fake=path.join(root,'wrangler'),record=path.join(root,'record.json');
@@ -22,5 +27,5 @@ try{
  assert.equal(run(['--check']).status,0);await assert.rejects(readFile(record));
  assert.equal(run().status,0);assert.deepEqual(JSON.parse(await readFile(record,'utf8')),{argv:['pages','deploy','www.yanghat.cn','--project-name','yanghat-cn','--branch','main'],cwd:path.join(root,'site')});
  await put('www.yanghat.cn/index.html','dirty');assert.notEqual(run().status,0);
- console.log('PASS 部署护栏：正常、八类拒绝、只检查、固定调用、密钥剔除、脏目录拒绝');
+ console.log('PASS 部署护栏：正常、坏路由与配置拒绝、include 集合与空 exclude、只检查、固定调用、密钥剔除、脏目录拒绝');
 }finally{await rm(root,{recursive:true,force:true});}

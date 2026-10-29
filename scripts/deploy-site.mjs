@@ -9,7 +9,12 @@ export function checkSite(root) {
   const requireFile=name=>{try{if(statSync(file(name)).isFile())return;}catch{}throw Error(`缺少普通文件：site/${name}`);};
   for(const name of ['functions/e.js','functions/api/help.js','www.yanghat.cn/_headers','www.yanghat.cn/_redirects','www.yanghat.cn/index.html','www.yanghat.cn/404.html'])requireFile(name);
   let routes;try{routes=JSON.parse(readFileSync(file('www.yanghat.cn/_routes.json'),'utf8'));}catch{throw Error('_routes.json 无法解析');}
-  if(routes?.version!==1||!Array.isArray(routes.include)||routes.include.length!==2||!routes.include.includes('/e')||!routes.include.includes('/api/help')||!Array.isArray(routes.exclude))throw Error('_routes.json 路由不符合部署要求');
+  const include=routes?.include;
+  const includeSet=new Set(Array.isArray(include)?include:[]);
+  const includeExact=Array.isArray(include)&&includeSet.size===2&&includeSet.has('/e')&&includeSet.has('/api/help')&&include.every(item=>item==='/e'||item==='/api/help');
+  const exclude=routes?.exclude;
+  const excludeOk=exclude===undefined||(Array.isArray(exclude)&&exclude.length===0);
+  if(routes?.version!==1||!includeExact||!excludeOk)throw Error('_routes.json 路由不符合部署要求');
   for(const [name,variable,endpoint] of [['help','VITE_HELP_ENDPOINT','/api/help'],['metrics','VITE_EVENT_ENDPOINT','/e']]){
     const expected=value=>`// Baked from ${variable} at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(value)};\n`;
     let content;try{content=readFileSync(file(`www.yanghat.cn/${name}-config.js`),'utf8');}catch{throw Error(`${name}-config.js 缺失`);}
