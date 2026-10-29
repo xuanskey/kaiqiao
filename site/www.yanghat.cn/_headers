@@ -65,3 +65,50 @@ https://yanghat.cn/*
   Cache-Control: no-cache
 /landing-track.js
   Cache-Control: no-cache
+
+/pelican.css
+  Cache-Control: no-cache
+/assets/pelican.svg
+  Cache-Control: public, max-age=3600
+
+/manifest.webmanifest
+  Cache-Control: no-cache
+
+/install.js
+  Cache-Control: no-cache
+
+/assets/pwa-192.png
+  Cache-Control: public, max-age=3600
+
+/assets/pwa-512.png
+  Cache-Control: public, max-age=3600
+
+/assets/pwa-maskable-512.png
+  Cache-Control: public, max-age=3600
+
+/assets/apple-touch-icon.png
+  Cache-Control: public, max-age=3600
+
+/topup
+  Cache-Control: no-cache
+
+/topup/
+  Cache-Control: no-cache
+
+/topup/index.html
+  Cache-Control: no-cache
+
+/topup.js
+  Cache-Control: no-cache
+
+/topup-core.js
+  Cache-Control: no-cache
+
+/topup-config.js
+  Cache-Control: no-cache
+
+/assets/wechat-pay-qr.png
+  Cache-Control: public, max-age=3600
+
+/assets/wechat-service-qr.png
+  Cache-Control: public, max-age=3600

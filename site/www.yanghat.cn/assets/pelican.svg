@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+  <ellipse cx="48" cy="94" rx="29" ry="4" fill="var(--forest,#244f3e)" opacity=".12"/>
+  <g class="pelican-body" stroke="var(--forest,#244f3e)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38 83v9h-9m28-9v9h9" fill="none"/>
+    <path d="M24 55C12 82 34 91 53 86c18-4 19-19 13-32L65 36C64 15 39 14 37 34l2 22Z" fill="var(--white,#fffefa)"/>
+    <path d="M28 62q8 18 28 6" fill="none"/>
+    <path d="M59 38h35L69 55Q53 58 54 44Z" fill="#f0c96d"/>
+    <path d="M57 38h37" fill="none"/>
+    <ellipse class="pelican-eye" cx="51" cy="32" rx="2.5" ry="3.5" fill="var(--ink,#243f34)" stroke="none"/>
+    <path d="m40 18 3-7 5 7" fill="var(--white,#fffefa)"/>
+  </g>
+  <g class="pelican-stars" fill="#b07827" stroke="none"><path d="m14 22 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"/><path d="m83 67 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"/></g>
+</svg>

@@ -53,7 +53,7 @@ node scripts/metrics-sql.mjs --days 7
 
 当前默认开启；留空即关闭。唯一客户端构建开关为 `VITE_HELP_ENDPOINT`，仅允许空字符串或 `/api/help`，其他值构建报错。关闭后首页 `help-config.js` 为 `export default ""`，应用与首页都不显示帮助按钮、不发送帮助请求。帮助是单轮网站使用问答，不存聊天，不要求注册登录；发送前会用正则替换常见个人信息，请仍不要输入姓名、电话、学校、住址等信息。
 
-系统提示覆盖开始练习、练习年级、学情、备份与恢复、反馈邮箱与充值说明。充值说明是 `workers/help/prompt.js` 的 `TOPUP_GUIDANCE` 常量；手动充值页上线前只回答「充值功能即将上线，请家长操作；有问题发邮件 hello@yanghat.cn」，不出现任何价格。上线充值页的 PR 只改该常量及 `prompt.test.ts`。
+系统提示覆盖开始练习、练习年级、学情、备份与恢复、反馈邮箱与充值说明。充值说明是 `workers/help/prompt.js` 的 `TOPUP_GUIDANCE` 常量，已与 `/topup` 的家长手动充值流程一致，提醒点数存在本机、目前没有消费功能，不编造价格、优惠或退款规则；相关断言在 `prompt.test.ts`。
 
 上线前由管理员创建 D1 数据库 `kaiqiao_help`（确认免费额度），在 Pages 项目 **yanghat-cn 的生产环境**绑定 `HELP_DB` 到该库。只保存北京时间日期与当日累计微元花费、北京时间分钟桶与调用次数，无请求内容或用户标识；表在首次配置完整的合法请求中自动创建。不新增 wrangler 配置文件。
 
@@ -94,3 +94,11 @@ wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend OR
 本地验证：`node scripts/check-help-client.mjs` 自动切换默认/启用构建，用 Playwright 拦截假回答，全程不调用外部 API，结束恢复默认产物。`node scripts/check-help-pagesdev.mjs` 使用 wrangler 4 和临时本地 D1，默认不传密钥，验证兜底、错误状态、静态头与旧重定向，结束清理进程与临时目录。`WRANGLER` 可指定二进制，默认 `/tmp/wrangler4/node_modules/.bin/wrangler`。仅管理员明确授权后才可运行 `HELP_REAL_ONCE=1` 模式：要求父进程已有密钥，仅经子进程环境传递（`CLOUDFLARE_INCLUDE_PROCESS_ENV=true`，wrangler 绑定表显示 `(hidden)`），一次真实提问后直接读取临时本地 D1 文件打印当日花费，不写密钥文件。
 
 部署护栏固定项目 yanghat-cn、main 分支和 site/ 工作目录，检查函数、路由、生成配置和静态入口，并拒绝 site/ 或 .env.production 未提交改动。`npm run deploy:site -- --check` 仅检查；`DEPLOY_ALLOW_DIRTY=1` 可带警告跳过已提交检查。部署子进程不继承 DEEPSEEK_API_KEY。
+
+## 家长手动充值
+
+首页页脚点「家长充值」进入 `/topup`（Pages 会跳到 `/topup/`）。请家长操作，小朋友不要自己付款。输入1–200正整数元，页面生成订单号和应付金额；整数元×100点，另加1–9分仅用于对账，不折算点数。家长用微信收款码付款，金额按页面填写，付款备注填订单号；付款后加页脚客服微信发送订单号，核账后领取充值码，再回同一浏览器输入兑换。上限200元待管理员确认；点数目前没有可消费功能，平台AI尚未上线，免费练习不需要充值。
+
+点数和待处理订单只存在本机浏览器，不在练习备份里；换设备、换浏览器或清缓存会丢失。公钥在 `www.yanghat.cn/topup-config.js`，只供浏览器验证P-256签名；私钥与签发工具只在仓库外，由管理员保管，不提交、不部署。签发前必须核对微信实际收款金额、零头和备注订单号。协议与威胁模型见 [topup-code.md](topup-code.md)：签名只防普通伪造和串用，懂技术的人仍能改本机存储，不能把余额当可信服务端账本。
+
+换钥时停止签发，安全保管或移走旧钥匙文件，在仓库根运行 `node scripts/topup-keygen.mjs`（拒绝覆盖已有私钥），再按上述构建与发布流程更新公钥。旧码失效，已付款未兑换的订单需核账后补发新码；原有本机余额不会因更换公钥自动消失。私钥需离线备份，遗失或泄露都按此流程处理。

@@ -1,3 +1,4 @@
+import { Pelican } from "@/components/math/pelican";
 import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Learning } from "./learning";
 import { Classroom } from "@/components/lesson/classroom";
@@ -317,6 +318,7 @@ function AskShell({ mood, title, onBack, progress, completed = 0, total, combo, 
         <p className={cn("question-prompt", qPrompt.length > 28 && "question-prompt--long")}>{qPrompt}</p>
         {!feedback ? <div className="question-encouragement"><Mascot mood={mood} /><span>不着急，先想清楚。</span></div> : null}
         {feedback ? <div className={cn("feedback-box", !feedback.ok && "feedback-box--retry")} role="status">
+          {feedback.ok ? <Pelican /> : null}
           <div className="feedback-title">{feedback.ok ? <CheckCircle2 size={23} /> : <Lightbulb size={23} />}<strong>{feedback.ok ? "答对了，想得很棒！" : "没关系，一起弄明白。"}</strong></div>
           {!feedback.ok ? <div className="answer-comparison"><span>你的答案 <b>{feedback.given}</b></span><span>正确答案 <strong>{answer}</strong></span></div> : null}
           <p className="feedback-explain">{explain}</p>
