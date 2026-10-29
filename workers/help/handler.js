@@ -36,14 +36,14 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
       (opaque ? site !== 'same-origin' : origin !== url.origin) ||
       !(prod || preview || dev)) return reply(403);
   if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') return reply(415);
-  if(Number(request.headers.get('Content-Length')) > 2048) return reply(413);
+  if(Number(request.headers.get('Content-Length')) > 8192) return reply(413);
   const chunks=[]; let size=0;
   const reader=request.body?.getReader();
   if(reader) {
     try { while(true) {
       const {done,value}=await reader.read(); if(done) break;
       size+=value.byteLength;
-      if(size>2048) {void reader.cancel().catch(()=>{});return reply(413);}
+      if(size>8192) {void reader.cancel().catch(()=>{});return reply(413);}
       chunks.push(value);
     }} catch {return reply(400);} finally {reader.releaseLock();}
   }
@@ -51,10 +51,25 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
   for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
   let data;
   try {data=JSON.parse(new TextDecoder().decode(bytes));}catch{return reply(400);}
-  if(data===null || typeof data!=='object' || Array.isArray(data) || Object.getPrototypeOf(data)!==Object.prototype || Object.keys(data).sort().join(',')!=='q,v' || data.v!==1 || typeof data.q!=='string' || [...data.q.trim()].length<1 || [...data.q.trim()].length>300) return reply(400);
+  const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
+  if(!plain(data)) return reply(400);
+  const keys=Object.keys(data).sort().join(',');
+  let input;
+  if(keys==='q,v' && data.v===1) input=[{role:'user',content:data.q}];
+  else if(keys==='messages,v' && data.v===2) input=data.messages;
+  else return reply(400);
+  if(!Array.isArray(input) || input.length<1 || input.length>12 || input.length%2!==1) return reply(400);
+  const messages=[];let total=0;
+  for(let i=0;i<input.length;i++) {
+    const item=input[i];
+    if(!plain(item) || Object.keys(item).sort().join(',')!=='content,role' || item.role!==(i%2===0?'user':'assistant') || typeof item.content!=='string') return reply(400);
+    const content=item.content.trim(), length=Array.from(content).length;
+    if(length<1 || length>(item.role==='user'?300:600)) return reply(400);
+    total+=length;if(total>2000) return reply(400);
+    messages.push({role:item.role,content:redactPII(content)});
+  }
   if(!env?.DEEPSEEK_API_KEY || !env?.HELP_DB) return fallback('unconfigured');
-  const q=redactPII(data.q.trim());
-  const reserve=(new TextEncoder().encode(SYSTEM_PROMPT+q).byteLength+64)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO;
+  const reserve=(new TextEncoder().encode(SYSTEM_PROMPT+messages.map(item=>item.content).join('')).byteLength+64*messages.length)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO;
   const beijing=new Date(deps.now()+8*3600000).toISOString();
   const day=beijing.slice(0,10), minute=beijing.slice(0,16);
   const db=env.HELP_DB;
@@ -76,7 +91,7 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),deps.timeoutMs ?? 15000);
   try {
-    const response=await deps.fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:`Bearer ${env.DEEPSEEK_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'deepseek-flash',messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:q}],thinking:{type:'disabled'},max_tokens:300,temperature:0.3,stream:false}),signal:controller.signal});
+    const response=await deps.fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:`Bearer ${env.DEEPSEEK_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'deepseek-flash',messages:[{role:'system',content:SYSTEM_PROMPT},...messages],thinking:{type:'disabled'},max_tokens:MAX_TOKENS,temperature:0.3,stream:false}),signal:controller.signal});
     if(!response.ok){await settle(-reserve);return fallback('upstream');}
     const result=await response.json();
     const u=result.usage;

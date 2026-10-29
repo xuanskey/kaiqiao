@@ -21,21 +21,51 @@ try {
  for(const enabled of [false,true]){
   await build(enabled);
   const context=await browser.newContext({serviceWorkers:'block',viewport:{width:390,height:844}});
-  let calls=0;
-  await context.route('**/*',async route=>{const r=route.request(),url=new URL(r.url());if(url.origin!==base){await route.abort();throw Error('External request blocked');}if(url.pathname==='/api/help'){calls++;assert.equal(r.method(),'POST');assert.deepEqual(r.postDataJSON(),{v:1,q:'怎么开始练习？'});const h=await r.allHeaders();assert.equal(h.cookie,undefined);assert.equal(h.referer,undefined);await new Promise(resolve=>setTimeout(resolve,80));return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({v:1,source:'fallback',reason:'busy',answer:'<b>请点开始练习</b>'})});}return route.continue();});
+  let calls=0, expected=[], replySource='ai', delayed=false;
+  const aiAnswer='<b>请点开始练习</b>';
+  await context.route('**/*',async route=>{const r=route.request(),url=new URL(r.url());if(url.origin!==base){await route.abort();throw Error('External request blocked');}if(url.pathname==='/api/help'){calls++;assert.equal(r.method(),'POST');assert.deepEqual(r.postDataJSON(),{v:2,messages:expected});const h=await r.allHeaders();assert.equal(h.cookie,undefined);assert.equal(h.referer,undefined);const source=replySource;await new Promise(resolve=>setTimeout(resolve,delayed?250:80));return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({v:1,source,answer:aiAnswer})}).catch(()=>{});}return route.continue();});
   try{
    const page=await context.newPage();await context.addCookies([{name:'help-test',value:'omit-me',url:base}]);
    const verify=async target=>{
     const button=target.getByRole('button',{name:'帮助',exact:true});
     if(!enabled){assert.equal(await button.count(),0);return;}
-    await button.click();const dialog=target.getByRole('dialog');await dialog.getByLabel('你的问题').fill('怎么开始练习？');
-    const sent=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/help');await dialog.getByRole('button',{name:'发送',exact:true}).click();assert.ok(await dialog.getByRole('button',{name:'发送',exact:true}).isDisabled());await sent;
-    await dialog.getByRole('status').filter({hasText:'<b>请点开始练习</b>'}).waitFor();assert.equal(await dialog.locator('b').count(),0);
-    await dialog.getByRole('button',{name:'关闭',exact:true}).click();await button.click();assert.equal(await dialog.getByLabel('你的问题').inputValue(),'');assert.equal(await dialog.getByRole('status').innerText(),'');await page.keyboard.press('Escape');
+    await button.click();const dialog=target.getByRole('dialog');
+    const question='怎么开始练习？', user=content=>({role:'user',content}), assistant={role:'assistant',content:aiAnswer};
+    const send=async(q,messages,source='ai')=>{
+     expected=messages;replySource=source;await dialog.getByLabel('你的问题').fill(q);
+     await dialog.getByRole('button',{name:'发送',exact:true}).click();assert.ok(await dialog.getByRole('button',{name:'发送',exact:true}).isDisabled());
+     await dialog.getByRole('status').filter({hasText:aiAnswer}).waitFor();
+     assert.ok(await dialog.getByRole('button',{name:'发送',exact:true}).isEnabled());
+     assert.equal(await dialog.getByLabel('你的问题').inputValue(),'');assert.equal(await dialog.locator('b').count(),0);
+    };
+    await send(question,[user(question)]);
+    assert.equal(await dialog.locator('.help-log li').count(),2);
+    await send('下一步呢？',[user(question),assistant,user('下一步呢？')]);
+    assert.equal(await dialog.locator('.help-log li').count(),4);
+    await dialog.getByRole('button',{name:'清空对话',exact:true}).click();
+    assert.equal(await dialog.locator('.help-log li').count(),0);assert.equal(await dialog.getByRole('status').innerText(),'');
+    await send(question,[user(question)],'fallback');assert.equal(await dialog.locator('.help-log li').count(),0);
+    await send('再试试',[user('再试试')]);assert.equal(await dialog.locator('.help-log li').count(),2);
+    await dialog.getByRole('button',{name:'关闭',exact:true}).click();await button.click();
+    assert.equal(await dialog.getByLabel('你的问题').inputValue(),'');assert.equal(await dialog.getByRole('status').innerText(),'');assert.equal(await dialog.locator('.help-log li').count(),0);
+    await send(question,[user(question)]);
+    // Clear/close while a response is pending; old results must never repopulate history.
+    for(const action of ['清空对话','关闭']){
+     expected=[user(question),assistant,user('迟到的问题')];replySource='ai';delayed=true;
+     await dialog.getByLabel('你的问题').fill('迟到的问题');
+     const requested=page.waitForRequest(r=>new URL(r.url()).pathname==='/api/help');
+     await dialog.getByRole('button',{name:'发送',exact:true}).click();await requested;
+     await dialog.getByRole('button',{name:action,exact:true}).click();if(action==='关闭')await button.click();
+     await page.waitForTimeout(350);delayed=false;
+     assert.equal(await dialog.locator('.help-log li').count(),0);assert.equal(await dialog.getByRole('status').innerText(),'');
+     await send(question,[user(question)]);
+    }
+    await dialog.getByRole('button',{name:'关闭',exact:true}).click();
+
    };
    await page.goto(base+'/',{waitUntil:'networkidle'});await verify(page);
    await page.goto(base+'/?practice=1',{waitUntil:'networkidle'});assert.equal(await page.getByRole('button',{name:'帮助',exact:true}).count(),0);const app=page.frameLocator('iframe');await app.getByRole('main').waitFor();await verify(app);
-   assert.equal(calls,enabled?2:0);console.log(`PASS ${enabled?'enabled homepage/application, exact private request, plain text, close clears':'default homepage/application: zero buttons and requests'}`);
+   assert.equal(calls,enabled?18:0);console.log(`PASS ${enabled?'enabled homepage/application, exact private request, plain text, close clears':'default homepage/application: zero buttons and requests'}`);
   }finally{await context.close();}
  }
 }finally{

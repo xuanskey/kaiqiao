@@ -35,3 +35,5 @@ main>section+section{border-top:1px solid var(--line)}.lessons,.product-section,
 /* Keep contact channels separate, including the help button appended by help.js. */
 .trust-footer{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content;align-items:center;gap:20px 32px}.trust-footer>p{grid-column:1/-1}.trust-footer>.service-qr{margin-top:0}.trust-footer>.help-button{justify-self:start;margin:0}
 @media(max-width:820px){.trust-footer{grid-template-columns:minmax(0,1fr);gap:24px}.trust-footer>p{grid-column:auto}}
+
+.help-log{max-height:240px;overflow:auto;padding-left:1.5em;white-space:pre-wrap;overflow-wrap:anywhere}.help-log li{margin:8px 0}
