@@ -16,7 +16,7 @@
     "test:render": "node scripts/check-render.mjs",
     "test:smoke": "node scripts/smoke.mjs",
     "test:state": "node scripts/state-regression.mjs",
-    "test:site": "node scripts/check-site-app.mjs"
+    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs"
   },
   "engines": {
     "node": ">=24"

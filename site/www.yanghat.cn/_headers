@@ -1,15 +1,42 @@
-/assets/*
-  Cache-Control: public, max-age=604800
+# Shared security headers; no catch-all Cache-Control to avoid merged cache policies.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+
+# Only hashed application bundles and this versioned cover are immutable.
 /app/assets/*
   Cache-Control: public, max-age=31536000, immutable
-/app/sw.js
+/assets/og-cover-20261029.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+# Unversioned brand/media files: short cache, safe to replace under the same name.
+/assets/brand.svg
+  Cache-Control: public, max-age=3600
+/assets/favicon.svg
+  Cache-Control: public, max-age=3600
+/assets/lantern.svg
+  Cache-Control: public, max-age=3600
+/assets/kaiqiao-promo-poster.jpg
+  Cache-Control: public, max-age=3600
+/assets/kaiqiao-promo.mp4
+  Cache-Control: public, max-age=3600
+
+# Query-string versions do not select _headers rules; always revalidate these paths.
+/styles.css
+  Cache-Control: no-cache
+/app.js
+  Cache-Control: no-cache
+
+# Documents and service workers must revalidate.
+/
+  Cache-Control: no-cache
+/index.html
   Cache-Control: no-cache
 /app/
   Cache-Control: no-cache
 /app/index.html
+  Cache-Control: no-cache
+/app/sw.js
   Cache-Control: no-cache
 /sw-practice.js
   Cache-Control: no-cache
