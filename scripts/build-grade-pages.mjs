@@ -1,7 +1,7 @@
 // Build-time only: import existing catalogs; never modify curriculum or application routing.
-import {mkdir,writeFile,copyFile} from 'node:fs/promises';
+import {mkdir,writeFile,copyFile,readFile} from 'node:fs/promises';
 import {loadEnv} from 'vite';
-import {syncPayQr, resolveTopupOpen} from './topup-pay-qr.mjs';
+import {syncPayQr, resolveTopupOpen, bakeTopupHtml} from './topup-pay-qr.mjs';
 import {PEP_MATH,JK_SCIENCE,resolveUnits} from '../src/lib/lesson/curriculum.ts';
 import {DEMOS} from '../src/lib/lesson/demos.ts';
 const root='site/www.yanghat.cn';
@@ -43,4 +43,5 @@ console.log(`Help config ${helpEndpoint||'(off)'}`);
 const topupOpen=resolveTopupOpen(process.env.TOPUP_OPEN);
 await writeFile(`${root}/topup-open.js`,`// Baked from TOPUP_OPEN at release. Unset closes payment. Only the exact string true opens it.\nexport default ${topupOpen};\n`);
 await syncPayQr(topupOpen, root);
+await writeFile(`${root}/topup/index.html`,bakeTopupHtml(await readFile(`${root}/topup/index.html`,'utf8'),topupOpen));
 console.log(`Top-up payment ${topupOpen?'open':'closed'}`);

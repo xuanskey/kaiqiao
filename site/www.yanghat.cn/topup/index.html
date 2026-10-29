@@ -11,7 +11,7 @@
 <p>本机余额：<strong id="balance">0</strong> 点</p>
 <form id="order-form"><label for="yuan">充值整数元（1–50 元）</label><input id="yuan" name="yuan" inputmode="numeric" type="text" required maxlength="2" autocomplete="off" value="10"><p>1 元 = 100 点。零头只用于对账，不折算点数。单笔最多 50 元。</p><button class="button button-primary" type="submit">生成订单</button></form>
 <p id="topup-message" role="status" aria-live="polite"></p>
-<section aria-labelledby="orders-title"><h2 id="orders-title">本机订单</h2><div id="orders"></div></section>
+<section aria-labelledby="orders-title"><h2 id="orders-title">本机订单</h2><div id="orders">还没有订单。</div></section>
 <section aria-labelledby="pay-title"><h2 id="pay-title">微信付款与领取充值码</h2><ol><li>微信扫码付款，金额填订单显示的应付金额。</li><li><strong>付款备注填订单号</strong>。</li><li>付款后加客服微信（下方客服码）发订单号，收到充值码。</li><li>在本页输入充值码，点「兑换」。</li></ol><div id="pay-qr-slot"></div><p>请先生成订单，再按该订单的应付金额付款。使用同一手机时，可保存二维码后用微信识别。</p></section>
 <section aria-labelledby="redeem-title"><h2 id="redeem-title">输入充值码</h2><form id="redeem-form"><label for="code">客服发来的充值码</label><textarea id="code" rows="5" required spellcheck="false" autocomplete="off" autocapitalize="characters" maxlength="512"></textarea><button class="button button-primary" type="submit">兑换</button></form></section>
 </div>

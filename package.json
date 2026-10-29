@@ -16,7 +16,7 @@
     "test:render": "node scripts/check-render.mjs",
     "test:smoke": "node scripts/smoke.mjs",
     "test:state": "node scripts/state-regression.mjs",
-    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs && node scripts/check-home-simplify.mjs && node scripts/check-site-pages.mjs && node scripts/check-trust-backup.mjs && node scripts/check-metrics-backend.mjs && node scripts/check-help-backend.mjs && node scripts/check-deploy-guard.mjs && node scripts/check-batch-features.mjs && node scripts/check-storage-blocked.mjs && node scripts/check-error-boundary.mjs",
+    "test:site": "node scripts/check-site-seo.mjs && node scripts/check-site-cache.mjs && node scripts/check-site-app.mjs && node scripts/check-home-simplify.mjs && node scripts/check-site-pages.mjs && node scripts/check-trust-backup.mjs && node scripts/check-metrics-backend.mjs && node scripts/check-help-backend.mjs && node scripts/check-deploy-guard.mjs && node scripts/check-batch-features.mjs && node scripts/check-storage-blocked.mjs && node scripts/check-error-boundary.mjs && node scripts/check-topup-cls.mjs",
     "deploy:site": "node scripts/deploy-site.mjs",
     "test:deploy-guard": "node scripts/check-deploy-guard.mjs"
   },

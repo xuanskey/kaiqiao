@@ -22,3 +22,12 @@ export function resolveTopupOpen(value) {
   if (value !== undefined && value !== '' && value !== 'true' && value !== 'false') throw Error('TOPUP_OPEN must be true or false');
   return value === 'true';
 }
+
+// Bake the open/closed state into /topup/ HTML so first paint already matches; topup.js no longer moves the footer (CLS).
+export function bakeTopupHtml(html, open) {
+  let out = html.replace(/<(p|div) data-topup-flow( hidden)?([ >])/g, (_, tag, _h, end) => `<${tag} data-topup-flow${open ? '' : ' hidden'}${end}`)
+    .replace(/<p class="parent-notice" data-topup-flow( hidden)?>/, `<p class="parent-notice" data-topup-flow${open ? '' : ' hidden'}>`)
+    .replace(/<p id="topup-closed"( hidden)?>/, `<p id="topup-closed"${open ? ' hidden' : ''}>`);
+  if (!out.includes('id="topup-closed"') || !out.includes('data-topup-flow')) throw Error('topup/index.html markers missing');
+  return out;
+}
