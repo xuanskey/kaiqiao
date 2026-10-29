@@ -9,7 +9,7 @@
     "preview": "vite preview --host 0.0.0.0 --port 5173",
     "mock:ai": "node scripts/mock-ai.mjs",
     "test:ai": "node --test workers/ai/*.test.ts",
-    "test": "node --test src/lib/help-history.test.ts src/lib/safe-storage.test.ts src/lib/error-reset.test.ts workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts workers/metrics/*.test.ts workers/help/*.test.ts scripts/metrics-sql.test.ts scripts/topup-core.test.mjs scripts/topup-switch.test.mjs",
+    "test": "node --test src/lib/help-history.test.ts src/lib/safe-storage.test.ts src/lib/error-reset.test.ts workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts workers/metrics/*.test.ts workers/help/*.test.ts scripts/metrics-sql.test.ts scripts/topup-core.test.mjs scripts/topup-switch.test.mjs scripts/contrast.test.mjs",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run test:render && npm run build",
     "release": "node scripts/build-grade-pages.mjs && npm run build && node scripts/release.mjs",
