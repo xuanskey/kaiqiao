@@ -1,3 +1,5 @@
+import os from 'node:os';
+import path from 'node:path';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { access, mkdir, readFile, readdir } from 'node:fs/promises';
@@ -30,14 +32,18 @@ assert.equal(createHash('sha256').update(serviceQr).digest('hex'),'7091ae644b689
 const paySource=await readFile(PAY_QR_SOURCE);
 assert.ok(paySource.length>=8000&&paySource.length<=200000);
 assert.equal(createHash('sha256').update(paySource).digest('hex'),PAY_QR_HASH);
-const published=await readFile(`${root}/assets/wechat-pay-qr.png`);
-assert.equal(createHash('sha256').update(published).digest('hex'),PAY_QR_HASH);
-try{await syncPayQr(false);await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));}finally{await syncPayQr(true);}
-assert.equal(createHash('sha256').update(await readFile(`${root}/assets/wechat-pay-qr.png`)).digest('hex'),PAY_QR_HASH);
+const publishedOpen=(await read('topup-open.js')).includes('export default true;');
+if(publishedOpen) assert.equal(createHash('sha256').update(await readFile(`${root}/assets/wechat-pay-qr.png`)).digest('hex'),PAY_QR_HASH);
+else await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));
+try {
+  await syncPayQr(true);
+  assert.equal(createHash('sha256').update(await readFile(`${root}/assets/wechat-pay-qr.png`)).digest('hex'),PAY_QR_HASH);
+  await syncPayQr(false);await assert.rejects(access(`${root}/assets/wechat-pay-qr.png`));
+} finally { await syncPayQr(publishedOpen); }
 const topup=await read('topup/index.html');assert.match(topup,/<meta name="robots" content="noindex">/);
 assert.doesNotMatch(topup,/wechat-pay-qr|class="pay-qr"/);
-for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里','懂技术的人能改本机数字','以实际付款与对账为准','充值功能即将开放','1–50','点数暂时还不能使用，功能上线前请按需充值；兑换前可联系客服全额退款'])assert.ok(topup.includes(text),text);
-assert.equal(await read('topup-open.js'),'// Baked from TOPUP_OPEN at release. Unset opens payment. Only the exact string false closes it.\nexport default true;\n');
+for(const text of ['请家长操作','小朋友不要自己付款','付款备注填订单号','点数目前还没有可消费的功能','不在备份文件里','懂技术的人能改本机数字','以实际付款与对账为准','充值暂未开放，免费练习不需要付费；已付款的家长可联系客服全额退款。','1–50','点数暂时还不能使用，功能上线前请按需充值；兑换前可联系客服全额退款'])assert.ok(topup.includes(text),text);
+assert.equal(await read('topup-open.js'),`// Baked from TOPUP_OPEN at release. Unset closes payment. Only the exact string true opens it.\nexport default ${publishedOpen};\n`);
 assert.match(await read('_headers'),/\/assets\/wechat-pay-qr\.png\n  Cache-Control: no-cache/);
 assert.doesNotMatch(topup,/1–200/);
 assert.doesNotMatch(await read('sitemap.xml'),/topup/);
@@ -73,6 +79,8 @@ try{
     const url=new URL(route.request().url());
     if(['data:','blob:'].includes(url.protocol))return route.continue();
     if(url.origin!==server.base){external.push(url.href);return route.abort();}
+    if(url.pathname==='/topup-open.js')return route.fulfill({contentType:'application/javascript',body:'export default true;'});
+    if(url.pathname==='/assets/wechat-pay-qr.png')return route.fulfill({contentType:'image/png',body:paySource});
     if(url.pathname==='/e')return route.fulfill({status:204,body:''});
     return route.continue();
   });
@@ -86,13 +94,14 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});
   for(const part of ['.pelican-body','.pelican-eye','.pelican-stars'])assert.equal(await page.locator(part).evaluate(el=>getComputedStyle(el).animationName),'none');
   await page.goto(server.base+'/?practice=1');assert.ok(await page.locator('#install-hint').isHidden());
-  const shots='/opt/cursor/artifacts/topup-open';await mkdir(shots,{recursive:true});
+  const shots=process.env.ARTIFACT_DIR||path.join(os.tmpdir(),'kaiqiao-topup-shots');await mkdir(shots,{recursive:true});
   const closed=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
-  await closed.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!==server.base)return route.abort();if(url.pathname==='/topup-open.js')return route.fulfill({contentType:'application/javascript',body:'// Baked from TOPUP_OPEN at release. Unset opens payment. Only the exact string false closes it.\nexport default false;\n'});return route.continue();});
+  await closed.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!==server.base)return route.abort();if(url.pathname==='/topup-open.js')return route.fulfill({contentType:'application/javascript',body:'// Baked from TOPUP_OPEN at release. Unset closes payment. Only the exact string true opens it.\nexport default false;\n'});return route.continue();});
   const closedPage=await closed.newPage();
   await closedPage.goto(server.base+'/topup/');
-  assert.equal(await closedPage.locator('#topup-closed').innerText(),'充值功能即将开放');
+  assert.equal(await closedPage.locator('#topup-closed').innerText(),'充值暂未开放，免费练习不需要付费；已付款的家长可联系客服全额退款。');
   assert.equal(await closedPage.locator('.pay-qr').count(),0);
+  assert.doesNotMatch(await closedPage.locator('body').innerText(),/请按需充值|决定是否付款/);
   assert.doesNotMatch(await closedPage.content(),/wechat-pay-qr/);
   await closed.close();
   await page.goto(server.base+'/topup/');

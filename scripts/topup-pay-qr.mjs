@@ -1,4 +1,5 @@
 // Canonical payment QR lives outside the Pages publish directory.
+// Unset closes payment. Only the exact string true opens it.
 // Release copies it into site/www.yanghat.cn only when TOPUP_OPEN=true.
 import { copyFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
@@ -15,4 +16,9 @@ export async function syncPayQr(open, publishRoot = 'site/www.yanghat.cn') {
   await mkdir(path.dirname(dest), { recursive: true });
   await copyFile(PAY_QR_SOURCE, dest);
   return dest;
+}
+
+export function resolveTopupOpen(value) {
+  if (value !== undefined && value !== '' && value !== 'true' && value !== 'false') throw Error('TOPUP_OPEN must be true or false');
+  return value === 'true';
 }

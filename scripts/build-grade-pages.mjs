@@ -1,7 +1,7 @@
 // Build-time only: import existing catalogs; never modify curriculum or application routing.
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
 import {loadEnv} from 'vite';
-import {syncPayQr} from './topup-pay-qr.mjs';
+import {syncPayQr, resolveTopupOpen} from './topup-pay-qr.mjs';
 import {PEP_MATH,JK_SCIENCE,resolveUnits} from '../src/lib/lesson/curriculum.ts';
 import {DEMOS} from '../src/lib/lesson/demos.ts';
 const root='site/www.yanghat.cn';
@@ -39,10 +39,8 @@ if(helpEndpoint!==''&&helpEndpoint!=='/api/help')throw Error('Only the same-orig
 await writeFile(`${root}/help-config.js`,`// Baked from VITE_HELP_ENDPOINT at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(helpEndpoint)};\n`);
 console.log(`Help config ${helpEndpoint||'(off)'}`);
 
-// Top-up payment UI. Unset opens payment. Only the exact string false closes it.
-const topupFlag=process.env.TOPUP_OPEN??'';
-if(topupFlag!==''&&topupFlag!=='true'&&topupFlag!=='false')throw Error('TOPUP_OPEN must be true or false');
-const topupOpen=topupFlag!=='false';
-await writeFile(`${root}/topup-open.js`,`// Baked from TOPUP_OPEN at release. Unset opens payment. Only the exact string false closes it.\nexport default ${topupOpen};\n`);
+// Top-up payment UI. Unset closes payment. Only the exact string true opens it.
+const topupOpen=resolveTopupOpen(process.env.TOPUP_OPEN);
+await writeFile(`${root}/topup-open.js`,`// Baked from TOPUP_OPEN at release. Unset closes payment. Only the exact string true opens it.\nexport default ${topupOpen};\n`);
 await syncPayQr(topupOpen, root);
 console.log(`Top-up payment ${topupOpen?'open':'closed'}`);
