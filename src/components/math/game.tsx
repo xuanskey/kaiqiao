@@ -1,3 +1,4 @@
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Learning } from "./learning";
 import { Classroom } from "@/components/lesson/classroom";
 import { unitById } from "@/lib/math/units";
@@ -14,7 +15,7 @@ import { nextCampaign } from "@/lib/math/progress";
 import { SKILL_HINT, SKILL_LABEL, isSkillId } from "@/lib/math/skills";
 import { hushSpeak, speakPrompt } from "@/lib/math/speak";
 import { cn } from "@/lib/utils";
-import { useMath } from "@/store/math";
+import { applyEntryGrade, useMath } from "@/store/math";
 import type { Question } from "@/lib/math/types";
 import { Keypad } from "./keypad";
 import { LogoMark, Mascot, type Mood } from "./mascot";
@@ -27,6 +28,7 @@ export function Game() {
   const persist = useMath((s) => s.persist);
   useEffect(() => {
     hydrate();
+    applyEntryGrade(window.location.search, window.location.hash);
     // 主站或分享链接可以直达某节课：?lesson=fraction-mul&grade=6
     const link = lessonFromSearch(window.location.search);
     if (link) {
@@ -179,9 +181,7 @@ function Play() {
     <AskShell
       mood={mood}
       title={`${session.dueReview ? "今日到期复习 · " : ""}${session.retried ? "巩固加练 · " : ""}${session.kind === "unit" ? `${unitById(session.unitId ?? "")?.title ?? "单元练习"} · ${session.assessment ? "自测" : "练习"}` : playTitle(session.kind, session.chapterId, session.level, session.skill)}`}
-      onBack={() => {
-        if (window.confirm("结束本轮？已提交的答案会保留，未完成的练习不计通关或打卡。")) go("home");
-      }}
+      onBack={() => go("home")}
       progress={isSprint ? `${remain}s` : `${session.index + 1} / ${total}`}
       completed={session.index}
       total={isSprint ? undefined : total}
@@ -209,6 +209,19 @@ function Play() {
     </AskShell>
   );
 }
+
+const endPracticeConfirm = {
+  title: "结束练习？",
+  description: "已提交的答案会保留，未完成的练习不计通关或打卡。",
+  confirmLabel: "结束练习",
+  cancelLabel: "继续练习",
+};
+const endDuelConfirm = {
+  title: "结束本轮对决？",
+  description: "已提交的答案会保留。",
+  confirmLabel: "结束对决",
+  cancelLabel: "继续对决",
+};
 
 function Duel() {
   const session = useMath((s) => s.session);
@@ -251,7 +264,8 @@ function Duel() {
     <AskShell
       mood={feedback ? (feedback.ok ? "happy" : "sad") : "think"}
       title="和电脑练一练"
-      onBack={() => { if (window.confirm("结束本轮对决？已提交的答案会保留。")) go("home"); }}
+      confirm={endDuelConfirm}
+      onBack={() => go("home")}
       progress={`${remain}s`}
       combo={session.combo}
       qPrompt={q.prompt}
@@ -283,16 +297,17 @@ function QuestionInput({ question: q, value, disabled, onChange, onSubmit }: { q
   </div></div> : <div className="answer-area"><label className="answer-label" htmlFor="answer-display">你的答案</label><output id="answer-display" className="answer-display" aria-live="polite">{value || <span>点数字，写下答案</span>}{value ? <i aria-hidden="true" /> : null}</output><Keypad value={value} kind={q.keypad ?? "int"} disabled={disabled} onChange={onChange} onSubmit={() => onSubmit(value)} /><p className="keyboard-note">{q.keypad === "remainder" ? "数字键输入，R 输入余，Enter 确认" : "也可以用数字键输入，按 Enter 确认"}</p></div>;
 }
 
-function AskShell({ mood, title, onBack, progress, completed = 0, total, combo, qPrompt, feedback, explain, answer, trap, skill, fromWrong, onSkip, extra, children }: {
+function AskShell({ mood, title, onBack, progress, completed = 0, total, combo, qPrompt, feedback, explain, answer, trap, skill, fromWrong, onSkip, extra, children, confirm = endPracticeConfirm }: {
   mood: Mood; title: string; onBack: () => void; progress: string; completed?: number; total?: number; combo: number; qPrompt: string;
   feedback: null | { ok: boolean; given: string }; explain: string; answer: string; trap?: string; skill?: string; fromWrong?: boolean;
   onSkip: () => void; extra?: ReactNode; children: ReactNode;
+  confirm?: { title: string; description: string; confirmLabel: string; cancelLabel: string };
 }) {
   const work = !feedback || feedback.ok ? null : parseColumn(qPrompt);
   const skillLabel = isSkillId(skill) ? SKILL_LABEL[skill] : null;
   const hint = isSkillId(skill) ? SKILL_HINT[skill] : null;
   return <div className="practice-page page-enter">
-    <header className="practice-topbar"><div className="brand"><LogoMark /><strong>开窍</strong></div><button type="button" onClick={onBack} className="back-button"><X size={18} />结束练习</button></header>
+    <header className="practice-topbar"><div className="brand"><LogoMark /><strong>开窍</strong></div><ConfirmAction title={confirm.title} description={confirm.description} confirmLabel={confirm.confirmLabel} cancelLabel={confirm.cancelLabel} onConfirm={onBack}><button type="button" className="back-button"><X size={18} />结束练习</button></ConfirmAction></header>
     <div className="practice-heading"><div><p className="eyebrow">专心这一题，就很好</p><h1>{title}</h1></div><span className="question-counter">{!total ? <Timer size={17} /> : null}{progress}{total ? <small>题</small> : null}</span></div>
     {total ? <Meter value={completed + (feedback ? 1 : 0)} max={total} label="本轮答题进度" /> : null}
     {extra ? <div className="practice-extra">{extra}</div> : null}

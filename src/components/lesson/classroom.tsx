@@ -1,3 +1,4 @@
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { useEffect, useMemo, useReducer, useRef, useState, type ComponentType } from "react";
 import { ArrowLeft, BarChart3, BookOpen, Lightbulb, FlaskConical, Hand, MessageCircle, Presentation, ShieldAlert } from "lucide-react";
 import { DEMOS, defaultParams, displayParam, lessonScript, normalizeParams, type DemoId, type Params, type Subject } from "@/lib/lesson/demos";
@@ -111,7 +112,7 @@ function ClassLogCard({ log, onClear }: { log: ClassLog; onClear: () => void }) 
     <header><BarChart3 size={18} /><strong>课堂练习记录</strong><small>只记录各课做了几题、对了几题，保存在本浏览器</small></header>
     {entries.length === 0 ? <p className="class-log-empty">还没有课堂练习记录。上完课做几道随堂练习，这里会显示掌握情况。</p>
       : <><ul>{entries.map(([id, e]) => { const m = masteryOf(e); return <li key={id}><span>{DEMOS[id].title}</span><div className="class-log-bar" aria-hidden="true"><i style={{ width: `${Math.round((m.rate ?? 0) * 100)}%` }} /></div><small>{e.correct}/{e.attempts} · {m.label}</small></li>; })}</ul>
-        <button type="button" className="class-log-clear" onClick={() => { if (window.confirm("清除所有课堂练习记录？原来的练习和学情不受影响。")) onClear(); }}>清除课堂记录</button></>}
+        <ConfirmAction title="清除所有课堂练习记录？" description="原来的练习和学情不受影响。" confirmLabel="清除记录" onConfirm={onClear}><button type="button" className="class-log-clear">清除课堂记录</button></ConfirmAction></>}
   </section>;
 }
 

@@ -1,3 +1,4 @@
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { dueReviews, reviewId } from "@/lib/math/review";
 import { useEffect, useState } from "react";
 import { classSummary, dateLabel, greeting, requestLesson, todayPicks } from "@/lib/lesson/today";
@@ -57,7 +58,7 @@ export function Home() {
 
     <section className="plan-card" aria-labelledby="plan-title">
       <div className="plan-main">
-        <span className="hero-kicker"><span className="status-dot" />{doneCount === 3 ? "今日计划已完成" : `今日计划 · 还差 ${3 - doneCount} 步`}</span>
+        <span className="hero-kicker"><span className="status-dot" />{doneCount === 3 ? "今日计划已完成" : `今日计划 · 还差 ${3 - doneCount} 个学习步骤`}</span>
         <div className="plan-head">
           <ProgressRing value={doneCount} max={3} />
           <div><h2 id="plan-title">今天的学习计划</h2><p>{nextStep ? `下一步：${nextStep.title}` : "三步都完成了，给自己点个赞！"}</p></div>
@@ -132,7 +133,7 @@ function useNow(): Date {
 
 function ProgressRing({ value, max }: { value: number; max: number }) {
   const r = 26, c = 2 * Math.PI * r, ratio = Math.min(1, value / Math.max(1, max));
-  return <div className="progress-ring" role="img" aria-label={`今日计划完成 ${value}/${max}`}>
+  return <div className="progress-ring" role="img" aria-label={`今日计划完成 ${value}/${max} 个学习步骤`}>
     <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r={r} className="ring-track" /><circle cx="32" cy="32" r={r} className="ring-value" strokeDasharray={`${c * ratio} ${c}`} transform="rotate(-90 32 32)" /></svg>
     <strong>{value}<small>/{max}</small></strong>
   </div>;
@@ -211,7 +212,7 @@ export function Review() {
       <ul className="wrong-list">{wrong.map((w, index) => <li key={w.at + w.prompt} className="wrong-card">
         <div className="flex items-start gap-3"><span className="question-number">{String(index + 1).padStart(2, '0')}</span><div className="min-w-0 flex-1"><div className="wrong-tags"><span>{chapterById(w.chapterId).name}</span>{isSkillId(w.skill) ? <span>{SKILL_LABEL[w.skill]}</span> : null}</div><h2>{w.prompt}</h2><details className="explanation" onToggle={(event) => { if (event.currentTarget.open) s.revealReview(reviewId(w)); }}><summary>查看答案与解题思路<ChevronRight size={16} /></summary><div className="answer-comparison"><span>上次回答 <b>{w.given}</b></span><span>正确答案 <strong>{w.answer}</strong></span></div><p>{w.explain}</p>{w.trap ? <p className="explanation-tip"><Lightbulb size={15} />{w.trap}</p> : null}</details></div></div>
       </li>)}</ul>
-      <div className="review-footer"><p>记录只保存在当前浏览器，换设备前记得备份。</p><Button variant="ghost" onClick={() => { if (window.confirm("清空本年级错题（跨天复习队列仍保留）？清空前可在学情页导出备份。")) s.clearWrong(); }}>清空本年级错题</Button></div>
+      <div className="review-footer"><p>记录只保存在当前浏览器，换设备前记得备份。</p><ConfirmAction title="清空本年级错题？" description="跨天复习队列仍保留。清空前可在学情页导出备份。" confirmLabel="清空错题" onConfirm={s.clearWrong}><Button variant="ghost">清空本年级错题</Button></ConfirmAction></div>
     </>}
   </div>;
 }
