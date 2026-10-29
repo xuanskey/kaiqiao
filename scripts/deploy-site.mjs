@@ -1,0 +1,35 @@
+import {readFileSync,statSync} from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {execFileSync,spawnSync} from 'node:child_process';
+
+// 只读取给定根目录；不访问环境、不启动进程、不修改文件。
+export function checkSite(root) {
+  const file=name=>path.join(root,'site',name);
+  const requireFile=name=>{try{if(statSync(file(name)).isFile())return;}catch{}throw Error(`缺少普通文件：site/${name}`);};
+  for(const name of ['functions/e.js','functions/api/help.js','www.yanghat.cn/_headers','www.yanghat.cn/_redirects','www.yanghat.cn/index.html','www.yanghat.cn/404.html'])requireFile(name);
+  let routes;try{routes=JSON.parse(readFileSync(file('www.yanghat.cn/_routes.json'),'utf8'));}catch{throw Error('_routes.json 无法解析');}
+  if(routes?.version!==1||!Array.isArray(routes.include)||routes.include.length!==2||!routes.include.includes('/e')||!routes.include.includes('/api/help')||!Array.isArray(routes.exclude))throw Error('_routes.json 路由不符合部署要求');
+  for(const [name,variable,endpoint] of [['help','VITE_HELP_ENDPOINT','/api/help'],['metrics','VITE_EVENT_ENDPOINT','/e']]){
+    const expected=value=>`// Baked from ${variable} at release (.env.production, shell overrides). Empty disables.\nexport default ${JSON.stringify(value)};\n`;
+    let content;try{content=readFileSync(file(`www.yanghat.cn/${name}-config.js`),'utf8');}catch{throw Error(`${name}-config.js 缺失`);}
+    if(content!==expected('')&&content!==expected(endpoint))throw Error(`${name}-config.js 格式或端点非法，请重新 release`);
+  }
+  return true;
+}
+export function deploy(root,args=[]) {
+  try {
+    if(args.some(arg=>arg!=='--check'))throw Error('仅支持 --check 参数，部署目标不可覆盖');
+    checkSite(root);
+    if(process.env.DEPLOY_ALLOW_DIRTY==='1')console.warn('警告：已跳过 site/ 与 .env.production 的已提交检查');
+    else if(execFileSync('git',['status','--porcelain','--','site/','.env.production'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim())throw Error('site/ 或 .env.production 有未提交改动');
+    const argv=['pages','deploy','www.yanghat.cn','--project-name','yanghat-cn','--branch','main'];
+    if(args.includes('--check')){console.log('检查通过');console.log('将在 site/ 执行：wrangler '+argv.join(' '));return 0;}
+    const env={...process.env};delete env.DEEPSEEK_API_KEY;
+    env.CLOUDFLARE_ACCOUNT_ID ||= 'c2ed124638eb30a36bdefa44b7a6faef';
+    const result=spawnSync(process.env.WRANGLER||'/tmp/wrangler4/node_modules/.bin/wrangler',argv,{cwd:path.join(root,'site'),env,stdio:'inherit'});
+    if(result.error)throw Error('无法启动 wrangler');
+    return result.status??1;
+  }catch(error){console.error('部署检查失败：'+error.message);return 1;}
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))process.exitCode=deploy(path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),process.argv.slice(2));
