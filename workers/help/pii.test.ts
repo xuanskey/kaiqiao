@@ -15,3 +15,7 @@ for(const input of ['我是三年级同学','我是新同学','我是你的同�
 
 for(const input of ['QQ是小明','vx：小明','wx为小明'])test('中文昵称 '+input,()=>assert.equal(redactPII(input),'[账号]'));
 for(const input of ['微信能用吗','微信分享给老师','可以用微信登录吗','用微信扫码','QQ群在哪','微信号是多少','微信是不是要绑定'])test('常见问法不脱敏 '+input,()=>assert.equal(redactPII(input),input));
+
+for(const input of ['微信是学校要求的吗','微信是免费的吗','微信是用来接收通知的','微信为了方便联系家长','微信能用吗','可以用微信登录吗','QQ群在哪','微信支付怎么用','微信里打开','名字是什么','我是同班同学','我是你们同学','我是小学同学','我是新生同学','我是三年级同学','我是新同学','我是你的同学'])test('问句不脱敏 '+input,()=>assert.equal(redactPII(input),input));
+for(const [input,expected] of [['我是小明同学','我是[名字]同学'],['名字是欧阳娜娜','名字是[名字]'],['微信是小明','[账号]'],['微信是abc123','[账号]']])test('仍脱敏 '+input,()=>assert.equal(redactPII(input),expected));
+test('名字是可以改的吗不比三字窗口更狠',()=>assert.equal(redactPII('名字是可以改的吗'),'名字是[名字]的吗'));
