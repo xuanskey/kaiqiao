@@ -2,7 +2,10 @@ import {redactPII} from './pii.js';
 import {SYSTEM_PROMPT} from './prompt.js';
 export const MINUTE_CAP = 20;
 export const DAILY_CAP_MICRO = 1_000_000;
-// https://api-docs.deepseek.com/zh-cn/quick_start/pricing (微元/token，高峰价)
+// 现行模型名；deepseek-chat/deepseek-reasoner 已于 2026-07-24 停用，deepseek-v4-flash 仅为兼容旧名临时转发。
+// https://api-docs.deepseek.com/api/create-chat-completion （2026-10 核对）
+export const MODEL = 'deepseek-flash';
+// https://api-docs.deepseek.com/zh-cn/quick_start/pricing (微元/token，高峰价；低谷为一半，按高峰预留更保守)
 export const PRICE_MISS_MICRO = 2, PRICE_HIT_MICRO = 0.04, PRICE_OUT_MICRO = 8;
 export const MAX_TOKENS = 300;
 export const FALLBACK_TEXT = '小助手暂时休息啦。你可以回首页点「开始练习」，也可以发邮件到 hello@yanghat.cn 寻求帮助。';
@@ -91,7 +94,7 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),deps.timeoutMs ?? 15000);
   try {
-    const response=await deps.fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:`Bearer ${env.DEEPSEEK_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'deepseek-flash',messages:[{role:'system',content:SYSTEM_PROMPT},...messages],thinking:{type:'disabled'},max_tokens:MAX_TOKENS,temperature:0.3,stream:false}),signal:controller.signal});
+    const response=await deps.fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:`Bearer ${env.DEEPSEEK_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:SYSTEM_PROMPT},...messages],thinking:{type:'disabled'},max_tokens:MAX_TOKENS,temperature:0.3,stream:false}),signal:controller.signal});
     if(!response.ok){await settle(-reserve);return fallback('upstream');}
     const result=await response.json();
     const u=result.usage;

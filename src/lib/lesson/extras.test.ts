@@ -112,10 +112,33 @@ describe("可选 AI 老师（自备密钥）", () => {
     assert.equal(seen!.url, "https://api.example.com/v1/chat/completions");
     assert.equal(seen!.auth, "Bearer k");
     assert.equal(seen!.body.messages.length, 2);
+    assert.ok(!("thinking" in seen!.body), "非 DeepSeek 接口不发 thinking 参数");
     const bad = await askAi(cfg, ctx, (async () => new Response("no", { status: 401 })) as typeof fetch);
     assert.deepEqual(bad, { ok: false, error: "密钥无效或没有权限" });
     const down = await askAi(cfg, ctx, (async () => { throw new TypeError("fail"); }) as typeof fetch);
     assert.deepEqual(down, { ok: false, error: "网络连接失败" });
+  });
+  it("DeepSeek 默认用现行模型名并显式关闭思考模式", async () => {
+    assert.equal(DEFAULT_AI.model, "deepseek-flash");
+    let body: Record<string, unknown> | null = null;
+    const r = await askAi({ ...DEFAULT_AI, enabled: true, apiKey: "k" }, ctx, (async (_url: string, init: RequestInit) => {
+      body = JSON.parse(String(init.body));
+      return new Response(JSON.stringify({ choices: [{ message: { content: "好" } }] }), { status: 200 });
+    }) as unknown as typeof fetch);
+    assert.equal(r.ok, true);
+    assert.equal(body!.model, "deepseek-flash");
+    assert.deepEqual(body!.thinking, { type: "disabled" });
+  });
+  it("旧配置里已停用的 DeepSeek 模型名读取时换成现行名，其他接口原样保留", () => {
+    const s = memStore();
+    for (const model of ["deepseek-chat", "deepseek-reasoner", " deepseek-chat "]) {
+      s.setItem("kaiqiao-ai", JSON.stringify({ enabled: true, baseUrl: "https://api.deepseek.com/", model, apiKey: "k" }));
+      assert.equal(loadAiConfig(s).model, "deepseek-flash");
+    }
+    s.setItem("kaiqiao-ai", JSON.stringify({ enabled: true, baseUrl: "https://api.deepseek.com", model: "deepseek-v4-pro", apiKey: "k" }));
+    assert.equal(loadAiConfig(s).model, "deepseek-v4-pro");
+    s.setItem("kaiqiao-ai", JSON.stringify({ enabled: true, baseUrl: "https://proxy.example.com/v1", model: "deepseek-chat", apiKey: "k" }));
+    assert.equal(loadAiConfig(s).model, "deepseek-chat");
   });
   it("配置只在开启或填写密钥后保存，关闭并清空后删除", () => {
     const s = memStore();

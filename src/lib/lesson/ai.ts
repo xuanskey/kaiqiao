@@ -12,7 +12,14 @@ import { redactPII } from "../../../workers/help/pii.js";
 export type AiConfig = { enabled: boolean; baseUrl: string; model: string; apiKey: string };
 
 export const AI_STORAGE_KEY = "kaiqiao-ai";
-export const DEFAULT_AI: AiConfig = { enabled: false, baseUrl: "https://api.deepseek.com", model: "deepseek-chat", apiKey: "" };
+// DeepSeek 现行模型名见 https://api-docs.deepseek.com/zh-cn/quick_start/pricing （2026-10 核对）。
+export const DEFAULT_AI: AiConfig = { enabled: false, baseUrl: "https://api.deepseek.com", model: "deepseek-flash", apiKey: "" };
+/** DeepSeek 官方已停用的旧模型名；家长早先保存的配置读取时换成现行名，否则请求会直接失败。 */
+const RETIRED_DEEPSEEK_MODELS = new Set(["deepseek-chat", "deepseek-reasoner"]);
+
+function isDeepSeek(baseUrl: string): boolean {
+  try { return new URL(baseUrl).hostname === "api.deepseek.com"; } catch { return false; }
+}
 
 type KV = { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void };
 
@@ -21,7 +28,10 @@ export function loadAiConfig(store: KV | undefined): AiConfig {
     const raw = store?.getItem(AI_STORAGE_KEY);
     if (!raw) return { ...DEFAULT_AI };
     const v = JSON.parse(raw);
-    return { enabled: v.enabled === true, baseUrl: typeof v.baseUrl === "string" ? v.baseUrl : DEFAULT_AI.baseUrl, model: typeof v.model === "string" ? v.model : DEFAULT_AI.model, apiKey: typeof v.apiKey === "string" ? v.apiKey : "" };
+    const baseUrl = typeof v.baseUrl === "string" ? v.baseUrl : DEFAULT_AI.baseUrl;
+    let model = typeof v.model === "string" ? v.model : DEFAULT_AI.model;
+    if (isDeepSeek(baseUrl) && RETIRED_DEEPSEEK_MODELS.has(model.trim())) model = DEFAULT_AI.model;
+    return { enabled: v.enabled === true, baseUrl, model, apiKey: typeof v.apiKey === "string" ? v.apiKey : "" };
   } catch { return { ...DEFAULT_AI }; }
 }
 
@@ -109,7 +119,8 @@ export async function askAi(cfg: AiConfig, ctx: AiContext, fetchImpl: typeof fet
     const res = await fetchImpl(`${cfg.baseUrl.replace(/\/+$/, "")}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
-      body: JSON.stringify({ model: cfg.model, messages: buildMessages(ctx), temperature: 0.4, max_tokens: 400 }),
+      // DeepSeek 默认开思考模式，思考 token 也占 max_tokens；官方地址显式关闭。其他兼容接口可能不认识 thinking，不发。
+      body: JSON.stringify({ model: cfg.model, messages: buildMessages(ctx), temperature: 0.4, max_tokens: 400, ...(isDeepSeek(cfg.baseUrl) ? { thinking: { type: "disabled" } } : {}) }),
       signal: ctrl.signal,
     });
     if (res.status === 401 || res.status === 403) return { ok: false, error: "密钥无效或没有权限" };

@@ -103,7 +103,9 @@ npm run deploy:site
 
 每日上限固定 **1 元（1,000,000 微元）**，不能通过环境变量调大，按北京时间自然日重置。每次先由 D1 原子预留最坏花费，再按 usage 结算。保守使用输入未命中 2 微元/token、缓存命中 0.04 微元/token、输出 8 微元/token 的固定高峰价；超时、网络错误或缺少有效 usage 不退预留，非 2xx 全退。结算失败保留预留，因此查询数字可能高于实际账单，不作为账单凭证。D1 出错或配置缺失均关闭上游调用；达到上限只返回友好兜底，不影响练习。全站上限 **20 次/分钟**，使用北京时间分钟桶，原子计数并删除旧桶，不存用户数据；超限返回 busy 兜底，不预留日额度、不调用上游。分钟名额在日额度拒绝时也会消耗。settle 将花费夹紧到 0 至日上限。
 
-模型固定为 `deepseek-flash`，显式 `thinking: {type: 'disabled'}`，非思考模式，最多 300 token、temperature 0.3、不流式；只读取 content，绝不将 reasoning_content 用作答案。模型与思考参数见 https://api-docs.deepseek.com/api/create-chat-completion ，高峰定价见 https://api-docs.deepseek.com/zh-cn/quick_start/pricing 。
+模型固定为 `deepseek-flash`（`workers/help/handler.js` 的 `MODEL`，与 `workers/ai/upstream.ts` 一致），显式 `thinking: {type: 'disabled'}`，非思考模式，最多 300 token、temperature 0.3、不流式；只读取 content，绝不将 reasoning_content 用作答案。模型与思考参数见 https://api-docs.deepseek.com/api/create-chat-completion ，高峰定价见 https://api-docs.deepseek.com/zh-cn/quick_start/pricing 。
+
+模型名沿革（2026-10 按官方文档核对）：`deepseek-chat` / `deepseek-reasoner` 已于 2026-07-24 停用；2026-04 的 V4 发布说明列出的 `deepseek-v4-flash` / `deepseek-v4-pro` 之后又被 2026-09-10 的 V4.1-Flash 发布取代，官方要求改用 `deepseek-flash`，旧名 `deepseek-v4-flash` 仅临时转发。思考模式默认开启，`thinking.type` 取 `enabled` / `disabled`。课堂“AI 老师”的默认模型同为 `deepseek-flash`；服务地址为 `api.deepseek.com` 时显式关闭思考，并把家长旧配置里已停用的模型名读取时换成现行名，其他兼容接口不发 `thinking`、不改模型名。官方再改名时同步修改上述三处常量，`workers/help/handler.test.ts` 会拦住源码里残留的已停用模型名。
 
 答案清理后按 Unicode 码点截断到 600 字，避免截断 emoji 代理对。PII 保留邮箱、手机、座机脱敏，证件号限制为日期结构有效的 15/18 位；账号要求标记与至少三位标识，号码仅匹配银行卡式 16–19 位；地址要求门牌、楼栋组合或居住语境，姓名与学校结合边界和停用词，避免误伤数学题与年级。
 

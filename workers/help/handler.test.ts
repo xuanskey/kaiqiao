@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,readdir} from 'node:fs/promises';
 // @ts-ignore JS module
-import {handleHelp, DAILY_CAP_MICRO, PRICE_MISS_MICRO, PRICE_OUT_MICRO, MAX_TOKENS} from './handler.js';
+import {handleHelp, DAILY_CAP_MICRO, PRICE_MISS_MICRO, PRICE_OUT_MICRO, MAX_TOKENS, MODEL} from './handler.js';
+import {MODEL as AI_MODEL} from '../ai/upstream.ts';
 // @ts-ignore JS module
 import {SYSTEM_PROMPT} from './prompt.js';
 globalThis.fetch=async()=>{assert.fail('Unexpected non-mock network request');};
@@ -114,4 +115,13 @@ test('v2 forwards all turns with PII redacted and reserves all messages',async()
 test('v2 accepts exact content limits and 2000 code points',async()=>{
  const messages=[message('user','😀'.repeat(300)),message('assistant','答'.repeat(600)),message('user','问'.repeat(300)),message('assistant','答'.repeat(600)),message('user','问'.repeat(200))];
  assert.equal((await call(req(v2(messages)))).status,200);
+});
+test('model names follow current DeepSeek docs',async()=>{
+ assert.equal(MODEL,'deepseek-flash');assert.equal(AI_MODEL,MODEL);
+ // deepseek-chat/deepseek-reasoner 已停用：只允许出现在 AI 老师的旧配置迁移表里。
+ const files:string[]=[];
+ async function scan(dir:string){for(const f of await readdir(dir,{withFileTypes:true})){const p=dir+'/'+f.name;if(f.isDirectory())await scan(p);else if(/\.(js|ts|tsx)$/.test(f.name)&&!/\.test\./.test(f.name))files.push(p);}}
+ for(const dir of ['workers','src','site/functions'])await scan(dir);
+ assert.ok(files.length>10);
+ for(const file of files){const hits=(await readFile(file,'utf8')).match(/['"]deepseek-(chat|reasoner)['"]/g)??[];assert.equal(hits.length,file==='src/lib/lesson/ai.ts'?2:0,file);}
 });
