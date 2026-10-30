@@ -1,5 +1,5 @@
-const CACHE = 'kaiqiao-edc0d42290b4';
-const ASSETS = ["./","./index.html","./manifest.webmanifest","./assets/index-Icz4xrcF.js","./assets/index-NtHXhrNh.css","./assets/classroom-Bmdl2TOY.js"];
+const CACHE = 'kaiqiao-f3139056ee42';
+const ASSETS = ["./","./index.html","./manifest.webmanifest","./assets/index-C2arSDeZ.js","./assets/index-NtHXhrNh.css","./assets/classroom-BTEnOXYn.js"];
 // 新版本装好后等待，不自动接管；页面提示后由用户点「更新」（SKIP_WAITING），或所有标签页关闭后自然生效。
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
