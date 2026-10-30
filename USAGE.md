@@ -1,4 +1,4 @@
-# 开窍 v0.14.0 使用指南
+# 开窍 v0.15.0 使用指南
 
 正式练习入口：https://www.yanghat.cn/?practice=1（地址栏不显示 /app/；yanghat.cn 同路径）
 养习主站：https://www.yanghat.cn（学习入口，不是另一个存档）
