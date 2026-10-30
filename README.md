@@ -70,7 +70,41 @@ npm run test:state  # 单独运行题目生命周期与 AI 竞态回归（同样
 
 `npm run build` 将完整 dist 同步到 `site/www.yanghat.cn/app/`，这是内部资源目录，不是对外入口。相对 Vite base 支持内嵌 `/app/`、docs 与离线包。顶层打开 `/app/` 会回到 `/?practice=1` 并保留课程参数。`npm run release` 生成离线文件和 Service Worker 后再次同步。发布上传整个 `site/www.yanghat.cn/` 到 **yanghat-cn Direct Upload**，包含主页和 `/app/`；不要把 app 或 docs 当成主站根目录。
 
-统计、AI 客服、充值开关、部署护栏和旧域迁移等管理员操作见 [site/README.md](site/README.md)。
+统计、AI 客服、充值开关、部署护栏和旧域名等管理员操作见 [site/README.md](site/README.md)。
+
+### 上线步骤（PR 合并后）
+
+合并到 main **不会**自动更新网站，需要有人手动上传一次。上传用 Cloudflare 的 Direct Upload，每次都整体替换线上文件。
+
+准备（只需一次）：
+
+- Node.js 24、git。
+- wrangler 4：`npm i -g wrangler@4`，然后用 `WRANGLER=$(which wrangler)` 指定；脚本默认找 `/tmp/wrangler4/node_modules/.bin/wrangler`。
+- Cloudflare API 令牌：控制台 → My Profile → API Tokens → Create Token，权限只给 **Account · Cloudflare Pages · Edit**，账号限定为 yanghat 所在账号。令牌只放在运行命令的环境变量 `CLOUDFLARE_API_TOKEN` 里，不要写进仓库、`.env` 文件或聊天。账号 ID 已在脚本里内置。
+
+每次上线：
+
+```bash
+git checkout main && git pull
+npm ci
+npm run check                      # 全绿才继续
+TOPUP_OPEN=false npm run release   # 开关读 .env.production；充值保持关闭
+git status --short                 # 必须为空；有改动说明 main 上的产物过期，先修再发
+npm run deploy:site -- --check     # 只检查，不上传
+CLOUDFLARE_API_TOKEN=<令牌> WRANGLER=$(which wrangler) npm run deploy:site
+```
+
+上线后核对：
+
+```bash
+curl -sSI https://www.yanghat.cn/ | head -1                 # 200
+curl -sSI https://yanghat.cn/ | grep -i '^location'          # 301 到 www
+curl -s -o /dev/null -w '%{http_code}\n' https://www.yanghat.cn/e   # GET 返回 405，说明函数在
+```
+
+然后在手机上打开 https://www.yanghat.cn/?practice=1 做一题，并点页脚「帮助」问一句，确认能正常回答。
+
+回滚：Cloudflare 控制台 → Workers & Pages → yanghat-cn → Deployments，在上一个正常的部署上点 Rollback。
 
 验收：`npm run check` 验证类型、回归用例、页面服务端渲染与生产构建；
 它不替代真实浏览器/手机验收。发布前建议在 320、390、768、1440 像素视口检查
