@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 // @ts-ignore Pure JavaScript runtime module.
-import {handleEvent} from './handler.js';
+import {handleEvent, recordServerEvent, SERVER_EVENTS} from './handler.js';
 const events = ['visit','enter','grade_select','lesson_start','quiz_complete','backup_export_click'];
 const valid = {v:1,event:'visit',grade:null,count:1};
 function request(body: unknown = valid, options: RequestInit = {}, url = 'https://www.yanghat.cn/e') {
@@ -60,4 +60,23 @@ test('source privacy guard',async()=>{
   for(const path of ['workers/metrics/handler.js','site/functions/e.js']) {
     assert.doesNotMatch(await readFile(path,'utf8'),/console\.|CF-Connecting-IP|x-forwarded-for|user-agent|cookie|referer|\.cf/i);
   }
+});
+// 服务端事件（客服兜底原因）：/e 不接受，只能由 recordServerEvent 写入。
+test('server events are rejected by /e and disjoint from client events',async()=>{
+  const {EVENTS:CLIENT}=await import('../../public/metrics.js');
+  assert.deepEqual([...SERVER_EVENTS],['help_fallback_upstream','help_fallback_cap','help_fallback_busy','help_fallback_unconfigured']);
+  for(const event of SERVER_EVENTS){assert.ok(!CLIENT.includes(event));await check(request({...valid,event}),400,{METRICS:{writeDataPoint(){assert.fail('must not write');}}});}
+});
+for(const [host,tag] of [['www.yanghat.cn','prod'],['yanghat.cn','prod'],['abc.yanghat-cn.pages.dev','preview'],['127.0.0.1','dev']]) test(`server event ${host}`,()=>{
+  const points: unknown[]=[];
+  for(const event of SERVER_EVENTS) recordServerEvent({METRICS:{writeDataPoint(p: unknown){points.push(p);}}},event,host);
+  assert.deepEqual(points,SERVER_EVENTS.map((event: string)=>({indexes:[event],blobs:[event,'none',tag],doubles:[1]})));
+});
+test('server event guards',()=>{
+  const points: unknown[]=[];
+  const env={METRICS:{writeDataPoint(p: unknown){points.push(p);}}};
+  for(const event of ['visit','help_fallback_other','',undefined]) recordServerEvent(env,event as string,'www.yanghat.cn');
+  recordServerEvent(env,'help_fallback_cap','evil.example');
+  assert.deepEqual(points,[]);
+  for(const bad of [undefined,{},{METRICS:{}},{METRICS:{writeDataPoint(){throw Error('down');}}}]) assert.doesNotThrow(()=>recordServerEvent(bad as any,'help_fallback_cap','www.yanghat.cn'));
 });

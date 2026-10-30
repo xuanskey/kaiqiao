@@ -37,7 +37,7 @@
 
 ## 启用统计
 
-当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。只统计六种事件的次数，不能推断独立人数。
+当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。客户端只上报六种事件的次数，不能推断独立人数；另有四种客服兜底事件只由服务端写入（见下文「客服故障计数」），`/e` 拒收。
 
 上线前由管理员在 Pages 项目 yanghat-cn 的目标环境绑定 Analytics Engine：变量 `METRICS` → 数据集 `kaiqiao_metrics`，并确认配额与 Functions 的 fail_open 设置。不新增 wrangler 配置文件。只有从 `site/` 目录部署才编译 `site/functions/`；显式 `_routes.json` 只包含 `/e` 与 `/api/help`，其余静态资源继续使用原 `_headers` 和 `_redirects`。
 
@@ -114,6 +114,19 @@ npm run deploy:site
 ```sh
 wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend ORDER BY day DESC LIMIT 7"
 ```
+
+### 客服故障计数
+
+每次 `/api/help` 返回兜底答复（「小助手暂时休息啦」），服务端向同一 Analytics Engine 数据集 `kaiqiao_metrics`（绑定 `METRICS`）写一个匿名数据点，格式与 `/e` 相同：`blob1`/`index1` 为事件，`blob2` 固定 `none`，`blob3` 为 `prod` / `preview` / `dev`，`double1` 固定 1。四种事件对应 `reason`：
+
+| 事件 | 含义 |
+| --- | --- |
+| `help_fallback_upstream` | DeepSeek 非 2xx、超时、网络错误、响应解析失败或回答为空 |
+| `help_fallback_cap` | 当日 1 元上限已满 |
+| `help_fallback_busy` | 全站每分钟 20 次上限已满 |
+| `help_fallback_unconfigured` | 缺 `DEEPSEEK_API_KEY` / `HELP_DB`，或 D1 出错 |
+
+白名单是 `workers/metrics/handler.js` 的 `SERVER_EVENTS`，由 `recordServerEvent` 写入；`/e` 的客户端白名单不含这些事件，浏览器无法伪造。数据点不含问题、回答、上游错误信息、IP、UA 或任何请求头；正常回答和 4xx 拒绝不计数。未绑定 `METRICS` 或写入失败时静默跳过，不影响兜底答复。`node scripts/metrics-sql.mjs` 生成的查询已按事件分组，`help_fallback_*` 行即故障次数；`upstream` 连续出现通常意味着密钥、余额或模型名有问题，`cap` 意味着当日额度用完。
 
 回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 后运行 `npm run deploy:site`（函数始终部署），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
 
