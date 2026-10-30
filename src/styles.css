@@ -537,7 +537,7 @@ summary::-webkit-details-marker { display: none; }
 .class-unit strong{font-size:15px;color:#2d4729}
 .class-unit small{font-size:12px;color:#636e58}
 .class-unit-no{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eef3e6;font-size:13px;color:#456e40;flex:none}
-.class-unit-actions{display:flex;gap:6px}
+.class-unit-actions{display:flex;flex-wrap:wrap;gap:6px}
 .class-open,.class-practice{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;font-size:14px;white-space:nowrap}
 .class-open{background:#285847;color:#fff}
 .class-practice{border:1px solid #d3dfc6;background:#fff;color:#456e40}
@@ -613,12 +613,12 @@ summary::-webkit-details-marker { display: none; }
 .experiment dt{color:#636e58}.experiment dd{margin:0;color:#2d4729}.experiment dd ol{margin:0;padding-left:18px}
 .experiment .is-safety dd{color:#a24a33}
 .experiment-note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff7e3;font-size:13px;color:#7a6326;line-height:1.7}
-.quiz{display:grid;gap:12px;margin-top:20px}
+.quiz{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:20px}
 .quiz-prompt{font-size:18px;line-height:1.7;color:#24402a}
 .quiz-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
 .quiz-choices button{min-height:50px;border:1px solid #d3dfc6;border-radius:12px;background:#fff;font-size:16px;color:#285847}
 .quiz-choices .is-right{background:#e3f1dc;border-color:#78a865}.quiz-choices .is-wrong{background:#fbe6e0;border-color:#d08a77}
-.quiz-fill{display:flex;gap:8px}.quiz-fill input{flex:1;min-height:50px;padding:0 14px;border:1px solid #d3dfc6;border-radius:12px;font-size:18px}
+.quiz-fill{display:flex;gap:8px}.quiz-fill input{flex:1;min-width:0;min-height:50px;padding:0 14px;border:1px solid #d3dfc6;border-radius:12px;font-size:18px}
 .quiz-fill button,.quiz-actions button,.quiz-start{min-height:50px;padding:0 20px;border-radius:12px;background:#285847;color:#fff;font-size:15px}
 .quiz-fill button:disabled{opacity:.4}
 .quiz-feedback{display:grid;gap:8px;padding:14px;border-radius:12px;font-size:14px;line-height:1.7}

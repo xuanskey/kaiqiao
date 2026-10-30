@@ -27,7 +27,7 @@ try {
   await page.getByLabel('教材').selectOption('pep-math');
   ok('未录入的教材版本不混用目录');
   // 三年级分数
-  await page.locator('li', { hasText: '分数的初步认识' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '分数的初步认识' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('heading', { name: '分数的初步认识' }).waitFor();
   await page.getByRole('button', { name: '播放' }).click();
   await page.waitForTimeout(3500);
@@ -73,7 +73,7 @@ try {
   // 一年级拖苹果
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '一年级' }).click();
-  await page.locator('li', { hasText: '5 以内数的认识和加、减法' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '5 以内数的认识和加、减法' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   for (let i = 0; i < 2; i++) {
     const apples = page.locator('.stage svg g[style*="grab"]');
@@ -90,7 +90,7 @@ try {
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '二年级' }).click();
   await page.getByRole('group', { name: '学期' }).getByRole('button', { name: '下册' }).click();
-  await page.locator('li', { hasText: '有余数的除法' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '有余数的除法' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('group', { name: '看什么' }).getByRole('button', { name: '平均分（除法）' }).click();
   await page.getByLabel('一共几个').fill('14');
   await page.getByLabel('几组 / 几人').fill('4');
@@ -102,7 +102,7 @@ try {
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '四年级' }).click();
   await page.getByRole('group', { name: '学期' }).getByRole('button', { name: '上册' }).click();
-  await page.locator('li', { hasText: '角的度量' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '角的度量' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   const handle = page.locator('.stage svg circle[style*="grab"]');
   const hb = await handle.boundingBox();
@@ -115,7 +115,7 @@ try {
   // 五年级：新教材的等式性质（不再解方程）
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '五年级' }).click();
-  await page.locator('li', { hasText: '用字母表示数和数量关系' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '用字母表示数和数量关系' }) }).getByRole('button', { name: '上课' }).click();
   for (let i = 1; i <= 5; i++) { await page.getByRole('button', { name: new RegExp(`^第 ${i} 步`) }).click(); }
   const bb = await page.locator('.board').innerText();
   assert.ok(bb.includes('3x + 4 = 19') && bb.includes('3×5 + 4 = 19') && bb.includes('等式两边') && bb.includes('初中'));
@@ -125,7 +125,7 @@ try {
   ok('五年级（新教材）：代入 x=5 得 3×5+4=19，演示等式的性质并说明解方程到初中学；天平猜 5 时平衡');
   // 五年级：可能性真实随机试验
   await page.getByRole('button', { name: '返回课程目录' }).click();
-  await page.locator('li', { hasText: '可能性' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '可能性' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '摸 100 次', exact: true }).click();
   const label = await page.locator('.stage svg').getAttribute('aria-label');
   const mm = label.match(/已摸 (\d+) 次，红 (\d+) 次，白 (\d+) 次/);
@@ -138,7 +138,7 @@ try {
   for (const t of ['确定位置', '生活中的负数', '鸽巢问题']) assert.ok(six.includes(t), t);
   for (const t of ['扇形统计图', '数与形']) assert.ok(!six.includes(t), t);
   ok('六上新目录：有确定位置、生活中的负数、鸽巢问题，没有比、扇形统计图、数与形');
-  await page.locator('li', { hasText: '鸽巢问题' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '鸽巢问题' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '随便放一次', exact: true }).click();
   await page.locator('.stage-result', { hasText: '确实不少于 3 个' }).waitFor();
   ok('鸽巢问题：7 个苹果随机放进 3 个抽屉，最多的抽屉确实不少于 3 个');
@@ -156,7 +156,7 @@ try {
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '四年级' }).click();
   await page.getByRole('group', { name: '学期' }).getByRole('button', { name: '下册' }).click();
   await page.getByRole('group', { name: '学科' }).getByRole('button', { name: '科学' }).click();
-  await page.locator('li', { hasText: '电路' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '电路' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('group', { name: '坏掉的灯泡' }).getByRole('button', { name: '第 1 个' }).click();
   await page.getByRole('button', { name: /第 3 步/ }).click();
   assert.ok((await page.locator('.stage-result').textContent()).includes('不亮'));
@@ -168,7 +168,7 @@ try {
   // v0.9：四上声音、摩擦力；六上杠杆、昼夜
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '学期' }).getByRole('button', { name: '上册' }).click();
-  await page.locator('li', { hasText: '摩擦力' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '摩擦力' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('group', { name: '接触面' }).getByRole('button', { name: '毛巾' }).click();
   await page.getByRole('button', { name: /第 3 步/ }).click();
   const fr = await page.locator('.stage-result').textContent();
@@ -176,7 +176,7 @@ try {
   ok('四年级科学：换成毛巾表面，测力计读数变为 1.4 牛');
   await page.screenshot({ path: `${out}/friction-desktop.png`, fullPage: true });
   await page.getByRole('button', { name: '返回课程目录' }).click();
-  await page.locator('li', { hasText: '声音' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '声音' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   await page.getByLabel('钢尺伸出长度').fill('6');
   await page.locator('.stage-result', { hasText: '音调高' }).waitFor();
@@ -184,7 +184,7 @@ try {
   await page.screenshot({ path: `${out}/sound-desktop.png`, fullPage: true });
   await page.getByRole('button', { name: '返回课程目录' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '六年级' }).click();
-  await page.locator('li', { hasText: '杠杆' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '杠杆' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   await page.getByRole('button', { name: '用力点移到第 6 格' }).click();
   await page.locator('.stage-result', { hasText: '省力' }).waitFor();
@@ -194,7 +194,7 @@ try {
   ok('六年级科学：点刻度把用力点移到第 6 格省力（3×2 = 1×6），移到第 1 格费力');
   await page.screenshot({ path: `${out}/lever-desktop.png`, fullPage: true });
   await page.getByRole('button', { name: '返回课程目录' }).click();
-  await page.locator('li', { hasText: '昼夜交替' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '昼夜交替' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   await page.getByRole('slider', { name: '北京时间' }).first().fill('22');
   await page.locator('.stage svg text', { hasText: '22 时：黑夜' }).waitFor();
@@ -207,7 +207,7 @@ try {
   await page.getByRole('group', { name: '学科' }).getByRole('button', { name: '数学' }).click();
   await page.getByRole('group', { name: '年级' }).getByRole('button', { name: '二年级' }).click();
   await page.getByRole('group', { name: '学期' }).getByRole('button', { name: '下册' }).click();
-  await page.locator('li', { hasText: '时间在哪里' }).getByRole('button', { name: '上课' }).click();
+  await page.locator('li').filter({ has: page.locator('strong', { hasText: '时间在哪里' }) }).getByRole('button', { name: '上课' }).click();
   await page.getByRole('button', { name: '让我自己试试' }).first().click();
   const ch = page.locator('.stage svg circle[style*="grab"]');
   const cb = await ch.boundingBox(); const csv = await page.locator('.stage svg').boundingBox();

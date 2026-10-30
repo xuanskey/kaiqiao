@@ -1,8 +1,33 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+
+// 只处理本项目真正会互相覆盖的几组 Tailwind 类（后写的赢），代替约 100KB 的 tailwind-merge。
+// 新增会互相覆盖的类组时，在这里补一条规则，并在 utils.test.ts 加用例。
+const FONT_SIZE = /^text-(xs|sm|base|lg|[2-9]?xl|\[[^\]]*(px|rem|em)\])$/;
+const GROUPS: [string, RegExp][] = [
+  ["font-size", FONT_SIZE],
+  ["text-color", /^text-(?!left$|center$|right$|justify$|start$|end$|wrap$|nowrap$|balance$|pretty$|ellipsis$|clip$)/],
+  ["size", /^size-/], ["h", /^h-/], ["w", /^w-/], ["min-w", /^min-w-/],
+  ["px", /^px-/], ["py", /^py-/], ["justify", /^justify-/], ["leading", /^leading-/], ["bg", /^bg-/], ["rounded", /^rounded(-|$)/],
+];
+
+function groupKey(cls: string): string | null {
+  const cut = cls.lastIndexOf(":");
+  const variant = cls.slice(0, cut + 1), base = cls.slice(cut + 1);
+  if (FONT_SIZE.test(base)) return variant + "font-size";
+  for (const [name, re] of GROUPS) if (name !== "font-size" && re.test(base)) return variant + name;
+  return null;
+}
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  const classes = clsx(inputs).split(/\s+/).filter(Boolean);
+  const seen = new Set<string>(), out: string[] = [];
+  for (let i = classes.length - 1; i >= 0; i--) {
+    const key = groupKey(classes[i]) ?? "=" + classes[i];
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(classes[i]);
+  }
+  return out.reverse().join(" ");
 }
 
 export function formatBytes(bytes: number, digits = 1): string {

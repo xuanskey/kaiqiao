@@ -302,8 +302,8 @@ export async function runStateRegression(browser, base) {
 
   // 新生命周期用于所有课程：补齐不同选择/判断/填空形态的真实浏览器覆盖。
   for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 }]) {
-    await run(`${viewport.width}px 全部 25 数学演示 + 11 科学实验：直达、板书、作答、换题`, viewport, async (page) => {
-      assert.equal(DEMO_LIST.filter((d) => d.subject === 'math').length, 25);
+    await run(`${viewport.width}px 全部 55 数学演示 + 11 科学实验：直达、板书、作答、换题`, viewport, async (page) => {
+      assert.equal(DEMO_LIST.filter((d) => d.subject === 'math').length, 55);
       assert.equal(DEMO_LIST.filter((d) => d.subject === 'science').length, 11);
       for (const demo of DEMO_LIST) {
         await enter(page, base, demo.id, demo.grades[0]);
@@ -338,7 +338,7 @@ export async function runStateRegression(browser, base) {
         await page.locator('.class-picker').waitFor();
         if (action === '切换课程') {
           await page.getByRole('group', { name: '年级', exact: true }).getByRole('button', { name: '五年级' }).click();
-          await page.locator('.class-unit', { hasText: '小数乘法' }).getByRole('button', { name: '上课' }).click();
+          await page.locator('.class-unit').filter({ has: page.locator('strong', { hasText: '小数乘法' }) }).getByRole('button', { name: '上课' }).click();
           await page.locator('.lesson-head h1', { hasText: '小数乘小数' }).waitFor();
         }
       } else {
