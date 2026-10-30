@@ -9,7 +9,7 @@ import { homePreview } from './home-preview.mjs';
 const sw = await readFile('site/www.yanghat.cn/app/sw.js', 'utf8');
 const chunk = sw.match(/"\.\/(assets\/classroom-[\w-]+\.js)"/)?.[1];
 assert.ok(chunk, 'SW 预缓存清单里有课堂块');
-const offlineHtml = await readFile('docs/offline.html', 'utf8');
+const offlineHtml = await readFile('site/www.yanghat.cn/app/offline.html', 'utf8');
 assert.doesNotMatch(offlineHtml, /classroom-[\w-]+\.js/, 'offline.html 不依赖外部课堂块');
 assert.doesNotMatch(offlineHtml, /<script\b[^>]*src="\.?\/?assets\//, 'offline.html 入口脚本已内嵌');
 
@@ -41,7 +41,7 @@ try {
   const p2 = await local.newPage();
   p2.on('request', (r) => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) requests.push(r.url()); });
   await local.route(/^https?:/, (route) => route.abort());
-  await p2.goto(pathToFileURL(path.resolve('docs/offline.html')).href);
+  await p2.goto(pathToFileURL(path.resolve('site/www.yanghat.cn/app/offline.html')).href);
   await p2.getByText('练习年级', { exact: true }).waitFor();
   await p2.getByRole('button', { name: '课堂' }).first().click();
   await p2.getByRole('heading', { name: '互动课堂' }).waitFor();

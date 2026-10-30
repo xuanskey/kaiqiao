@@ -20,7 +20,7 @@
 
 第一次使用请看[使用指南](USAGE.md)：按年级选择题库或互动课，三年级可从理解实验室开始；包含操作、计分、备份迁移和问题反馈方法。
 
-下载新版发布包，解压后直接打开 `offline.html`。也可以把 `docs/` 部署到静态网页服务，访问 `index.html`。旧版下载包不会自动升级。
+离线使用：直接打开单文件版 `site/www.yanghat.cn/app/offline.html`（也可在本地 `npm run release` 后取 `docs/offline.html`，两者相同）。也可以把 `docs/` 部署到静态网页服务，访问 `index.html`。旧版下载包不会自动升级。
 
 导航共 5 个标签：首页、课堂、题库、错题本、学情。
 
@@ -53,7 +53,7 @@ npm run dev
 
 ```bash
 npm run check       # 类型检查 + 回归测试 + 生产构建
-npm run release     # 生成 docs/ 网站目录与 offline.html 单文件版（单文件版另做一次构建，课堂静态内嵌；网站版课堂按需加载并进 SW 预缓存）
+npm run release     # 生成 docs/ 网站目录（本地产物，不入库）与 offline.html 单文件版（单文件版另做一次构建，课堂静态内嵌；网站版课堂按需加载并进 SW 预缓存）
 npm run test:smoke  # 原有冒烟 + 状态回归（先 npm run build；需要 Playwright Chromium）
 npm run test:state  # 单独运行题目生命周期与 AI 竞态回归（同样先构建）
 ```
@@ -63,7 +63,8 @@ npm run test:state  # 单独运行题目生命周期与 AI 竞态回归（同样
 - `scripts/smoke.mjs`：浏览器冒烟测试，CI 每次运行；包含 `scripts/state-regression.mjs` 的状态回归。
 - `src/store/math.ts`：练习状态、年级和结算。
 - `src/components/math/`：首页、练习、错题、学情及电脑/手机自适应界面。
-- `docs/`：可部署的构建产物；每次发布通过脚本重新生成。
+- `docs/`：`npm run release` 在本地生成的可部署产物，与已提交的 `site/www.yanghat.cn/app/` 完全相同，已加入 `.gitignore`，不再入库。
+- `reports/`：验收报告。截图（`*.png`）不入库，作为 PR 附件上传。
 
 ## 发布
 
