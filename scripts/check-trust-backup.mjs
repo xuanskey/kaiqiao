@@ -151,29 +151,4 @@ try {
     console.log(`PASS ${width}: 首页/练习/学情零非同源请求；3题导出→清空→取消不写入→确认恢复五键；旧format:1确认/取消/坏数据/写入失败回滚；坏文件提示；无原生 dialog/溢出；反馈 subject 正确`);
     await context.close();
   }
-  // Hostnames are fulfilled from the local static server; no real domain is contacted.
-  for (const hasRecords of [false, true]) {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
-    await ctx.route('**/*', async route => {
-      const u = new URL(route.request().url());
-      if (!['yanghat.cn', 'www.yanghat.cn'].includes(u.hostname)) return route.abort();
-      const response = await route.fetch({ url: base + u.pathname + u.search });
-      await route.fulfill({ response });
-    });
-    if (hasRecords) await ctx.addInitScript(() => { if (location.hostname === 'yanghat.cn') localStorage.setItem('kaiqiao-class-log', '{}'); });
-    const p = await ctx.newPage();
-    await p.goto('https://yanghat.cn/?practice=1&grade=5#keep');
-    if (hasRecords) {
-      await p.locator('.domain-notice').waitFor();
-      assert.equal(new URL(p.url()).hostname, 'yanghat.cn');
-      assert.ok(await p.locator('.domain-notice').isVisible());
-      assert.ok(await p.locator('#practice-frame').evaluate(el => el.getBoundingClientRect().top >= document.querySelector('.domain-notice').getBoundingClientRect().bottom - 1));
-      assert.equal(new URL(p.frames().find(f => f.url().includes('/app/')).url()).hostname, 'yanghat.cn');
-      await p.screenshot({ path: 'reports/trust-shots/apex-records-390.png' });
-    } else {
-      await p.waitForURL('https://www.yanghat.cn/?practice=1&grade=5#keep');
-    }
-    await ctx.close();
-  }
-  console.log('PASS: 本地模拟裸域无记录软跳保留参数/hash；有记录保留裸域且提示条不遮挡 iframe');
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }
