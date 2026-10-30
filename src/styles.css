@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* 只扫描源码找类名。默认会扫整个项目，把 dist/、docs/、site/ 里的构建产物也算进去，产物再反过来影响 CSS，导致不同检出结果不一致。 */
+@import "tailwindcss" source(none);
+@source "../src";
+@source "../index.html";
 @import "tw-animate-css";
 
 @theme {
