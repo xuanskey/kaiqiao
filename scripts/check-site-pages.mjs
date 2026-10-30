@@ -69,6 +69,7 @@ try{
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(server.base);assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior),'auto');
  await page.locator('#demo-next').focus();await page.keyboard.press('Enter');await page.keyboard.press('Space');assert.equal(await page.locator('#demo-answer').innerText(),'13');
  assert.equal(await page.locator('#demo-next').evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
+ assert.ok(await page.locator('#promo-stage').evaluate(n=>n.classList.contains('is-held')&&n.classList.contains('is-static')&&n.querySelector('.scene-end').classList.contains('is-current')),'减弱动效时动画演示不自动播放');
  assert.deepEqual(external,[]);assert.deepEqual(errors,[]);assert.deepEqual(dialogs,[]);
  assertSameOriginMetrics(events,server.base);
  assert.match(await readFile('site/www.yanghat.cn/metrics-config.js','utf8'),/export default "\/e"/);
