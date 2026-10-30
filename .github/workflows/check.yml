@@ -22,7 +22,7 @@ jobs:
       - run: npm run check
       - run: npm run release
       - name: Check release artifacts
-        run: git diff --exit-code -- docs/
+        run: git diff --exit-code -- site/
 
   # 浏览器冒烟测试：只装 Chromium（headless shell），用本地 vite preview 打开构建产物，不访问外网。
   # 包含 36 节课的手机/电脑访问和 React 状态回归；AI 完全由本地 fetch 模拟。
@@ -76,4 +76,4 @@ jobs:
       - name: Site checks
         run: npm run test:site
       - name: Release artifacts unchanged after site checks
-        run: git diff --exit-code -- docs/ site/
+        run: git diff --exit-code -- site/

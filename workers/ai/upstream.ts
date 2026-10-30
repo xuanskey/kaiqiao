@@ -1,4 +1,5 @@
 import type { Usage } from './billing.ts';
+// 与客服 workers/help/handler.js 同一现行模型名，见 https://api-docs.deepseek.com/api/create-chat-completion
 export const MODEL = 'deepseek-flash';
 export const MAX_TOKENS = 400;
 export const TIMEOUT_MS = 20000;

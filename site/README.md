@@ -11,13 +11,9 @@
 - FAQ 文案修改后运行 `node scripts/check-site-seo.mjs --write` 同步结构化数据，再运行默认校验（不带 `--write`）。
 - 缓存：仅 `/app/assets/*` 的哈希资源和明确带版本的分享图使用 immutable；新增长缓存资源须使用新文件名，并为其增加精确路径规则。未版本化媒体使用一小时缓存；首页 CSS/JS 的 query 版本不用于匹配 `_headers`，保持 no-cache。同步或发布脚本不重写主站 `_headers`。
 
-## 旧域 yanghat.cn 迁移顺序
+## 旧域名
 
-两个域名的本机存储互相隔离，裸域上的练习记录只能在裸域页面里导出。仓库内的设计是：首页第一个脚本 `domain-transition.js` 在裸域顶层判断——**有本机练习记录就留在裸域**，顶部提示先在「学情→导出备份」，再到 www 恢复；**没有记录才跳到 www**，保留路径、参数和锚点。`scripts/check-domain-transition.mjs` 在本地把 yanghat.cn 解析到预览服务器验证这两种情况，并检查仓库里没有裸域无条件跳转。
-
-2026-10-30 实测线上 `https://yanghat.cn/…` 返回 **301 → https://www.yanghat.cn/…**，响应来自 Cloudflare 规则而不是本仓库（`_redirects` 只有 `/练习` 两条，Functions 不做跳转）。301 发生在页面脚本之前，所以上面的保护在线上不会生效：裸域上有记录的用户进不了导出页面。
-
-需要管理员在 Cloudflare 后台做的改动（仓库改不了，本次未改）：在 yanghat.cn 区域找到产生这条 301 的规则（Redirect Rules、Page Rules 或 Bulk Redirects 之一），**迁移期内暂停它**，让裸域请求落到 Pages 项目 yanghat-cn，由页面脚本决定跳转或提示；迁移期结束后再恢复 301。暂停后用 `curl -sI https://yanghat.cn/?practice=1` 确认返回 200 而不是 301。暂停期间搜索引擎靠 `_headers` 里的 canonical Link 头和页面 canonical 识别正式地址。
+`yanghat.cn`、`kaiqiao.yanghat.cn` 由 Cloudflare 规则 301 到 `www.yanghat.cn`（保留路径与参数），不在本仓库。2026-10-30 杨哥确认旧地址不再使用，删除了首页的旧域迁移脚本 `domain-transition.js`（有记录留旧域提示导出、无记录才跳）及其测试；`_headers` 中裸域的 canonical 提示保留。以后不要暂停这条 301。
 
 ## Cloudflare 网络错误日志（NEL）：建议关闭
 
@@ -37,7 +33,7 @@
 
 ## 启用统计
 
-当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。只统计六种事件的次数，不能推断独立人数。
+当前提交默认开启。仓库根 `.env.production` 写着 `VITE_EVENT_ENDPOINT=/e`（无密钥，随仓库提交）。这是唯一客户端构建开关，同时用于应用 bundle 和首页 `metrics-config.js`；运行时不读取环境变量。普通 `npm run release` / `npm run build` 都会读到它：Vite 在 production 模式加载该文件，`scripts/build-grade-pages.mjs` 用同一套 `loadEnv('production')` 生成 `export default "/e"`。已经存在的 shell 变量优先于文件，所以 `VITE_EVENT_ENDPOINT=/e npm run release` 仍然显式打开。客户端只上报六种事件的次数，不能推断独立人数；另有四种客服兜底事件只由服务端写入（见下文「客服故障计数」），`/e` 拒收。
 
 上线前由管理员在 Pages 项目 yanghat-cn 的目标环境绑定 Analytics Engine：变量 `METRICS` → 数据集 `kaiqiao_metrics`，并确认配额与 Functions 的 fail_open 设置。不新增 wrangler 配置文件。只有从 `site/` 目录部署才编译 `site/functions/`；显式 `_routes.json` 只包含 `/e` 与 `/api/help`，其余静态资源继续使用原 `_headers` 和 `_redirects`。
 
@@ -103,7 +99,9 @@ npm run deploy:site
 
 每日上限固定 **1 元（1,000,000 微元）**，不能通过环境变量调大，按北京时间自然日重置。每次先由 D1 原子预留最坏花费，再按 usage 结算。保守使用输入未命中 2 微元/token、缓存命中 0.04 微元/token、输出 8 微元/token 的固定高峰价；超时、网络错误或缺少有效 usage 不退预留，非 2xx 全退。结算失败保留预留，因此查询数字可能高于实际账单，不作为账单凭证。D1 出错或配置缺失均关闭上游调用；达到上限只返回友好兜底，不影响练习。全站上限 **20 次/分钟**，使用北京时间分钟桶，原子计数并删除旧桶，不存用户数据；超限返回 busy 兜底，不预留日额度、不调用上游。分钟名额在日额度拒绝时也会消耗。settle 将花费夹紧到 0 至日上限。
 
-模型固定为 `deepseek-flash`，显式 `thinking: {type: 'disabled'}`，非思考模式，最多 300 token、temperature 0.3、不流式；只读取 content，绝不将 reasoning_content 用作答案。模型与思考参数见 https://api-docs.deepseek.com/api/create-chat-completion ，高峰定价见 https://api-docs.deepseek.com/zh-cn/quick_start/pricing 。
+模型固定为 `deepseek-flash`（`workers/help/handler.js` 的 `MODEL`，与 `workers/ai/upstream.ts` 一致），显式 `thinking: {type: 'disabled'}`，非思考模式，最多 300 token、temperature 0.3、不流式；只读取 content，绝不将 reasoning_content 用作答案。模型与思考参数见 https://api-docs.deepseek.com/api/create-chat-completion ，高峰定价见 https://api-docs.deepseek.com/zh-cn/quick_start/pricing 。
+
+模型名沿革（2026-10 按官方文档核对）：`deepseek-chat` / `deepseek-reasoner` 已于 2026-07-24 停用；2026-04 的 V4 发布说明列出的 `deepseek-v4-flash` / `deepseek-v4-pro` 之后又被 2026-09-10 的 V4.1-Flash 发布取代，官方要求改用 `deepseek-flash`，旧名 `deepseek-v4-flash` 仅临时转发。思考模式默认开启，`thinking.type` 取 `enabled` / `disabled`。课堂“AI 老师”的默认模型同为 `deepseek-flash`；服务地址为 `api.deepseek.com` 时显式关闭思考，并把家长旧配置里已停用的模型名读取时换成现行名，其他兼容接口不发 `thinking`、不改模型名。官方再改名时同步修改上述三处常量，`workers/help/handler.test.ts` 会拦住源码里残留的已停用模型名。
 
 答案清理后按 Unicode 码点截断到 600 字，避免截断 emoji 代理对。PII 保留邮箱、手机、座机脱敏，证件号限制为日期结构有效的 15/18 位；账号要求标记与至少三位标识，号码仅匹配银行卡式 16–19 位；地址要求门牌、楼栋组合或居住语境，姓名与学校结合边界和停用词，避免误伤数学题与年级。
 
@@ -112,6 +110,19 @@ npm run deploy:site
 ```sh
 wrangler d1 execute kaiqiao_help --remote --command "SELECT * FROM help_spend ORDER BY day DESC LIMIT 7"
 ```
+
+### 客服故障计数
+
+每次 `/api/help` 返回兜底答复（「小助手暂时休息啦」），服务端向同一 Analytics Engine 数据集 `kaiqiao_metrics`（绑定 `METRICS`）写一个匿名数据点，格式与 `/e` 相同：`blob1`/`index1` 为事件，`blob2` 固定 `none`，`blob3` 为 `prod` / `preview` / `dev`，`double1` 固定 1。四种事件对应 `reason`：
+
+| 事件 | 含义 |
+| --- | --- |
+| `help_fallback_upstream` | DeepSeek 非 2xx、超时、网络错误、响应解析失败或回答为空 |
+| `help_fallback_cap` | 当日 1 元上限已满 |
+| `help_fallback_busy` | 全站每分钟 20 次上限已满 |
+| `help_fallback_unconfigured` | 缺 `DEEPSEEK_API_KEY` / `HELP_DB`，或 D1 出错 |
+
+白名单是 `workers/metrics/handler.js` 的 `SERVER_EVENTS`，由 `recordServerEvent` 写入；`/e` 的客户端白名单不含这些事件，浏览器无法伪造。数据点不含问题、回答、上游错误信息、IP、UA 或任何请求头；正常回答和 4xx 拒绝不计数。未绑定 `METRICS` 或写入失败时静默跳过，不影响兜底答复。`node scripts/metrics-sql.mjs` 生成的查询已按事件分组，`help_fallback_*` 行即故障次数；`upstream` 连续出现通常意味着密钥、余额或模型名有问题，`cap` 意味着当日额度用完。
 
 回滚：删掉 `.env.production` 里的 `VITE_HELP_ENDPOINT` 行（或单次 `VITE_HELP_ENDPOINT= npm run release`），保留 `VITE_EVENT_ENDPOINT=/e`，重新 release 后运行 `npm run deploy:site`（函数始终部署），前端即隐藏。管理员删除 `DEEPSEEK_API_KEY` secret 后，服务端合法请求返回 unconfigured 兜底且不写 D1、不调用上游。
 

@@ -15,7 +15,7 @@
 | `src/lib/math/{generate,grades,expanded-bank,learning-bank,chapters,skills,explain,speak}.ts` | 混合：固定题干、解释、提示、章节说明 CC BY-NC；随机算法、答案计算、接口与调度 MIT |
 | `src/components/lesson/**/*.tsx`（包括 `stages-*.tsx`） | 混合：教学文字及具有独创性的教学插图表达 CC BY-NC；组件逻辑、交互、渲染实现 MIT |
 | `src/components/**/*.tsx`、`src/lib/**/*.ts` 其他文件 | 代码 MIT；若含独立教学题干、讲解、静态素材，按元素归 CC BY-NC，不能把变量名/普通 UI 按钮文案都算作内容 |
-| `site/www.yanghat.cn/index.html`、`open.svg`、`public/使用说明.txt`、`README.md`、`CONTENT_ROADMAP.md` | 原创教学/宣传叙述与非品牌插图 CC BY-NC；HTML/SVG 实现、技术使用说明与接口示例代码 MIT；品牌元素除外 |
+| `site/www.yanghat.cn/index.html`、`open.svg`、`public/使用说明.txt`、`README.md`、`CHANGELOG.md`（由 README 拆出的版本记录）、`CONTENT_ROADMAP.md` | 原创教学/宣传叙述与非品牌插图 CC BY-NC；HTML/SVG 实现、技术使用说明与接口示例代码 MIT；品牌元素除外 |
 | `site/www.yanghat.cn/assets/kaiqiao-promo.mp4`、`kaiqiao-promo-poster.jpg`、`og-cover-20261029.jpg`（后两者同目录） | 宣传片中自录的产品录屏段可归原创内容（CC BY-NC）；照片段与音轨、宣传片海报图、OG 分享图为 AI 辅助生成或来源待核实，不纳入 CC BY-NC 授权；历史 MIT 许可不撤销 |
 | `site/www.yanghat.cn/assets/lantern.svg` | 品牌标识，与 logo、favicon、「开窍」「养习」名称及 yanghat.cn 域名一并保留，不授予品牌使用权；历史有效版权许可不撤销 |
 | `site/www.yanghat.cn/assets/{brand,favicon}.svg`、其他路径中嵌入的「开窍」「养习」名称/logo | 品牌保留：不在本次 MIT / CC 授权范围；历史已有效授出的版权许可不追溯撤销；不限制法律允许的合理指称 |

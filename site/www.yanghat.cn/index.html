@@ -2,7 +2,6 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <script type="module" src="/domain-transition.js"></script>
   <script type="module" src="/landing-track.js"></script>
   <script type="module" src="/help.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,9 +38,8 @@
   </script>
   <style>
     html.is-practice, html.is-practice body { margin: 0; background: #f7f6ef; }
-    html.is-practice body > :not(#practice-frame):not(.domain-notice) { display: none !important; }
+    html.is-practice body > :not(#practice-frame) { display: none !important; }
     html.is-practice #practice-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #f7f6ef; }
-    html.is-practice #practice-frame { top: var(--domain-notice-height, 0px); height: calc(100% - var(--domain-notice-height, 0px)); }
   </style>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v=20261029">

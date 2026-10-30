@@ -29,5 +29,4 @@ for (const name of bundles) {
 }
 const apex = rules.find(r => r.path === 'https://yanghat.cn/*');
 assert.deepEqual(apex?.headers, [['link', '<https://www.yanghat.cn/:splat>; rel="canonical"']]);
-expectCache('/domain-transition.js', 'no-cache');
 console.log('Cache verified: HTML/SW revalidate, versioned assets immutable, no merged Cache-Control');

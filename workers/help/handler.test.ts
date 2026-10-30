@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,readdir} from 'node:fs/promises';
 // @ts-ignore JS module
-import {handleHelp, DAILY_CAP_MICRO, PRICE_MISS_MICRO, PRICE_OUT_MICRO, MAX_TOKENS} from './handler.js';
+import {handleHelp, DAILY_CAP_MICRO, PRICE_MISS_MICRO, PRICE_OUT_MICRO, MAX_TOKENS, MODEL} from './handler.js';
+import {MODEL as AI_MODEL} from '../ai/upstream.ts';
 // @ts-ignore JS module
 import {SYSTEM_PROMPT} from './prompt.js';
 globalThis.fetch=async()=>{assert.fail('Unexpected non-mock network request');};
@@ -114,4 +115,45 @@ test('v2 forwards all turns with PII redacted and reserves all messages',async()
 test('v2 accepts exact content limits and 2000 code points',async()=>{
  const messages=[message('user','😀'.repeat(300)),message('assistant','答'.repeat(600)),message('user','问'.repeat(300)),message('assistant','答'.repeat(600)),message('user','问'.repeat(200))];
  assert.equal((await call(req(v2(messages)))).status,200);
+});
+test('model names follow current DeepSeek docs',async()=>{
+ assert.equal(MODEL,'deepseek-flash');assert.equal(AI_MODEL,MODEL);
+ // deepseek-chat/deepseek-reasoner 已停用：只允许出现在 AI 老师的旧配置迁移表里。
+ const files:string[]=[];
+ async function scan(dir:string){for(const f of await readdir(dir,{withFileTypes:true})){const p=dir+'/'+f.name;if(f.isDirectory())await scan(p);else if(/\.(js|ts|tsx)$/.test(f.name)&&!/\.test\./.test(f.name))files.push(p);}}
+ for(const dir of ['workers','src','site/functions'])await scan(dir);
+ assert.ok(files.length>10);
+ for(const file of files){const hits=(await readFile(file,'utf8')).match(/['"]deepseek-(chat|reasoner)['"]/g)??[];assert.equal(hits.length,file==='src/lib/lesson/ai.ts'?2:0,file);}
+});
+// 客服兜底原因写入匿名统计：每次兜底恰好一个数据点，只含原因与环境。
+const metrics=()=>{const points:any[]=[];return {points,METRICS:{writeDataPoint(p:unknown){points.push(p);}}};};
+const point=(reason:string,tag='prod')=>({indexes:['help_fallback_'+reason],blobs:['help_fallback_'+reason,'none',tag],doubles:[1]});
+test('fallback reasons are counted without user content',async()=>{
+ const q='邮箱abc@example.cn 我家住在幸福路8号';const headers={['CF-Connecting'+'-IP']:'fake-ip',['User'+'-Agent']:'fake-ua'};
+ const db=new D1();await seed(db,DAILY_CAP_MICRO);
+ const runs:[string,any,any][]=[
+  ['unconfigured',{DEEPSEEK_API_KEY:'fake'},undefined],
+  ['unconfigured',{DEEPSEEK_API_KEY:'fake',HELP_DB:{batch(){throw Error();},prepare(){return {bind(){return this;}};}}},undefined],
+  ['cap',{DEEPSEEK_API_KEY:'fake',HELP_DB:db},undefined],
+  ['upstream',{DEEPSEEK_API_KEY:'fake',HELP_DB:new D1()},async()=>new Response('secret',{status:500})],
+  ['upstream',{DEEPSEEK_API_KEY:'fake',HELP_DB:new D1()},async()=>{throw Error('private upstream details');}],
+  ['upstream',{DEEPSEEK_API_KEY:'fake',HELP_DB:new D1()},async()=>Response.json({choices:[{message:{content:'',reasoning_content:'private reasoning'}}]})],
+ ];
+ for(const [reason,env,fetcher] of runs){const m=metrics();const r=await call(req({v:1,q},{headers}),{...env,METRICS:m.METRICS},fetcher);assert.equal((await r.json()).reason,reason);assert.deepEqual(m.points,[point(reason)]);
+  const raw=JSON.stringify(m.points);for(const secret of ['abc@example.cn','幸福路','fake-ip','fake-ua','secret','private'])assert.ok(!raw.includes(secret),secret);}
+});
+test('busy fallback counted once per refused request',async()=>{
+ const db=new D1();const m=metrics();
+ for(let i=0;i<22;i++)await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:db,METRICS:m.METRICS},async()=>upstream());
+ assert.deepEqual(m.points,[point('busy'),point('busy')]);
+});
+test('fallback metric env tag follows host; success and rejections write nothing',async()=>{
+ for(const [host,tag] of [['yanghat-cn.pages.dev','preview'],['localhost','dev']]){const m=metrics();await call(req(undefined,{},`http://${host}/api/help`),{METRICS:m.METRICS});assert.deepEqual(m.points,[point('unconfigured',tag)]);}
+ const m=metrics();
+ assert.equal((await (await call(req(),{DEEPSEEK_API_KEY:'fake',HELP_DB:new D1(),METRICS:m.METRICS},async()=>upstream())).json()).source,'ai');
+ for(const r of [req(null,{body:'{'}),req(undefined,{headers:{Origin:'https://evil.example'}}),req(undefined,{},'https://evil.example/api/help')])assert.ok((await handleHelp(r,{METRICS:m.METRICS},{fetch:async()=>assert.fail('no upstream'),now})).status>=400);
+ assert.deepEqual(m.points,[]);
+});
+test('metrics binding failure never breaks fallback',async()=>{
+ for(const METRICS of [{},{writeDataPoint(){throw Error('ae down');}},null]){const r=await call(req(),{METRICS});assert.equal(r.status,200);assert.equal((await r.json()).reason,'unconfigured');}
 });

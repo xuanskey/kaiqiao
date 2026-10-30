@@ -1,8 +1,12 @@
 import {redactPII} from './pii.js';
 import {SYSTEM_PROMPT} from './prompt.js';
+import {recordServerEvent} from '../metrics/handler.js';
 export const MINUTE_CAP = 20;
 export const DAILY_CAP_MICRO = 1_000_000;
-// https://api-docs.deepseek.com/zh-cn/quick_start/pricing (微元/token，高峰价)
+// 现行模型名；deepseek-chat/deepseek-reasoner 已于 2026-07-24 停用，deepseek-v4-flash 仅为兼容旧名临时转发。
+// https://api-docs.deepseek.com/api/create-chat-completion （2026-10 核对）
+export const MODEL = 'deepseek-flash';
+// https://api-docs.deepseek.com/zh-cn/quick_start/pricing (微元/token，高峰价；低谷为一半，按高峰预留更保守)
 export const PRICE_MISS_MICRO = 2, PRICE_HIT_MICRO = 0.04, PRICE_OUT_MICRO = 8;
 export const MAX_TOKENS = 300;
 export const FALLBACK_TEXT = '小助手暂时休息啦。你可以回首页点「开始练习」，也可以发邮件到 hello@yanghat.cn 寻求帮助。';
@@ -10,6 +14,8 @@ const headers = {'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','
 const reply = (status, extra = {}) => new Response(null,{status,headers:{...headers,...extra}});
 const json = (data) => new Response(JSON.stringify({v:1,...data}),{headers:{...headers,'Content-Type':'application/json; charset=utf-8'}});
 const fallback = (reason) => json({source:'fallback',reason,answer:FALLBACK_TEXT});
+// 兜底原因计入匿名统计（/e 同一数据集），只记原因和环境，不记问题、回答、IP 或 UA。
+const failWith = (env, host) => (reason) => {recordServerEvent(env,'help_fallback_'+reason,host);return fallback(reason);};
 /** @param {unknown} text */
 function sanitize(text) {
   if(typeof text !== 'string') return '';
@@ -68,7 +74,8 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
     total+=length;if(total>2000) return reply(400);
     messages.push({role:item.role,content:redactPII(content)});
   }
-  if(!env?.DEEPSEEK_API_KEY || !env?.HELP_DB) return fallback('unconfigured');
+  const fail=failWith(env,host);
+  if(!env?.DEEPSEEK_API_KEY || !env?.HELP_DB) return fail('unconfigured');
   const reserve=(new TextEncoder().encode(SYSTEM_PROMPT+messages.map(item=>item.content).join('')).byteLength+64*messages.length)*PRICE_MISS_MICRO+MAX_TOKENS*PRICE_OUT_MICRO;
   const beijing=new Date(deps.now()+8*3600000).toISOString();
   const day=beijing.slice(0,10), minute=beijing.slice(0,16);
@@ -80,19 +87,19 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
       db.prepare('DELETE FROM help_minute WHERE minute < ?1').bind(minute),
       db.prepare('INSERT INTO help_minute(minute, calls) VALUES (?1, 1) ON CONFLICT(minute) DO UPDATE SET calls = calls + 1 WHERE calls + 1 <= ?2 RETURNING calls').bind(minute,MINUTE_CAP)
     ]);
-    if(!minutes[2]?.results?.length) return fallback('busy');
+    if(!minutes[2]?.results?.length) return fail('busy');
     const results=await db.batch([
       db.prepare('CREATE TABLE IF NOT EXISTS help_spend (day TEXT PRIMARY KEY, micro INTEGER NOT NULL)'),
       db.prepare('INSERT INTO help_spend(day, micro) SELECT ?1, ?2 WHERE ?2 <= ?3 ON CONFLICT(day) DO UPDATE SET micro = micro + ?2 WHERE micro + ?2 <= ?3 RETURNING micro').bind(day,reserve,DAILY_CAP_MICRO)
     ]);
-    if(!results[1]?.results?.length) return fallback('cap');
-  } catch {return fallback('unconfigured');}
+    if(!results[1]?.results?.length) return fail('cap');
+  } catch {return fail('unconfigured');}
   const settle=async(delta)=>{try{await db.prepare('UPDATE help_spend SET micro = MIN(?3, MAX(0, micro + ?2)) WHERE day = ?1').bind(day,delta,DAILY_CAP_MICRO).run();}catch{}};
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),deps.timeoutMs ?? 15000);
   try {
-    const response=await deps.fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:`Bearer ${env.DEEPSEEK_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:'deepseek-flash',messages:[{role:'system',content:SYSTEM_PROMPT},...messages],thinking:{type:'disabled'},max_tokens:MAX_TOKENS,temperature:0.3,stream:false}),signal:controller.signal});
-    if(!response.ok){await settle(-reserve);return fallback('upstream');}
+    const response=await deps.fetch('https://api.deepseek.com/chat/completions',{method:'POST',headers:{Authorization:`Bearer ${env.DEEPSEEK_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages:[{role:'system',content:SYSTEM_PROMPT},...messages],thinking:{type:'disabled'},max_tokens:MAX_TOKENS,temperature:0.3,stream:false}),signal:controller.signal});
+    if(!response.ok){await settle(-reserve);return fail('upstream');}
     const result=await response.json();
     const u=result.usage;
     if(u && Number.isFinite(u.prompt_tokens) && Number.isFinite(u.completion_tokens) && u.prompt_tokens>=0 && u.completion_tokens>=0) {
@@ -101,6 +108,6 @@ export async function handleHelp(request, env, deps = {fetch:(input,init)=>fetch
       await settle(actual-reserve);
     }
     const answer=sanitize(result.choices?.[0]?.message?.content);
-    return answer ? json({source:'ai',answer}) : fallback('upstream');
-  }catch{return fallback('upstream');}finally{clearTimeout(timer);}
+    return answer ? json({source:'ai',answer}) : fail('upstream');
+  }catch{return fail('upstream');}finally{clearTimeout(timer);}
 }

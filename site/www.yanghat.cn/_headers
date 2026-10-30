@@ -51,8 +51,6 @@
 # Canonical hints only; real 301 is a later Cloudflare redirect rule.
 https://yanghat.cn/*
   Link: <https://www.yanghat.cn/:splat>; rel="canonical"
-/domain-transition.js
-  Cache-Control: no-cache
 
 /robots.txt
   Content-Type: text/plain; charset=utf-8
