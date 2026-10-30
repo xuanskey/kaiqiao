@@ -1,5 +1,5 @@
 import type { Grade } from "../math/types.ts";
-import { DEMOS, DEMO_LIST, isDemoId, type DemoDef, type DemoId } from "./demos.ts";
+import { DEMOS, DEMO_LIST, isDemoId, type DemoDef, type DemoId } from "./demo-defs.ts";
 import type { ClassLog } from "./class-log.ts";
 
 /** 首页“今日”板块用到的纯函数：问候语、日期、按天轮换的推荐课，都可以单独测试。 */

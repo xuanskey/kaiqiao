@@ -1,5 +1,5 @@
-const CACHE = 'kaiqiao-26c1de6b0e40';
-const ASSETS = ["./","./index.html","./manifest.webmanifest","./assets/index-BtpOK5e8.css","./assets/index-vzCW0wmd.js","./assets/classroom-B33ZvEHZ.js"];
+const CACHE = 'kaiqiao-2c13c904e95e';
+const ASSETS = ["./","./index.html","./manifest.webmanifest","./assets/index-BnwA7WO4.css","./assets/index-CAb0Ylrz.js","./assets/classroom-BDbHcLkL.js"];
 // 新版本装好后等待，不自动接管；页面提示后由用户点「更新」（SKIP_WAITING），或所有标签页关闭后自然生效。
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
@@ -17,8 +17,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET' || !request.url.startsWith(self.registration.scope)) return;
+  // 应用页和本版本缓存的脚本同属一个版本：直接用缓存，打开时不必先等一趟网络（国内访问海外节点很慢）；
+  // 缓存缺失才走网络。新版本仍按上面的流程切换：装好后提示「有新版本」，点更新或关掉全部标签后生效。
+  // 缓存里的页面可能是跟随重定向取回的，导航不能直接用带 redirected 标记的响应，所以重新包一层。
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(() => caches.open(CACHE).then((cache) => cache.match('./index.html'))));
+    event.respondWith(caches.open(CACHE)
+      .then((cache) => cache.match('./').then((hit) => hit || cache.match('./index.html')))
+      .then((hit) => hit ? new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers: hit.headers }) : fetch(request)));
     return;
   }
   event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));

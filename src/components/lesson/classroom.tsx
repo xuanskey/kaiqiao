@@ -28,6 +28,7 @@ import { BarChartStage, MakeTenStage, PolyAreaStage } from "./stages-v10";
 import { DecimalDivStage, FractionMulStage } from "./stages-v12";
 import { EarthStage, FrictionStage, LeverStage, PlantStage, SlopeStage, SoundStage } from "./stages-lab";
 import { ChanceStage, ClockStage, NumberLineStage, ParallelStage, PercentStage, PigeonholeStage, RmbStage, RulerStage, ScaleStage, ShapesStage, WaterStage } from "./stages-more";
+import { SticksStage, AbacusStage, ColumnAddStage, ColumnMulStage, LongDivStage, MixedOpsStage, BarModelStage, UnitsStage, CalendarStage, ViewsStage, PositionStage, TransformStage, TriangleStage, DecimalStage, TallyStage, LineChartStage, FactorsStage, CuboidStage, FractionAddStage, FractionDivStage, CombosStage, ChickenRabbitStage, TreePlantStage, OddOneStage, VennStage, IdCodeStage, SquareNumbersStage, OptimizeStage, PatternStage, LogicStage } from "./stages-plus";
 import { safeLocalStorage } from "@/lib/safe-storage";
 
 const STAGES: Record<DemoId, ComponentType<StageProps>> = {
@@ -38,6 +39,7 @@ const STAGES: Record<DemoId, ComponentType<StageProps>> = {
   "make-ten": MakeTenStage, "bar-chart": BarChartStage, "poly-area": PolyAreaStage,
   "decimal-div": DecimalDivStage, "fraction-mul": FractionMulStage,
   lever: LeverStage, slope: SlopeStage, sound: SoundStage, earth: EarthStage, friction: FrictionStage, plant: PlantStage,
+  sticks: SticksStage, abacus: AbacusStage, "column-add": ColumnAddStage, "column-mul": ColumnMulStage, "long-div": LongDivStage, "mixed-ops": MixedOpsStage, "bar-model": BarModelStage, units: UnitsStage, calendar: CalendarStage, views: ViewsStage, position: PositionStage, transform: TransformStage, triangle: TriangleStage, decimal: DecimalStage, tally: TallyStage, "line-chart": LineChartStage, factors: FactorsStage, cuboid: CuboidStage, "fraction-add": FractionAddStage, "fraction-div": FractionDivStage, combos: CombosStage, "chicken-rabbit": ChickenRabbitStage, "tree-plant": TreePlantStage, "odd-one": OddOneStage, venn: VennStage, "id-code": IdCodeStage, "square-numbers": SquareNumbersStage, optimize: OptimizeStage, pattern: PatternStage, logic: LogicStage,
 };
 
 const MOTION_KEY = "kaiqiao-reduce-motion";
@@ -98,8 +100,8 @@ export function Classroom() {
       : units.length === 0 ? <div className="class-empty"><FlaskConical size={22} /><p>{GRADE_LABEL[grade]}{term}册的{SUBJECT_LABEL[subject]}暂时没有互动实验。{subject === "science" ? "可以换个学期看看。" : ""}</p></div>
       : <ol className="class-units">{units.map((u, i) => <li key={u.id} className={cn("class-unit", u.demos?.length && "has-demo")}>
           <span className="class-unit-no">{i + 1}</span>
-          <div><strong>{u.title}</strong>{u.demos?.length ? <small>{u.demos.map((d) => DEMOS[d].title).join("、")}</small> : <small>{subject === "math" ? "暂无互动课，可去题库练习" : ""}</small>}</div>
-          {u.demos?.length ? <div className="class-unit-actions">{u.demos.map((d) => <button key={d} type="button" className="class-open" onClick={() => { setOpen({ demo: d, unit: u.title, preset: u.preset }); window.scrollTo({ top: 0, behavior: "instant" }); }}><Presentation size={16} />上课</button>)}</div>
+          <div><strong>{u.title}</strong>{u.demos?.length ? <small>{/复习/.test(u.title) ? `回看本册 ${u.demos.length} 节互动课` : u.demos.map((d) => DEMOS[d].title).join("、")}</small> : <small>{subject === "math" ? "暂无互动课，可去题库练习" : ""}</small>}</div>
+          {u.demos?.length ? <div className="class-unit-actions">{u.demos.map((d) => <button key={d} type="button" className="class-open" onClick={() => { setOpen({ demo: d, unit: u.title, preset: u.preset }); window.scrollTo({ top: 0, behavior: "instant" }); }}><Presentation size={16} />{u.demos!.length > 1 ? DEMOS[d].title.split("：")[0] : "上课"}</button>)}</div>
             : subject === "math" ? <button type="button" className="class-practice" onClick={() => { setStoreGrade(grade); go("map"); }}>去题库</button> : null}
         </li>)}</ol>}
     {grade === 3 && subject === "math" ? <section className="class-lab-entry"><Lightbulb size={20} /><div><strong>三年级理解实验室</strong><small>18 个知识单元，配分步讲解、动手小实验和单元小测</small></div><button type="button" onClick={() => { setStoreGrade(3); go("learn"); }}>进入理解实验室</button></section> : null}
@@ -256,7 +258,7 @@ function LessonSession({ demo, grade, unitTitle, onBack, preset }: LessonProps) 
       <aside className="lesson-side">
         <section className="param-panel" aria-label="调节参数">
           <header><strong>调节参数</strong><small>结果由真实计算得出</small></header>
-          {def.params.filter((p) => !(demo === "group-share" && ((params.mode === 0 && p.key === "total") || (params.mode === 1 && p.key === "each"))) && !(demo === "fraction-mul" && ((params.mode === 0 && (p.key === "n2" || p.key === "d2")) || (params.mode === 1 && p.key === "k"))) && !(demo === "poly-area" && params.shape !== 2 && p.key === "b")).map((spec) => spec.options
+          {def.params.filter((p) => !p.when || p.when[1].includes(params[p.when[0]])).filter((p) => !(demo === "group-share" && ((params.mode === 0 && p.key === "total") || (params.mode === 1 && p.key === "each"))) && !(demo === "fraction-mul" && ((params.mode === 0 && (p.key === "n2" || p.key === "d2")) || (params.mode === 1 && p.key === "k"))) && !(demo === "poly-area" && params.shape !== 2 && p.key === "b")).map((spec) => spec.options
             ? <div key={spec.key} className="param-options" role="group" aria-label={spec.label}><span>{spec.label}</span><div>{spec.options.map((o, i) => <button key={o} type="button" aria-pressed={params[spec.key] === i} onClick={() => setParam(spec.key, i)} disabled={demo === "circuit" && spec.key === "broken" && i > params.bulbs}>{o}</button>)}</div></div>
             : <label key={spec.key} className="param-range"><span>{spec.label}<b>{displayParam(spec, params[spec.key])}</b></span>
               <input type="range" min={spec.min} max={demo === "fraction" && spec.key === "shaded" ? params.parts : spec.max} step={demo === "circle" && spec.key === "n" ? 2 : 1} value={params[spec.key]} onChange={(e) => setParam(spec.key, Number(e.target.value))} aria-label={spec.label} /></label>)}

@@ -34,6 +34,16 @@
         if (value) inner.set(key, value);
       });
       window.__kaiqiaoSrc = "/app/" + (inner.toString() ? "?" + inner.toString() : "") + location.hash;
+      // 练习应用的入口脚本和样式先并行下载，不等本页样式表；文件名由 scripts/sync-app-to-site.mjs 构建时写入。
+      var APP_ENTRY = ["/app/assets/index-CAb0Ylrz.js","/app/assets/index-BnwA7WO4.css"];
+      APP_ENTRY.forEach(function (href) {
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = /\.css$/.test(href) ? "style" : "script";
+        link.href = href;
+        link.crossOrigin = "anonymous";
+        document.head.appendChild(link);
+      });
     })();
   </script>
   <style>
@@ -201,7 +211,7 @@
         <li class="lesson-card lesson-card-all">
           <a href="/?practice=1">
             <span class="lesson-meta">一到六年级</span>
-            <p class="lesson-count"><strong>25</strong> 节数学互动课<br><strong>11</strong> 个科学小实验</p>
+            <p class="lesson-count"><strong>55</strong> 节数学互动课<br><strong>11</strong> 个科学小实验</p>
             <h3>凑十法、条形统计图、多边形面积……</h3>
             <p>选年级和上下册，打开就能上课。</p>
             <span class="lesson-go">进入课堂 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></span>

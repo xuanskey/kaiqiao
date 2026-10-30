@@ -1,7 +1,7 @@
 {
   "name": "kaiqiao",
   "private": true,
-  "version": "0.15.0",
+  "version": "0.16.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
@@ -9,7 +9,7 @@
     "preview": "vite preview --host 0.0.0.0 --port 5173",
     "mock:ai": "node scripts/mock-ai.mjs",
     "test:ai": "node --test workers/ai/*.test.ts",
-    "test": "node --test src/lib/help-history.test.ts src/lib/help.test.ts src/lib/sw-update.test.ts src/lib/safe-storage.test.ts src/lib/error-reset.test.ts workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts workers/metrics/*.test.ts workers/help/*.test.ts scripts/metrics-sql.test.ts scripts/topup-core.test.mjs scripts/topup-switch.test.mjs scripts/contrast.test.mjs scripts/bundle-size.test.mjs scripts/help-pii-copy.test.mjs",
+    "test": "node --test src/lib/utils.test.ts src/lib/help-history.test.ts src/lib/help.test.ts src/lib/sw-update.test.ts src/lib/safe-storage.test.ts src/lib/error-reset.test.ts workers/ai/*.test.ts src/lib/math/*.test.ts src/lib/lesson/*.test.ts src/store/*.test.ts workers/metrics/*.test.ts workers/help/*.test.ts scripts/metrics-sql.test.ts scripts/topup-core.test.mjs scripts/topup-switch.test.mjs scripts/contrast.test.mjs scripts/bundle-size.test.mjs scripts/help-pii-copy.test.mjs",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run test:render && npm run build",
     "release": "node scripts/build-grade-pages.mjs && npm run build && node scripts/release.mjs",
@@ -33,7 +33,6 @@
     "pdfjs-dist": "^6.4.299",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwind-merge": "^3.5.0",
     "tesseract.js": "^7.0.0",
     "zustand": "^5.0.0"
   },

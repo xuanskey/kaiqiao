@@ -1,5 +1,5 @@
-import type { DemoId } from "./demos.ts";
-import { isDemoId } from "./demos.ts";
+import type { DemoId } from "./demo-defs.ts";
+import { isDemoId } from "./demo-defs.ts";
 
 /**
  * 课堂练习记录：只保存在本浏览器（键名 kaiqiao-class-log），

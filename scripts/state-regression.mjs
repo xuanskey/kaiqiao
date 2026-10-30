@@ -338,7 +338,7 @@ export async function runStateRegression(browser, base) {
         await page.locator('.class-picker').waitFor();
         if (action === '切换课程') {
           await page.getByRole('group', { name: '年级', exact: true }).getByRole('button', { name: '五年级' }).click();
-          await page.locator('.class-unit', { hasText: '小数乘法' }).getByRole('button', { name: '上课' }).click();
+          await page.locator('.class-unit').filter({ has: page.locator('strong', { hasText: '小数乘法' }) }).getByRole('button', { name: '上课' }).click();
           await page.locator('.lesson-head h1', { hasText: '小数乘小数' }).waitFor();
         }
       } else {

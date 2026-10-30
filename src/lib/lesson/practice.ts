@@ -1,6 +1,8 @@
 import type { Grade } from "../math/types.ts";
 import type { Rng } from "../math/rng.ts";
 import { fmtScaled, gcd } from "./num.ts";
+import { plusPractice, plusVerify } from "./plus.ts";
+import { PLUS_DEMOS, type PlusId } from "./demo-defs-plus.ts";
 import { SHAPES, chanceWord, clock, fmtSigned, lineRelation, numberLine, percent, pigeonhole, rmb, ruler, scale, water, addSub, angleKind, balance, circle, cylinder, decimalMul, fraction, groupShare, law, magnet, pendulum, perimeterArea, shadow, circuit, lever, slope, sound, earth, friction, plant, SURFACES, makeTen, barChart, polyArea, decimalDiv, fractionMul, FRUITS, type DemoId, type Params, normalizeParams } from "./demos.ts";
 
 /**
@@ -384,6 +386,8 @@ function buildPractice(demo: DemoId, grade: Grade, level: number, rng: Rng, n = 
       const items = [["种子发芽一定需要阳光。", false], ["放在暗处的豆苗，叶子会发黄。", true], ["做对比实验时，一次只改变一个条件。", true]] as const;
       return { ...base, kind: "judge", params: { i, q: 2 }, prompt: `判断：${items[i][0]}`, answer: J(items[i][1]), choices: ["对", "错"], steps: [["大多数种子在暗处也能发芽，阳光对发芽不是必需的。", "豆苗需要阳光才能长出绿叶。", "只改变一个条件，才能知道是哪个条件起了作用。"][i]], traps: i === 0 ? { "对": "绿豆在暗处也能发芽，发芽后才需要阳光。" } : {} };
     }
+    default:
+      return plusPractice(demo as PlusId, grade, lv, rng, { ...base, demo: demo as PlusId });
   }
 }
 
@@ -432,7 +436,7 @@ export function verifyPractice(q: PracticeQ): string[] {
     case "earth": expect = p.q === 2 ? "东方" : earth(p).day ? "白天" : "黑夜"; break;
     case "friction": expect = p.q === 1 ? SURFACES.reduce((m, s, i) => (friction({ surf: i, n: p.n }).tenths > friction({ surf: m, n: p.n }).tenths ? i : m), 0) === 2 ? "毛巾" : "?" : friction({ surf: p.surf, n: p.n2 }).tenths > friction({ surf: p.surf, n: p.n1 }).tenths ? "变大" : "不变"; break;
     case "plant": expect = p.q === 1 ? (plant({ water: p.water, light: 1, day: 5 }).sprout ? "会发芽" : "不会发芽") : J([false, true, true][p.i]); break;
-    default: expect = q.answer;
+    default: expect = Object.prototype.hasOwnProperty.call(PLUS_DEMOS, q.demo) ? plusVerify(q) : q.answer;
   }
   if (expect !== q.answer) issues.push(`答案不一致：期望 ${expect}，题目给出 ${q.answer}`);
   if (!q.prompt || q.prompt.length < 4) issues.push("题干不完整");
@@ -487,8 +491,8 @@ function smartHint(q: PracticeQ, g: string): string | undefined {
 export function checkAnswer(q: PracticeQ, given: string): { ok: boolean; hint?: string } {
   const g = normalizeAnswer(given);
   if (g === normalizeAnswer(q.answer)) return { ok: true };
-  // 分数乘法：假分数写成最简的带分数（如 9/4 写成 2又1/4）也算对
-  if (q.demo === "fraction-mul") {
+  // 分数乘除、加减：假分数写成最简的带分数（如 9/4 写成 2又1/4）也算对
+  if (q.demo === "fraction-mul" || q.demo === "fraction-div" || q.demo === "fraction-add") {
     const a = readFraction(normalizeAnswer(q.answer)), x = readFraction(g);
     if (a && x && x.mixed && x.n * a.d === a.n * x.d && x.whole > 0 && x.fn > 0 && x.fn < x.d && gcd(x.fn, x.d) === 1) return { ok: true };
   }
