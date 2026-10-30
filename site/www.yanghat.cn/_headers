@@ -23,10 +23,6 @@
   Cache-Control: public, max-age=3600
 /assets/lantern.svg
   Cache-Control: public, max-age=3600
-/assets/kaiqiao-promo-poster.jpg
-  Cache-Control: public, max-age=3600
-/assets/kaiqiao-promo.mp4
-  Cache-Control: public, max-age=3600
 
 # Query-string versions do not select _headers rules; always revalidate these paths.
 /styles.css

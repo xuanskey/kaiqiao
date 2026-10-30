@@ -42,8 +42,8 @@
     html.is-practice #practice-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #f7f6ef; }
   </style>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261029">
-  <script src="app.js?v=20261029" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261030">
+  <script src="app.js?v=20261030" defer></script>
   <script type="application/ld+json" id="faq-schema">
 {
   "@context": "https://schema.org",
@@ -102,7 +102,7 @@
         <span class="brand-name">养习<span class="brand-english">YANGHAT</span></span>
       </a>
       <div class="nav-desktop">
-        <a href="#video">宣传片</a>
+        <a href="#video">动画演示</a>
         <a href="#lessons">看一眼</a>
         <a href="#kaiqiao">认识开窍</a>
         <a href="#questions">常见问题</a>
@@ -111,7 +111,7 @@
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="打开导航菜单" hidden><span></span><span></span></button>
     </nav>
     <div class="mobile-menu container" id="mobile-menu" hidden>
-      <a href="#video">宣传片 <span aria-hidden="true">01</span></a>
+      <a href="#video">动画演示 <span aria-hidden="true">01</span></a>
       <a href="#lessons">看一眼 <span aria-hidden="true">02</span></a>
       <a href="#kaiqiao">认识开窍 <span aria-hidden="true">03</span></a>
       <a href="#questions">常见问题 <span aria-hidden="true">04</span></a>
@@ -139,7 +139,7 @@
         <p class="hero-description">小学数学 1–6 年级，选题练习、互动讲解、错题复习。</p>
         <div class="hero-actions">
           <a class="button button-primary" data-primary-cta href="/?practice=1">进入开窍 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-          <a class="text-link" href="#video">看 45 秒宣传片 <span aria-hidden="true">↓</span></a>
+          <a class="text-link" href="#video">看动画演示 <span aria-hidden="true">↓</span></a>
         </div>
         <aside id="install-hint" class="install-hint" aria-label="添加到主屏幕" hidden><span data-install-text>可以把开窍添加到手机主屏幕，下次一点就开。</span><button type="button" data-install hidden>添加</button><button type="button" data-dismiss aria-label="关闭添加到主屏幕提示">关闭</button></aside><p class="hero-note">免费使用 · 无需注册 · 支持离线练习</p>
         <nav class="grade-links" aria-label="选择练习年级"><a data-grade="1" href="/?practice=1&amp;grade=1">一年级</a><a data-grade="2" href="/?practice=1&amp;grade=2">二年级</a><a data-grade="3" href="/?practice=1&amp;grade=3">三年级</a><a data-grade="4" href="/?practice=1&amp;grade=4">四年级</a><a data-grade="5" href="/?practice=1&amp;grade=5">五年级</a><a data-grade="6" href="/?practice=1&amp;grade=6">六年级</a></nav>
@@ -232,17 +232,115 @@
 
     <section class="promo container" id="video" aria-labelledby="promo-title">
       <div class="promo-copy">
-        <p class="section-kicker">45 秒认识开窍 <span class="kicker-line" aria-hidden="true"></span></p>
-        <h2 id="promo-title">宣传片</h2>
-        <p class="section-description">凑十法、分数乘法的面积模型、小数除法……片中每一个演示，都是开窍里真实的互动课录屏。从理解，到练习，再到巩固。</p>
-        <a class="text-link" href="assets/kaiqiao-promo.mp4" download>下载宣传片 MP4</a>
+        <p class="section-kicker">半分钟认识开窍 <span class="kicker-line" aria-hidden="true"></span></p>
+        <h2 id="promo-title">动画演示</h2>
+        <p class="section-description">凑十法、分数乘法的面积模型、小数除法，再到随堂练习，动画里每一步都是开窍互动课的讲法：先理解，再练习，最后巩固。</p>
+        <ol class="promo-chapters" aria-label="动画章节">
+          <li><button type="button" data-promo-scene="1"><span>01</span>凑十法<small>一年级</small></button></li>
+          <li><button type="button" data-promo-scene="2"><span>02</span>分数乘法<small>六年级</small></button></li>
+          <li><button type="button" data-promo-scene="3"><span>03</span>小数除法<small>五年级</small></button></li>
+          <li><button type="button" data-promo-scene="4"><span>04</span>随堂练习<small>逐题反馈</small></button></li>
+        </ol>
       </div>
-      <div class="promo-frame">
-        <video controls playsinline preload="none" poster="assets/kaiqiao-promo-poster.jpg" width="1080" height="1920" aria-describedby="promo-title">
-          <source src="assets/kaiqiao-promo.mp4" type="video/mp4">
-          你的浏览器暂不支持视频播放，可以<a href="assets/kaiqiao-promo.mp4">下载宣传片</a>观看。
-        </video>
-      </div>
+      <figure class="promo-frame">
+        <div class="promo-stage" id="promo-stage">
+          <div class="promo-progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <svg class="promo-svg" viewBox="0 0 360 640" aria-hidden="true" focusable="false">
+            <rect width="360" height="640" class="p-bg"/>
+            <text x="28" y="62" class="p-brand">开窍 · 互动课堂</text>
+
+            <g class="scene" data-duration="4000">
+              <image href="assets/lantern.svg" x="120" y="138" width="120" height="126" class="a-up a-float"/>
+              <text x="180" y="344" class="p-c p-hero a-up" style="--d:.4s">开窍</text>
+              <text x="180" y="404" class="p-c p-line a-up" style="--d:1s">不急着学会，</text>
+              <text x="180" y="444" class="p-c p-line a-up" style="--d:1.5s">先让理解发生。</text>
+              <path d="M144 458h96" class="p-underline a-grow-x" style="--d:2s"/>
+              <text x="180" y="540" class="p-c p-muted a-up" style="--d:2.3s">小学数学 · 1–6 年级</text>
+            </g>
+
+            <g class="scene" data-duration="7000">
+              <text x="28" y="104" class="p-kicker">一年级 · 凑十法</text>
+              <text x="150" y="172" class="p-c p-eq">8 + 5 =</text>
+              <text x="248" y="172" class="p-c p-eq p-q a-out" style="--d:3.8s">?</text>
+              <text x="248" y="172" class="p-c p-eq p-ans a-pop" style="--d:3.9s">13</text>
+              <rect x="50" y="220" width="260" height="104" rx="12" class="p-frame"/>
+              <path d="M102 220v104M154 220v104M206 220v104M258 220v104M50 272h260" class="p-grid"/>
+              <circle cx="232" cy="298" r="17" class="p-slot"/><circle cx="284" cy="298" r="17" class="p-slot"/>
+              <g class="p-green a-fade" style="--d:.2s"><circle cx="76" cy="246" r="18"/><circle cx="128" cy="246" r="18"/><circle cx="180" cy="246" r="18"/><circle cx="232" cy="246" r="18"/><circle cx="284" cy="246" r="18"/><circle cx="76" cy="298" r="18"/><circle cx="128" cy="298" r="18"/><circle cx="180" cy="298" r="18"/></g>
+              <g class="p-gold a-fade" style="--d:.5s"><circle cx="76" cy="400" r="18"/><circle cx="128" cy="400" r="18"/><circle cx="180" cy="400" r="18"/><circle cx="232" cy="298" r="18" class="a-lift" style="--d:1.4s"/><circle cx="284" cy="298" r="18" class="a-lift" style="--d:1.55s"/></g>
+              <rect x="50" y="220" width="260" height="104" rx="12" class="p-done a-fade" style="--d:2.4s"/>
+              <text x="180" y="356" class="p-c p-tag a-up" style="--d:2.4s">凑成 10</text>
+              <text x="128" y="448" class="p-c p-muted a-up" style="--d:2.8s">还剩 3 个</text>
+              <text x="180" y="508" class="p-c p-step a-up" style="--d:2.4s">8 + 2 = 10</text>
+              <text x="180" y="546" class="p-c p-step a-up" style="--d:3.4s">10 + 3 = 13</text>
+              <text x="180" y="590" class="p-c p-muted a-up" style="--d:4.4s">把 5 拆成 2 和 3，先凑成十</text>
+            </g>
+
+            <g class="scene" data-duration="7000">
+              <text x="28" y="104" class="p-kicker">六年级 · 分数乘法</text>
+              <text x="150" y="172" class="p-c p-eq p-eq-s">3/4 × 2/3 =</text>
+              <text x="258" y="172" class="p-c p-eq p-eq-s p-q a-out" style="--d:4.6s">?</text>
+              <text x="258" y="172" class="p-c p-eq p-eq-s p-ans a-pop" style="--d:4.7s">1/2</text>
+              <rect x="60" y="216" width="240" height="180" class="p-sheet"/>
+              <rect x="60" y="216" width="180" height="180" class="p-fill-a a-grow-x" style="--d:.8s"/>
+              <rect x="60" y="216" width="180" height="120" class="p-fill-b a-grow-y" style="--d:2.4s"/>
+              <path d="M120 216v180M180 216v180M240 216v180M60 276h240M60 336h240" class="p-grid"/>
+              <rect x="60" y="216" width="240" height="180" class="p-edge"/>
+              <g class="p-count"><text x="90" y="252" class="a-pop" style="--d:4s">1</text><text x="150" y="252" class="a-pop" style="--d:4.1s">2</text><text x="210" y="252" class="a-pop" style="--d:4.2s">3</text><text x="90" y="312" class="a-pop" style="--d:4.3s">4</text><text x="150" y="312" class="a-pop" style="--d:4.4s">5</text><text x="210" y="312" class="a-pop" style="--d:4.5s">6</text></g>
+              <text x="60" y="440" class="p-step-s a-up" style="--d:.8s">① 先取整体的 3/4</text>
+              <text x="60" y="476" class="p-step-s a-up" style="--d:2.4s">② 再取它的 2/3</text>
+              <text x="60" y="512" class="p-step-s a-up" style="--d:4s">③ 重叠 6 格，共 12 格</text>
+              <text x="180" y="580" class="p-c p-step a-up" style="--d:4.9s">6/12 = 1/2</text>
+            </g>
+
+            <g class="scene" data-duration="6500">
+              <text x="28" y="104" class="p-kicker">五年级 · 小数除法</text>
+              <text x="28" y="150" class="p-title a-up" style="--d:.1s">除数是小数，怎么办？</text>
+              <text x="180" y="250" class="p-c p-eq a-up" style="--d:.4s">7.2 ÷ 0.4</text>
+              <path d="M113 270v46m-7-9 7 9 7-9" pathLength="1" class="p-arrow a-draw" style="--d:1.2s"/><path d="M247 270v46m-7-9 7 9 7-9" pathLength="1" class="p-arrow a-draw" style="--d:1.3s"/>
+              <text x="126" y="300" class="p-mul a-up" style="--d:1.4s">×10</text>
+              <text x="260" y="300" class="p-mul a-up" style="--d:1.4s">×10</text>
+              <text x="180" y="372" class="p-c p-eq a-up" style="--d:2s">72 ÷ 4</text>
+              <text x="180" y="444" class="p-c p-eq p-ans a-pop" style="--d:3.1s">= 18</text>
+              <text x="180" y="520" class="p-c p-step-s a-up" style="--d:3.6s">被除数和除数同时乘 10，商不变</text>
+              <text x="180" y="556" class="p-c p-muted a-up" style="--d:4.2s">竖式一步步除，除不尽也能看懂</text>
+            </g>
+
+            <g class="scene" data-duration="6500">
+              <text x="28" y="104" class="p-kicker">随堂练习 · 逐题反馈</text>
+              <rect x="36" y="128" width="288" height="306" rx="16" class="p-card"/>
+              <text x="56" y="162" class="p-small">第 3 题 / 共 8 题</text>
+              <rect x="56" y="174" width="248" height="6" rx="3" class="p-track"/>
+              <rect x="56" y="174" width="93" height="6" rx="3" class="p-meter a-grow-x" style="--d:2.4s;--from:.67"/>
+              <text x="160" y="240" class="p-c p-eq">9 + 6 =</text>
+              <text x="260" y="240" class="p-c p-eq p-q a-out" style="--d:2.3s">?</text>
+              <text x="260" y="240" class="p-c p-eq p-ans a-pop" style="--d:2.3s">15</text>
+              <rect x="56" y="270" width="76" height="56" rx="10" class="p-opt"/>
+              <rect x="142" y="270" width="76" height="56" rx="10" class="p-opt"/>
+              <rect x="228" y="270" width="76" height="56" rx="10" class="p-opt"/>
+              <rect x="142" y="270" width="76" height="56" rx="10" class="p-opt-ok a-fade" style="--d:2s"/>
+              <text x="94" y="306" class="p-c p-opt-t">14</text><text x="180" y="306" class="p-c p-opt-t">15</text><text x="266" y="306" class="p-c p-opt-t">16</text>
+              <circle cx="180" cy="298" r="26" class="p-ripple a-ripple" style="--d:1.9s"/>
+              <g class="a-point" style="--d:.9s"><circle cx="196" cy="314" r="13" class="p-finger"/><circle cx="196" cy="314" r="4.5" class="p-finger-dot"/></g>
+              <text x="56" y="370" class="p-ok a-up" style="--d:2.3s">✓ 答对了</text>
+              <text x="56" y="404" class="p-small a-up" style="--d:2.6s">9 + 1 = 10，10 + 5 = 15</text>
+              <text x="180" y="490" class="p-c p-step-s a-up" style="--d:3.4s">答错的题自动进错题本，</text>
+              <text x="180" y="524" class="p-c p-step-s a-up" style="--d:3.8s">换一道同考点再巩固。</text>
+            </g>
+
+            <g class="scene scene-end" data-duration="5000">
+              <image href="assets/lantern.svg" x="140" y="136" width="80" height="84" class="a-up"/>
+              <text x="180" y="304" class="p-c p-hero a-up" style="--d:.2s">开窍</text>
+              <text x="180" y="346" class="p-c p-muted a-up" style="--d:.5s">小学数学 1–6 年级</text>
+              <text x="180" y="384" class="p-c p-muted a-up" style="--d:.7s">选题练习 · 互动讲解 · 错题复习</text>
+              <g class="a-pop" style="--d:1.1s"><rect x="62" y="428" width="236" height="56" rx="28" class="p-pill"/><text x="180" y="463" class="p-c p-url">www.yanghat.cn</text></g>
+              <text x="180" y="540" class="p-c p-muted a-up" style="--d:1.5s">免费使用 · 打开就能练</text>
+            </g>
+          </svg>
+          <button class="promo-toggle" id="promo-toggle" type="button" aria-label="暂停动画" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M8 5v14M16 5v14"/><path class="i-play" d="M8 5.5v13l11-6.5z"/></svg></button>
+        </div>
+        <figcaption class="visually-hidden">动画演示：一年级凑十法，8 加 5，把 5 拆成 2 和 3，先凑成 10，再加 3 得 13；六年级分数乘法，在长方形里先取 3/4，再取它的 2/3，重叠 6 格共 12 格，等于 1/2；五年级小数除法，7.2 除以 0.4，被除数和除数同时乘 10 变成 72 除以 4，等于 18；随堂练习逐题反馈，答错的题自动进入错题本。网址 www.yanghat.cn。</figcaption>
+      </figure>
     </section>
 
     <section class="questions-section" id="questions" aria-labelledby="questions-title">

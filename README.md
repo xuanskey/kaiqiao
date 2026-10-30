@@ -8,11 +8,11 @@
 
 正式入口：**https://www.yanghat.cn/?practice=1**（yanghat.cn 同路径）。主页是门面；点「开始练习」后地址栏仍是 `/?practice=1`，不显示 `/app/`。各版本变更见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 宣传片
+## 动画演示与宣传片
 
-[![开窍 45 秒宣传片](site/www.yanghat.cn/assets/kaiqiao-promo-poster.jpg)](https://www.yanghat.cn/#video)
+主页「动画演示」用代码（SVG + CSS + 少量 JS）绘制，约 36 秒循环：凑十法、分数乘法面积模型、小数除法、随堂练习，最后落到 www.yanghat.cn。进入视口才自动播放，可暂停、按章节跳转；系统开启「减弱动效」时不自动播放。[在线观看](https://www.yanghat.cn/#video)
 
-45 秒竖屏（1080×1920）产品宣传片，片中凑十法、分数乘法面积模型、小数除法和随堂练习均为真实产品录屏。[在线观看](https://www.yanghat.cn/#video) · [下载 MP4](site/www.yanghat.cn/assets/kaiqiao-promo.mp4)
+原 45 秒竖屏宣传片（1080×1920）已不在网站上发布，源文件留在仓库 [media/kaiqiao-promo.mp4](media/kaiqiao-promo.mp4)（海报 `media/kaiqiao-promo-poster.jpg`），可用于视频号等站外渠道。
 
 ## 使用
 

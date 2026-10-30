@@ -74,4 +74,77 @@ if (next && ["#demo-answer", ".equation", "#demo-explanation", "#demo-button-lab
   next.hidden = false;
   next.addEventListener('click', () => { step = (step + 1) % steps.length; render(); });
 }
+
+// 动画演示：只在进入视口时自动播放；可暂停，章节可跳转；减弱动效时不自动播放，直接显示每段的完成画面。
+const stage = document.querySelector('#promo-stage');
+const toggle = document.querySelector('#promo-toggle');
+if (stage && toggle && stage.querySelectorAll('.scene').length === stage.querySelectorAll('.promo-progress i').length) {
+  const scenes = [...stage.querySelectorAll('.scene')];
+  const bars = [...stage.querySelectorAll('.promo-progress i')];
+  const chapters = [...document.querySelectorAll('[data-promo-scene]')];
+  const durations = scenes.map(scene => Number(scene.dataset.duration) || 5000);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let index = 0, elapsed = 0, last = 0, frame = 0, visible = false, held = reduceMotion.matches;
+  function paint() {
+    bars.forEach((bar, i) => bar.style.setProperty('--p', i < index ? 1 : i > index ? 0 : Math.min(elapsed / durations[index], 1)));
+  }
+  function show(next) {
+    index = (next + scenes.length) % scenes.length;
+    elapsed = 0;
+    scenes.forEach(scene => scene.classList.remove('is-current'));
+    void stage.getBoundingClientRect(); // 重新挂上 is-current 以从头播放本段动画
+    scenes[index].classList.add('is-current');
+    chapters.forEach(button => {
+      if (Number(button.dataset.promoScene) === index) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+    paint();
+  }
+  function tick(now) {
+    elapsed += now - last;
+    last = now;
+    if (elapsed >= durations[index]) show(index + 1);
+    paint();
+    frame = requestAnimationFrame(tick);
+  }
+  function sync() {
+    const running = visible && !held && !document.hidden;
+    stage.classList.toggle('is-paused', !running);
+    stage.classList.toggle('is-held', held);
+    toggle.setAttribute('aria-label', held ? '播放动画' : '暂停动画');
+    cancelAnimationFrame(frame);
+    if (running) {
+      last = performance.now();
+      frame = requestAnimationFrame(tick);
+    }
+  }
+  toggle.addEventListener('click', () => {
+    held = !held;
+    if (!held && stage.classList.contains('is-static')) {
+      stage.classList.remove('is-static');
+      show(index);
+    }
+    sync();
+  });
+  chapters.forEach(button => button.addEventListener('click', () => {
+    // 暂停时跳章节直接显示该段完成画面；播放中则从该段开头继续播。
+    stage.classList.toggle('is-static', held);
+    show(Number(button.dataset.promoScene));
+    sync();
+  }));
+  document.addEventListener('visibilitychange', sync);
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      visible = entries[entries.length - 1].isIntersecting;
+      sync();
+    }, { threshold: 0.35 }).observe(stage);
+  } else {
+    visible = true;
+  }
+  stage.classList.add('is-live');
+  stage.classList.toggle('is-static', held);
+  toggle.hidden = false;
+  show(held ? scenes.length - 1 : 0);
+  sync();
+}
 }

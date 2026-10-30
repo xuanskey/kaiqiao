@@ -28,10 +28,12 @@ try {
   assert.equal(await page.locator('[data-grade]').count(),6);
   assert.equal(await page.locator('dialog').count(),1);
   assert.equal(await page.locator('dialog.help-dialog[aria-labelledby="help-title"]').count(),1);
-  assert.equal(await page.locator('video').getAttribute('preload'),'none');
-  assert.ok(await page.locator('video').getAttribute('poster'));
-  assert.equal(await page.locator('a[download][href$=".mp4"]').count(),1);
+  // 动画演示是代码绘制，不再有视频元素或 MP4 请求。
+  assert.equal(await page.locator('video').count(),0);
+  assert.equal(await page.locator('a[href$=".mp4"]').count(),0);
   assert.deepEqual(videos,[], '首页加载时不得请求视频');
+  assert.equal(await page.locator('#promo-stage.is-live .scene').count(),6);
+  assert.equal(await page.locator('#promo-stage .promo-progress i').count(),6);
   // Count visible body text with all FAQ expanded; excludes head/meta/JSON-LD,
   // includes every FAQ answer, so collapsed content cannot hide duplicate copy.
   await page.locator('.faq-list details').evaluateAll(nodes=>nodes.forEach(n=>{n.removeAttribute('name');n.open=true;}));
@@ -62,8 +64,21 @@ try {
    if(u.origin!==server.base)continue;
    const res=await context.request.get(u.href);assert.ok(res.ok(),`${ref}: ${res.status()}`);await res.dispose();
   }
-  assert.deepEqual(videos,[], '滚动查看全部板块后仍不预载视频');
-  // H.264 playback is not asserted in ungoogled Chromium; keep zero-preload checks.
+  assert.deepEqual(videos,[], '滚动查看全部板块后仍不请求视频');
+  // 动画演示：可见时播放，可暂停；暂停后跳章节显示该段完成画面，继续播放从该段开头。
+  const stage=page.locator('#promo-stage'),toggle=page.locator('#promo-toggle');
+  await stage.scrollIntoViewIfNeeded();
+  await page.waitForFunction(()=>!document.querySelector('#promo-stage').classList.contains('is-paused'));
+  assert.equal(await toggle.getAttribute('aria-label'),'暂停动画');
+  await toggle.click();
+  assert.equal(await toggle.getAttribute('aria-label'),'播放动画');
+  assert.ok(await stage.evaluate(n=>n.classList.contains('is-paused')&&n.classList.contains('is-held')));
+  await page.locator('[data-promo-scene="2"]').click();
+  assert.equal(await page.locator('[data-promo-scene="2"]').getAttribute('aria-current'),'step');
+  assert.equal(await page.locator('[data-promo-scene][aria-current]').count(),1);
+  assert.ok(await stage.evaluate(n=>n.classList.contains('is-static')&&n.querySelectorAll('.scene')[2].classList.contains('is-current')));
+  await toggle.click();
+  assert.ok(await stage.evaluate(n=>!n.classList.contains('is-static')&&!n.classList.contains('is-paused')&&n.querySelectorAll('.scene')[2].classList.contains('is-current')));
   // Real clicks at both viewports; clear persisted grade so each link must set it.
   for(let grade=1;grade<=6;grade++) {
    await page.goto(server.base);await page.evaluate(()=>localStorage.clear());
@@ -78,7 +93,7 @@ try {
   }
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(dialogs,[]);
   assertSameOriginMetrics(events,server.base);
-  console.log(`PASS ${width}×${height}: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、视频零预载、FAQ一致、站内资源、无外发/错误/原生dialog/溢出；仅帮助 dialog；备份入口真实可达`);
+  console.log(`PASS ${width}×${height}: 5板块、2主按钮、6年级首屏与iframe实点、唯一无需注册（展开FAQ）、动画演示可暂停与跳章节、无视频请求、FAQ一致、站内资源、无外发/错误/原生dialog/溢出；仅帮助 dialog；备份入口真实可达`);
   await context.close();
  }
 }finally{await browser.close();await server.close();}
